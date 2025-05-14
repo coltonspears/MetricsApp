@@ -1,0 +1,125 @@
+{
+  "Version": 1,
+  "Hash": "xWUYvs5QEncfUUtPfZYptKaG675z9N+b8HetRv97pso=",
+  "Source": "MetricsApp",
+  "BasePath": "_content/MetricsApp",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "MetricsApp\\wwwroot",
+      "Source": "MetricsApp",
+      "ContentRoot": "C:\\Projects\\repos\\MetricsApp\\wwwroot\\",
+      "BasePath": "_content/MetricsApp",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "C:\\Projects\\repos\\MetricsApp\\wwwroot\\js\\metrics.js",
+      "SourceId": "MetricsApp",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Projects\\repos\\MetricsApp\\wwwroot\\",
+      "BasePath": "_content/MetricsApp",
+      "RelativePath": "js/metrics#[.{fingerprint}]?.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "29njga6s6v",
+      "Integrity": "iivCEUaiS6PrzGHqvAPbLynCktKFm8ryicSuovG0+5E=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\metrics.js"
+    }
+  ],
+  "Endpoints": [
+    {
+      "Route": "js/metrics.29njga6s6v.js",
+      "AssetFile": "C:\\Projects\\repos\\MetricsApp\\wwwroot\\js\\metrics.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "4289"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"iivCEUaiS6PrzGHqvAPbLynCktKFm8ryicSuovG0+5E=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 14 May 2025 08:01:59 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "29njga6s6v"
+        },
+        {
+          "Name": "label",
+          "Value": "js/metrics.js"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-iivCEUaiS6PrzGHqvAPbLynCktKFm8ryicSuovG0+5E="
+        }
+      ]
+    },
+    {
+      "Route": "js/metrics.js",
+      "AssetFile": "C:\\Projects\\repos\\MetricsApp\\wwwroot\\js\\metrics.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "4289"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"iivCEUaiS6PrzGHqvAPbLynCktKFm8ryicSuovG0+5E=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 14 May 2025 08:01:59 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-iivCEUaiS6PrzGHqvAPbLynCktKFm8ryicSuovG0+5E="
+        }
+      ]
+    }
+  ]
+}

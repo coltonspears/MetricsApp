@@ -1,0 +1,6 @@
+@MetricsApp_HostAddress = http://localhost:5190
+
+GET {{MetricsApp_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

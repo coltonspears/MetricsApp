@@ -1,0 +1,16 @@
+﻿<Project>
+  <ItemGroup>
+    <StaticWebAssetEndpoint Include="_content/MetricsApp/js/metrics.29njga6s6v.js">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\metrics.js'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"29njga6s6v"},{"Name":"integrity","Value":"sha256-iivCEUaiS6PrzGHqvAPbLynCktKFm8ryicSuovG0\u002B5E="},{"Name":"label","Value":"_content/MetricsApp/js/metrics.js"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"4289"},{"Name":"Content-Type","Value":"text/javascript"},{"Name":"ETag","Value":"\u0022iivCEUaiS6PrzGHqvAPbLynCktKFm8ryicSuovG0\u002B5E=\u0022"},{"Name":"Last-Modified","Value":"Wed, 14 May 2025 08:01:59 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/MetricsApp/js/metrics.js">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\metrics.js'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-iivCEUaiS6PrzGHqvAPbLynCktKFm8ryicSuovG0\u002B5E="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"4289"},{"Name":"Content-Type","Value":"text/javascript"},{"Name":"ETag","Value":"\u0022iivCEUaiS6PrzGHqvAPbLynCktKFm8ryicSuovG0\u002B5E=\u0022"},{"Name":"Last-Modified","Value":"Wed, 14 May 2025 08:01:59 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+  </ItemGroup>
+</Project>

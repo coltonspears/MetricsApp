@@ -1,0 +1,29 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Projects\\repos\\MetricsApp\\wwwroot\\js\\metrics.js",
+      "PackagePath": "staticwebassets\\js\\metrics.js"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.MetricsApp.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.MetricsApp.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.build.MetricsApp.props",
+      "PackagePath": "build\\MetricsApp.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildMultiTargeting.MetricsApp.props",
+      "PackagePath": "buildMultiTargeting\\MetricsApp.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildTransitive.MetricsApp.props",
+      "PackagePath": "buildTransitive\\MetricsApp.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

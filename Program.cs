@@ -24,6 +24,7 @@ else
     builder.Services.AddSingleton<ICacheService, RedisCacheService>();
 }
 
+builder.Services.AddMcpServer();
 builder.Services.AddControllers(); // For API Controllers
 builder.Services.AddRazorPages(); // For Razor Pages UI
 

@@ -31,3 +31,27 @@ build_property.EnableCodeStyleSeverity =
 [C:/Projects/repos/MetricsApp/Pages/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Projects/repos/MetricsApp/Pages/MetricsOverview.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTWV0cmljc092ZXJ2aWV3LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Projects/repos/MetricsApp/Pages/PerformanceCounters.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGVyZm9ybWFuY2VDb3VudGVycy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Projects/repos/MetricsApp/Pages/Settings.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2V0dGluZ3MuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Projects/repos/MetricsApp/Pages/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXF9MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Projects/repos/MetricsApp/Pages/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Projects/repos/MetricsApp/Pages/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 

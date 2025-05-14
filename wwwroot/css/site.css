@@ -1,0 +1,524 @@
+/* /wwwroot/css/site.css */
+
+/* Global Resets & Base Styles */
+html {
+  font-size: 16px;
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px; /* Space for the footer */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease; /* Smooth theme transition */
+}
+
+/* CSS Variables for Theming */
+:root {
+  /* Light Theme (Default) */
+  --primary-bg: #ffffff;
+  --secondary-bg: #f8f9fa;
+  --tertiary-bg: #e9ecef;
+  --primary-text: #212529;
+  --secondary-text: #495057;
+  --muted-text: #6c757d;
+  --accent-color: #007bff;
+  --accent-color-hover: #0056b3;
+  --border-color: #dee2e6;
+  --card-bg: #ffffff;
+  --card-border-color: var(--border-color);
+  --card-header-bg: #f8f9fa;
+  --link-color: var(--accent-color);
+  --link-hover-color: var(--accent-color-hover);
+  --sidebar-bg: #f0f2f5;
+  --sidebar-link-color: #333;
+  --sidebar-link-hover-bg: #d1d7e0;
+  --sidebar-link-active-color: var(--accent-color);
+  --sidebar-link-active-bg: #c5cdd8;
+  --sidebar-border-color: var(--border-color);
+  --top-navbar-bg: var(--primary-bg);
+  --top-navbar-border-color: var(--border-color);
+  --footer-bg: var(--primary-bg);
+  --footer-border-color: var(--border-color);
+  --footer-text-color: var(--muted-text);
+  --button-primary-bg: var(--accent-color);
+  --button-primary-text: #ffffff;
+  --button-primary-hover-bg: var(--accent-color-hover);
+  --input-bg: #fff;
+  --input-border-color: #ced4da;
+  --input-text-color: #495057;
+  --input-focus-border-color: #80bdff;
+  --box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  --box-shadow-lg: 0 1rem 3rem rgba(0,0,0,.175);
+}
+
+[data-theme="dark"] {
+  --primary-bg: #121212;
+  --secondary-bg: #1e1e1e;
+  --tertiary-bg: #2a2a2a;
+  --primary-text: #e0e0e0;
+  --secondary-text: #b3b3b3;
+  --muted-text: #868e96;
+  --accent-color: #bb86fc; /* Material Design Dark Theme Purple */
+  --accent-color-hover: #a76bf4;
+  --border-color: #393939;
+  --card-bg: var(--secondary-bg);
+  --card-border-color: var(--border-color);
+  --card-header-bg: var(--tertiary-bg);
+  --link-color: var(--accent-color);
+  --link-hover-color: var(--accent-color-hover);
+  --sidebar-bg: #171717;
+  --sidebar-link-color: var(--primary-text);
+  --sidebar-link-hover-bg: #2f2f2f;
+  --sidebar-link-active-color: var(--accent-color);
+  --sidebar-link-active-bg: #3a3a3a;
+  --sidebar-border-color: var(--border-color);
+  --top-navbar-bg: var(--secondary-bg);
+  --top-navbar-border-color: var(--border-color);
+  --footer-bg: var(--secondary-bg);
+  --footer-border-color: var(--border-color);
+  --footer-text-color: var(--muted-text);
+  --button-primary-bg: var(--accent-color);
+  --button-primary-text: #121212; /* Dark text for light button */
+  --button-primary-hover-bg: var(--accent-color-hover);
+  --input-bg: #2a2a2a;
+  --input-border-color: #444;
+  --input-text-color: var(--primary-text);
+  --input-focus-border-color: var(--accent-color);
+  --box-shadow: 0 0.125rem 0.25rem rgba(255, 255, 255, 0.05);
+  --box-shadow-lg: 0 1rem 3rem rgba(255,255,255,.075);
+}
+
+/* Apply base theme colors to body */
+body {
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
+}
+
+/* Layout specific styles from _Layout.cshtml (refactored to use variables) */
+.main-wrapper {
+  display: flex;
+  flex-grow: 1;
+}
+
+.sidebar {
+  width: 250px;
+  min-height: 100vh;
+  background-color: var(--sidebar-bg);
+  padding-top: 1rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 1000;
+  transition: width 0.3s ease; /* Smoother collapse */
+  border-right: 1px solid var(--sidebar-border-color);
+  box-shadow: var(--box-shadow);
+}
+
+.sidebar .navbar-brand {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center brand text when not collapsed */
+}
+
+.sidebar .navbar-brand span {
+  color: var(--primary-text);
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.sidebar .nav-link {
+  color: var(--sidebar-link-color);
+  padding: 0.85rem 1.25rem; /* Increased padding for better touch */
+  border-left: 3px solid transparent;
+  transition: background-color 0.2s ease, color 0.2s ease, border-left-color 0.2s ease;
+  font-size: 0.95rem;
+}
+.sidebar .nav-link i {
+  width: 20px; /* Ensure icons align */
+  text-align: center;
+}
+
+.sidebar .nav-link:hover {
+  background-color: var(--sidebar-link-hover-bg);
+  color: var(--accent-color);
+  border-left-color: var(--accent-color);
+}
+
+.sidebar .nav-link.active {
+  color: var(--sidebar-link-active-color);
+  background-color: var(--sidebar-link-active-bg);
+  font-weight: 500;
+  border-left-color: var(--sidebar-link-active-color);
+}
+
+.content-area {
+  margin-left: 250px;
+  padding: 2rem; /* Increased padding */
+  flex-grow: 1;
+  width: calc(100% - 250px);
+  background-color: var(--secondary-bg);
+  transition: margin-left 0.3s ease, width 0.3s ease;
+}
+
+.top-navbar {
+  margin-left: 250px;
+  width: calc(100% - 250px);
+  z-index: 999;
+  transition: margin-left 0.3s ease, width 0.3s ease;
+  position: sticky; /* Make top-navbar sticky */
+  top: 0;
+}
+
+.top-navbar nav {
+  background-color: var(--top-navbar-bg) !important; /* Important to override Bootstrap */
+  border-bottom: 1px solid var(--top-navbar-border-color) !important;
+  box-shadow: var(--box-shadow);
+  min-height: 60px; /* Give it some height */
+  display: flex;
+  align-items: center;
+}
+
+.footer {
+  margin-left: 250px;
+  width: calc(100% - 250px);
+  background-color: var(--footer-bg);
+  border-top: 1px solid var(--footer-border-color) !important;
+  color: var(--footer-text-color);
+  padding: 1rem 2rem; /* Consistent padding */
+  transition: margin-left 0.3s ease, width 0.3s ease;
+  font-size: 0.875rem;
+}
+
+.footer a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+.footer a:hover {
+  color: var(--link-hover-color);
+  text-decoration: underline;
+}
+
+/* Sidebar collapsed styles */
+.sidebar.collapsed {
+  width: 60px;
+}
+
+.sidebar.collapsed .nav-link span,
+.sidebar.collapsed .navbar-brand span {
+  display: none;
+}
+
+.sidebar.collapsed .nav-link i {
+  margin-right: 0;
+}
+.sidebar.collapsed .nav-link {
+    padding: 0.85rem 0;
+    text-align: center;
+}
+
+.sidebar.collapsed .navbar-brand {
+    padding-left: 0;
+    padding-right: 0;
+}
+/* Add App Icon when collapsed - replace with your actual icon if you have one */
+.sidebar.collapsed .navbar-brand::before {
+    content: "MA"; /* MetricsApp Initials or a FontAwesome Icon */
+    font-size: 1.5rem;
+    color: var(--accent-color);
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+
+.content-area.collapsed,
+.top-navbar.collapsed,
+.footer.collapsed {
+  margin-left: 60px;
+  width: calc(100% - 60px);
+}
+
+/* Toggle Buttons */
+#sidebarToggle, #themeToggle {
+  background: none;
+  border: none;
+  color: var(--accent-color);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+#sidebarToggle:hover, #themeToggle:hover {
+    background-color: var(--tertiary-bg);
+}
+
+#themeToggle i {
+    font-size: 1.2rem; /* Slightly smaller icon for theme toggle */
+}
+
+
+/* Bootstrap Component Theming */
+
+/* General Link Styling */
+a {
+    color: var(--link-color);
+    text-decoration: none; /* Optional: remove underline globally */
+}
+a:hover {
+    color: var(--link-hover-color);
+    /* text-decoration: underline; Optional */
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    color: var(--primary-text);
+    font-weight: 500; /* Slightly bolder headings */
+}
+
+/* Cards */
+.card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border-color);
+  box-shadow: var(--box-shadow);
+  border-radius: 0.375rem; /* Bootstrap's default is 0.25rem, slightly more rounded */
+}
+.card-header {
+  background-color: var(--card-header-bg);
+  border-bottom: 1px solid var(--card-border-color);
+  color: var(--primary-text);
+  font-weight: 500;
+}
+.card-body {
+  color: var(--secondary-text);
+}
+.card-footer {
+  background-color: var(--card-header-bg);
+  border-top: 1px solid var(--card-border-color);
+}
+
+/* Tables */
+.table {
+  background-color: var(--card-bg); /* Use card-bg for table background */
+  color: var(--primary-text);
+  border: 1px solid var(--border-color);
+}
+.table th, .table td {
+  border-color: var(--border-color);
+  vertical-align: middle;
+}
+.table thead th {
+  background-color: var(--tertiary-bg);
+  color: var(--primary-text);
+  border-bottom-width: 2px; /* Thicker bottom border for header */
+}
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0,0,0,0.025); /* Subtle striping */
+}
+[data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(255,255,255,0.035); /* Dark theme subtle striping */
+}
+.table-hover tbody tr:hover {
+  background-color: var(--tertiary-bg);
+  color: var(--primary-text);
+}
+
+/* Buttons */
+.btn {
+    border-radius: 0.3rem; /* Slightly more rounded buttons */
+    font-weight: 500;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-primary {
+  background-color: var(--button-primary-bg);
+  border-color: var(--button-primary-bg);
+  color: var(--button-primary-text);
+}
+.btn-primary:hover, .btn-primary:focus {
+  background-color: var(--button-primary-hover-bg);
+  border-color: var(--button-primary-hover-bg);
+  color: var(--button-primary-text);
+  box-shadow: 0 0 0 0.2rem rgba(var(--accent-color), 0.5);
+}
+.btn-secondary {
+    background-color: var(--muted-text);
+    border-color: var(--muted-text);
+    color: var(--primary-bg); /* Text color that contrasts with muted-text */
+}
+.btn-secondary:hover {
+    background-color: var(--secondary-text);
+    border-color: var(--secondary-text);
+    color: var(--primary-bg);
+}
+/* Add more btn styles (btn-success, btn-danger, etc.) if needed, using CSS variables */
+.btn-outline-primary {
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+.btn-outline-primary:hover {
+    background-color: var(--accent-color);
+    color: var(--button-primary-text);
+}
+
+
+/* Forms */
+.form-control, .form-select {
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border-color);
+  color: var(--input-text-color);
+  border-radius: 0.3rem;
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--input-focus-border-color);
+  background-color: var(--input-bg); /* Ensure bg doesn't change on focus */
+  color: var(--input-text-color); /* Ensure text color doesn't change on focus */
+  box-shadow: 0 0 0 0.2rem rgba(var(--accent-color), 0.25);
+}
+.form-control::placeholder {
+    color: var(--muted-text);
+    opacity: 0.7;
+}
+label {
+    color: var(--secondary-text);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+/* Modals */
+.modal-content {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--primary-text);
+  border-radius: 0.5rem; /* More prominent radius for modals */
+}
+.modal-header {
+  background-color: var(--tertiary-bg);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--primary-text);
+}
+.modal-header .btn-close {
+    filter: var(--primary-text) == #e0e0e0 ? invert(1) brightness(2) : none; /* Make close button visible on dark bg */
+}
+.modal-footer {
+  border-top: 1px solid var(--border-color);
+  background-color: var(--tertiary-bg);
+}
+
+/* List Groups */
+.list-group-item {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--primary-text);
+}
+.list-group-item.active {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: var(--button-primary-text);
+}
+a.list-group-item:hover, button.list-group-item:hover {
+    background-color: var(--tertiary-bg);
+    color: var(--accent-color);
+}
+
+/* Navbar specific overrides (if any top navbar items exist beyond toggles) */
+.navbar-light .navbar-nav .nav-link { /* Bootstrap class for light navbar text */
+    color: var(--primary-text);
+}
+.navbar-light .navbar-nav .nav-link:hover, .navbar-light .navbar-nav .nav-link:focus {
+    color: var(--accent-color);
+}
+.navbar-brand { /* Ensure brand in top bar also adapts if used there */
+    color: var(--primary-text) !important;
+}
+
+/* Utility classes */
+.text-primary { color: var(--accent-color) !important; }
+.bg-primary { background-color: var(--accent-color) !important; }
+.border-primary { border-color: var(--accent-color) !important; }
+/* Add more as needed */
+
+.text-muted {
+    color: var(--muted-text) !important;
+}
+
+/* Responsive adjustments (Bootstrap handles most, but you can add specific tweaks) */
+@media (max-width: 768px) {
+  /* Example: Adjust sidebar for smaller screens if needed, though Bootstrap handles basic collapse */
+  /* .sidebar { width: 100%; height: auto; position: relative; border-right: none; border-bottom: 1px solid var(--sidebar-border-color); } */
+  /* .content-area, .top-navbar, .footer { margin-left: 0; width: 100%; } */
+}
+
+/* Specific application styles */
+/* Placeholder for any app-specific styles not covered by Bootstrap theming */
+/* For example, styles for your metric divs if they are custom elements */
+.metric-card { /* Assuming your metric divs might have a class like this */
+    background-color: var(--card-bg);
+    border: 1px solid var(--card-border-color);
+    color: var(--primary-text);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0.375rem;
+    box-shadow: var(--box-shadow);
+}
+.metric-card-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--primary-text);
+    margin-bottom: 0.5rem;
+}
+.metric-card-value {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--accent-color);
+}
+.metric-card-description {
+    font-size: 0.875rem;
+    color: var(--secondary-text);
+}
+
+/* Make sure Bootstrap's default white/light backgrounds and text colors are overridden */
+[data-bs-theme="light"] body, /* If you were using Bootstrap's data-bs-theme */
+[data-bs-theme="dark"] body {
+    background-color: var(--primary-bg) !important;
+    color: var(--primary-text) !important;
+}
+
+/* Ensure container backgrounds are transparent to let body background through */
+.container, .container-fluid {
+    background-color: transparent;
+}
+
+/* Improve focus states for accessibility */
+*:focus-visible {
+    outline: 2px solid var(--accent-color) !important;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 0.2rem rgba(var(--accent-color), 0.25) !important;
+}
+/* Remove default outline if focus-visible is supported and used */
+*:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Custom Scrollbars (Optional - Webkit only but can be a nice touch) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--secondary-bg);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--muted-text);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-text);
+}
+

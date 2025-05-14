@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MetricsApp</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <div class="d-flex justify-content-between align-items-center px-3 mb-3">
+             <a class="navbar-brand" asp-area="" asp-page="/Index"><span>MetricsApp</span></a>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" asp-area="" asp-page="/Index"><i class="fas fa-tachometer-alt me-2"></i><span>Dashboard</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-area="" asp-page="/MetricsOverview"><i class="fas fa-chart-bar me-2"></i><span>Metrics Overview</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-area="" asp-page="/PerformanceCounters"><i class="fas fa-cogs me-2"></i><span>Perf Counters</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-area="" asp-page="/Settings"><i class="fas fa-cog me-2"></i><span>Settings</span></a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-wrapper flex-column flex-grow-1">
+        <header class="top-navbar sticky-top">
+             <nav class="navbar navbar-expand-sm navbar-toggleable-sm border-bottom box-shadow">
+                <div class="container-fluid">
+                    <button id="sidebarToggle" class="ms-2"><i class="fas fa-bars"></i></button>
+                    <div class="ms-auto">
+                         <button id="themeToggle" class="btn">
+                            <i class="fas fa-moon"></i> <!-- Default to moon, JS will set sun if light -->
+                        </button>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <div class="content-area" id="contentArea">
+            <main role="main" class="pb-3">
+                @RenderBody()
+            </main>
+        </div>
+
+        <footer class="border-top footer text-muted mt-auto" id="pageFooter">
+            <div class="container-fluid">
+                &copy; @DateTime.Now.Year - MetricsApp - <a asp-area="" asp-page="/Privacy">Privacy</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const contentArea = document.getElementById('contentArea');
+        const topNavbar = document.querySelector('.top-navbar');
+        const pageFooter = document.getElementById('pageFooter');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+        const htmlElement = document.documentElement;
+
+        function setTheme(theme) {
+            htmlElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            if (theme === 'dark') {
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            } else {
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            }
+        }
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('collapsed');
+                contentArea.classList.toggle('collapsed');
+                topNavbar.classList.toggle('collapsed');
+                pageFooter.classList.toggle('collapsed');
+            });
+        }
+        
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = htmlElement.getAttribute('data-theme');
+                setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+            });
+        }
+
+        // Load saved theme from localStorage or default to light
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+
+            // Active link highlighting
+            const sidebarElement = document.getElementById('sidebar');
+            if (!sidebarElement) return;
+            let currentPath = window.location.pathname;
+            if (currentPath !== '/' && currentPath.endsWith('/')) {
+                currentPath = currentPath.slice(0, -1);
+            }
+            if (!currentPath.startsWith('/')) {
+                currentPath = '/' + currentPath;
+            }
+            if (currentPath === '') {
+                currentPath = '/';
+            }
+            const navLinks = sidebarElement.querySelectorAll(".nav-link");
+            navLinks.forEach(link => {
+                link.classList.remove("active"); // Ensure all are inactive first
+                let linkHref = link.getAttribute("href");
+                if (!linkHref) return;
+                if (linkHref !== '/' && linkHref.endsWith('/')) {
+                    linkHref = linkHref.slice(0, -1);
+                }
+                if (!linkHref.startsWith('/')) {
+                    linkHref = '/' + linkHref;
+                }
+                 if (linkHref === '') {
+                    linkHref = '/';
+                }
+                if (linkHref === currentPath) {
+                    link.classList.add("active");
+                }
+            });
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+

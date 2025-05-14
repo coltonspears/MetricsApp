@@ -17,6 +17,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.5" />
+    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.1.0-preview.13" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.37" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>

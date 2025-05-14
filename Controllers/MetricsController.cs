@@ -3,6 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using MetricsApp.Data;
 using MetricsApp.Models;
 using MetricsApp.Services;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System;
 
 namespace MetricsApp.Controllers
 {
@@ -14,6 +18,8 @@ namespace MetricsApp.Controllers
         private readonly ICacheService _cacheService;
         private const string AllMetricsCacheKey = "all_metrics";
         private const string FilteredMetricsCacheKeyPrefix = "filtered_metrics_";
+        private const string MetricsSummaryCacheKey = "metrics_summary";
+        private const string MetricTypesOverviewCacheKey = "metric_types_overview";
 
         public MetricsController(MetricsDbContext context, ICacheService cacheService)
         {
@@ -34,11 +40,11 @@ namespace MetricsApp.Controllers
             _context.MetricItems.Add(metricItem);
             await _context.SaveChangesAsync();
 
-            // Invalidate cache for all metrics and any potentially related filtered results
-            await _cacheService.RemoveAsync(AllMetricsCacheKey); 
-            // More sophisticated cache invalidation for filtered results might be needed for production
-            // For now, we can assume a simple prefix based removal or rely on TTL for filtered results
-            // A more robust approach would involve tracking active filter keys or using tagged cache entries if supported.
+            // Invalidate relevant caches
+            await _cacheService.RemoveAsync(AllMetricsCacheKey);
+            await _cacheService.RemoveAsync(MetricsSummaryCacheKey); // Invalidate summary KPIs
+            await _cacheService.RemoveAsync(MetricTypesOverviewCacheKey); // Invalidate overview page data
+            // Consider more granular cache invalidation for filtered results if performance becomes an issue
 
             return CreatedAtAction(nameof(GetMetricItem), new { id = metricItem.Id }, metricItem);
         }
@@ -61,7 +67,10 @@ namespace MetricsApp.Controllers
 
             if (isFiltered)
             {
-                cacheKey = $"{FilteredMetricsCacheKeyPrefix}{serverName}_{environment}_{metricType}_{startDate:yyyyMMddHHmmss}_{endDate:yyyyMMddHHmmss}";
+                // Normalize date formats for consistent cache keys
+                string start = startDate.HasValue ? startDate.Value.ToUniversalTime().ToString("o") : "null";
+                string end = endDate.HasValue ? endDate.Value.ToUniversalTime().ToString("o") : "null";
+                cacheKey = $"{FilteredMetricsCacheKeyPrefix}{serverName}_{environment}_{metricType}_{start}_{end}";
             }
 
             var cachedMetrics = await _cacheService.GetAsync<List<MetricItem>>(cacheKey);
@@ -74,7 +83,7 @@ namespace MetricsApp.Controllers
 
             if (!string.IsNullOrEmpty(serverName))
             {
-                query = query.Where(m => m.ServerName == serverName);
+                query = query.Where(m => m.ServerName != null && m.ServerName.Contains(serverName));
             }
             if (!string.IsNullOrEmpty(environment))
             {
@@ -82,7 +91,7 @@ namespace MetricsApp.Controllers
             }
             if (!string.IsNullOrEmpty(metricType))
             {
-                query = query.Where(m => m.MetricType == metricType);
+                query = query.Where(m => m.MetricType != null && m.MetricType.Contains(metricType));
             }
             if (startDate.HasValue)
             {
@@ -93,27 +102,114 @@ namespace MetricsApp.Controllers
                 query = query.Where(m => m.Timestamp <= endDate.Value.ToUniversalTime());
             }
 
-            var metrics = await query.OrderByDescending(m => m.Timestamp).ToListAsync();
+            var metrics = await query.OrderByDescending(m => m.Timestamp).Take(1000).ToListAsync(); // Limit results for performance
             
-            // Cache the result with a sliding expiration (e.g., 5 minutes)
             await _cacheService.SetAsync(cacheKey, metrics, TimeSpan.FromMinutes(5));
 
             return Ok(metrics);
         }
 
         // GET: api/Metrics/5
-        // This is a helper for the POST CreatedAtAction, not typically used directly by the frontend for general metrics display
         [HttpGet("{id}")]
         public async Task<ActionResult<MetricItem>> GetMetricItem(int id)
         {
             var metricItem = await _context.MetricItems.FindAsync(id);
-
             if (metricItem == null)
             {
                 return NotFound();
             }
-
             return metricItem;
+        }
+
+        // GET: api/Metrics/summary
+        [HttpGet("summary")]
+        public async Task<ActionResult<object>> GetMetricsSummary()
+        {
+            var cachedSummary = await _cacheService.GetAsync<object>(MetricsSummaryCacheKey);
+            if (cachedSummary != null)
+            {
+                return Ok(cachedSummary);
+            }
+
+            var totalMetrics = await _context.MetricItems.CountAsync();
+            var uniqueServers = await _context.MetricItems.Select(m => m.ServerName).Distinct().CountAsync();
+            var uniqueMetricTypes = await _context.MetricItems.Select(m => m.MetricType).Distinct().CountAsync();
+            var lastMetricTime = await _context.MetricItems.OrderByDescending(m => m.Timestamp).Select(m => m.Timestamp).FirstOrDefaultAsync();
+
+            var summary = new
+            {
+                TotalMetrics = totalMetrics,
+                UniqueServers = uniqueServers,
+                UniqueMetricTypes = uniqueMetricTypes,
+                LastMetricTime = lastMetricTime == DateTime.MinValue ? (DateTime?)null : lastMetricTime
+            };
+
+            await _cacheService.SetAsync(MetricsSummaryCacheKey, summary, TimeSpan.FromMinutes(1)); 
+            return Ok(summary);
+        }
+
+        // GET: api/Metrics/overview
+        [HttpGet("overview")]
+        public async Task<ActionResult<IEnumerable<object>>> GetMetricTypesOverview()
+        {
+            var cachedOverview = await _cacheService.GetAsync<List<object>>(MetricTypesOverviewCacheKey);
+            if (cachedOverview != null)
+            {
+                return Ok(cachedOverview);
+            }
+
+            var overview = await _context.MetricItems
+                .GroupBy(m => m.MetricType)
+                .Select(g => new
+                {
+                    MetricType = g.Key,
+                    Quantity = g.Count(),
+                    LastUpdateTime = g.Max(m => m.Timestamp)
+                })
+                .OrderBy(o => o.MetricType)
+                .ToListAsync<object>();
+            
+            await _cacheService.SetAsync(MetricTypesOverviewCacheKey, overview, TimeSpan.FromMinutes(5));
+            return Ok(overview);
+        }
+
+        // GET: api/Metrics/distribution/environment
+        [HttpGet("distribution/environment")]
+        public async Task<ActionResult<IEnumerable<object>>> GetMetricsByEnvironment()
+        {
+            // This could be cached similarly if needed
+            var distribution = await _context.MetricItems
+                .GroupBy(m => m.Environment)
+                .Select(g => new { Name = g.Key ?? "Unknown", Count = g.Count() })
+                .ToListAsync<object>();
+            return Ok(distribution);
+        }
+
+        // GET: api/Metrics/distribution/type
+        [HttpGet("distribution/type")]
+        public async Task<ActionResult<IEnumerable<object>>> GetMetricsCountByType()
+        {
+            var distribution = await _context.MetricItems
+                .GroupBy(m => m.MetricType)
+                .Select(g => new { Name = g.Key ?? "Unknown", Count = g.Count() })
+                .OrderByDescending(g => g.Count)
+                .Take(10) // Top 10 for chart readability
+                .ToListAsync<object>();
+            return Ok(distribution);
+        }
+
+        // GET: api/Metrics/distribution/server
+        [HttpGet("distribution/server")]
+        public async Task<ActionResult<IEnumerable<object>>> GetMetricsCountByServer()
+        {
+            var distribution = await _context.MetricItems
+                .GroupBy(m => m.ServerName)
+                .Select(g => new { Name = g.Key ?? "Unknown", Count = g.Count() })
+                .OrderByDescending(g => g.Count)
+                .Take(10) // Top 10 for chart readability
+                .ToListAsync<object>();
+            return Ok(distribution);
         }
     }
 }
+

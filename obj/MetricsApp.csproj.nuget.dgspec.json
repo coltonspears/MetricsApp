@@ -73,6 +73,18 @@
               "target": "Package",
               "version": "[9.0.5, )"
             },
+            "Microsoft.Extensions.DependencyInjection": {
+              "target": "Package",
+              "version": "[9.0.5, )"
+            },
+            "Microsoft.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[9.0.5, )"
+            },
+            "ModelContextProtocol.AspNetCore": {
+              "target": "Package",
+              "version": "[0.1.0-preview.13, )"
+            },
             "StackExchange.Redis": {
               "target": "Package",
               "version": "[2.8.37, )"

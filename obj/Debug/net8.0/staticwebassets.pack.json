@@ -1,8 +1,16 @@
 {
   "Files": [
     {
+      "Id": "C:\\Projects\\repos\\MetricsApp\\wwwroot\\css\\site.css",
+      "PackagePath": "staticwebassets\\css\\site.css"
+    },
+    {
       "Id": "C:\\Projects\\repos\\MetricsApp\\wwwroot\\js\\metrics.js",
       "PackagePath": "staticwebassets\\js\\metrics.js"
+    },
+    {
+      "Id": "C:\\Projects\\repos\\MetricsApp\\wwwroot\\js\\metricsOverview.js",
+      "PackagePath": "staticwebassets\\js\\metricsOverview.js"
     },
     {
       "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.MetricsApp.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",

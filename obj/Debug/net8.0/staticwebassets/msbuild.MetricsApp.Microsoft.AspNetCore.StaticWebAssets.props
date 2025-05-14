@@ -1,5 +1,23 @@
 ﻿<Project>
   <ItemGroup>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\css\site.css'))">
+      <SourceType>Package</SourceType>
+      <SourceId>MetricsApp</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/MetricsApp</BasePath>
+      <RelativePath>css/site.css</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>xbxibu9emi</Fingerprint>
+      <Integrity>PawzMp5+bdEAiQWYqcD7E2gpjjNYm1D/LYgRwNSidYc=</Integrity>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\css\site.css'))</OriginalItemSpec>
+    </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\metrics.js'))">
       <SourceType>Package</SourceType>
       <SourceId>MetricsApp</SourceId>
@@ -12,11 +30,29 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>29njga6s6v</Fingerprint>
-      <Integrity>iivCEUaiS6PrzGHqvAPbLynCktKFm8ryicSuovG0+5E=</Integrity>
+      <Fingerprint>2fhxy2lo9b</Fingerprint>
+      <Integrity>ki+E/La/kzjWg81/TqrxU6NfXNUQqJqywr9Rxrba9Ao=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\metrics.js'))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\metricsOverview.js'))">
+      <SourceType>Package</SourceType>
+      <SourceId>MetricsApp</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/MetricsApp</BasePath>
+      <RelativePath>js/metricsOverview.js</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>3rm8rar6py</Fingerprint>
+      <Integrity>L7ixo5tPpDdTr98gsBP63iHWFzPHgL8WZzMOd9TWceM=</Integrity>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\metricsOverview.js'))</OriginalItemSpec>
     </StaticWebAsset>
   </ItemGroup>
 </Project>

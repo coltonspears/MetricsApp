@@ -70,7 +70,6 @@ This application provides a professional, modern dashboard to display metrics fr
     -   (Potentially `js/settings.js` in the future for the settings page).
 -   `metrics.db`: The SQLite database file (created in project root on first run/migration).
 -   `README.md`: This file.
--   `dashboard_design_principles.md`: Reference document for dashboard design choices.
 
 ## Setup and Running the Application
 

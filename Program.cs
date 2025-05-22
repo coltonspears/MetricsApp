@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using MetricsApp.Data;
 using MetricsApp.Models;
-using MetricsApp.Services; // Added for CacheService
-using StackExchange.Redis; // Added for Redis
+using MetricsApp.Services; 
+using StackExchange.Redis; 
 
 var builder = WebApplication.CreateBuilder(args);
 

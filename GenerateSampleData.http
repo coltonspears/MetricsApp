@@ -1,0 +1,241 @@
+﻿@MetricsApp_HostAddress = http://localhost:5190
+
+### Simulate MSMQ Message Count for PROD-01
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "PROD-01",
+  "environment": "Production",
+  "metricType": "MSMQ Message Count",
+  "metricValue": "{{$randomInt}}",
+  "source": "P01234567\\private$\\SampleQueue"
+}
+
+### Simulate CPU Usage for PROD-01
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "PROD-01",
+  "environment": "Production",
+  "metricType": "CPU Usage",
+  "metricValue": "{{$randomInt 10 90}}%",
+  "source": "PerformanceCounter"
+}
+
+### Simulate Memory Usage for PROD-01
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "PROD-01",
+  "environment": "Production",
+  "metricType": "Memory Usage",
+  "metricValue": "{{$randomInt 40 85}}%",
+  "source": "PerformanceCounter"
+}
+
+### Simulate MSMQ Message Count for PROD-02
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "PROD-02",
+  "environment": "Production",
+  "metricType": "MSMQ Message Count",
+  "metricValue": "{{$randomInt 5000 15000}}",
+  "source": "P02345678\\private$\\AnotherQueue"
+}
+
+### Simulate CPU Usage for PROD-02
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "PROD-02",
+  "environment": "Production",
+  "metricType": "CPU Usage",
+  "metricValue": "{{$randomInt 15 70}}%",
+  "source": "PerformanceCounter"
+}
+
+### Simulate TransactionCount for QA-API-01
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "QA-API-01",
+  "environment": "QA",
+  "metricType": "TransactionCount",
+  "metricValue": "{{$randomInt 100 1500}}",
+  "source": "APILogger"
+}
+
+### Simulate ErrorRate for QA-API-01
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "QA-API-01",
+  "environment": "QA",
+  "metricType": "ErrorRate",
+  "metricValue": "{{$randomInt 0 5}}%",
+  "source": "APILogger"
+}
+
+### Simulate Disk Space for PROD-DB-01
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "PROD-DB-01",
+  "environment": "Production",
+  "metricType": "Disk Space Free",
+  "metricValue": "{{$randomInt 20 500}}GB",
+  "source": "SystemMonitor"
+}
+
+### Simulate MSMQ Message Count again for PROD-01 (overlap)
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "PROD-01",
+  "environment": "Production",
+  "metricType": "MSMQ Message Count",
+  "metricValue": "{{$randomInt 11000 18000}}",
+  "source": "P01234567\\private$\\SampleQueue"
+}
+
+### Simulate CPU Usage for QA-WEB-01
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "QA-WEB-01",
+  "environment": "QA",
+  "metricType": "CPU Usage",
+  "metricValue": "{{$randomInt 5 60}}%",
+  "source": "PerformanceCounter"
+}
+
+### Simulate Memory Usage for QA-WEB-01
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "QA-WEB-01",
+  "environment": "QA",
+  "metricType": "Memory Usage",
+  "metricValue": "{{$randomInt 30 70}}%",
+  "source": "PerformanceCounter"
+}
+
+### Simulate LoginAttempts for PROD-AUTH-01
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "PROD-AUTH-01",
+  "environment": "Production",
+  "metricType": "LoginAttempts",
+  "metricValue": "{{$randomInt 50 500}}",
+  "source": "AuthService"
+}
+
+### Simulate FailedLoginAttempts for PROD-AUTH-01
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "PROD-AUTH-01",
+  "environment": "Production",
+  "metricType": "FailedLoginAttempts",
+  "metricValue": "{{$randomInt 1 20}}",
+  "source": "AuthService"
+}
+
+### Simulate MSMQ Message Count for UAT-01
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "UAT-01",
+  "environment": "UAT",
+  "metricType": "MSMQ Message Count",
+  "metricValue": "{{$randomInt 100 2000}}",
+  "source": "U0123456\\private$\\UatQueue"
+}
+
+### Simulate CPU Usage for UAT-01 (overlap with PROD and QA)
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "UAT-01",
+  "environment": "UAT",
+  "metricType": "CPU Usage",
+  "metricValue": "{{$randomInt 20 75}}%",
+  "source": "PerformanceCounter"
+}
+
+### More MSMQ for PROD-02 (overlap)
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "PROD-02",
+  "environment": "Production",
+  "metricType": "MSMQ Message Count",
+  "metricValue": "{{$randomInt 6000 18000}}",
+  "source": "P02345678\\private$\\AnotherQueue"
+}
+
+### More TransactionCount for QA-API-01 (overlap)
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "QA-API-01",
+  "environment": "QA",
+  "metricType": "TransactionCount",
+  "metricValue": "{{$randomInt 200 2500}}",
+  "source": "APILogger"
+}
+
+###
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "PROD-01",
+  "environment": "Production",
+  "metricType": "DatabaseQueryTime",
+  "metricValue": "{{$randomInt 10 500}}ms",
+  "source": "DBMonitor"
+}
+
+###
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "PROD-02",
+  "environment": "Production",
+  "metricType": "DatabaseQueryTime",
+  "metricValue": "{{$randomInt 15 600}}ms",
+  "source": "DBMonitor"
+}
+
+###
+POST {{MetricsApp_HostAddress}}/api/Metrics
+Content-Type: application/json
+
+{
+  "serverName": "QA-API-01",
+  "environment": "QA",
+  "metricType": "APICallDuration",
+  "metricValue": "{{$randomInt 50 1500}}ms",
+  "source": "APIMetricsCollector"
+}

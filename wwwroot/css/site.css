@@ -1,524 +1,386 @@
-/* /wwwroot/css/site.css */
+/* /wwwroot/css/site.css - Adapted for Bulma */
 
 /* Global Resets & Base Styles */
 html {
-  font-size: 16px;
-  position: relative;
-  min-height: 100%;
+    font-size: 16px; 
+    position: relative;
+    min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px; /* Space for the footer */
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  line-height: 1.6;
-  transition: background-color 0.3s ease, color 0.3s ease; /* Smooth theme transition */
+    margin-bottom: 60px; 
+    transition: background-color 0.3s ease, color 0.3s ease;
+    background-color: var(--bulma-body-background-color);
+    color: var(--bulma-body-color);
 }
 
-/* CSS Variables for Theming */
+/* --- (Light Theme - Default) --- */
 :root {
-  /* Light Theme (Default) */
-  --primary-bg: #ffffff;
-  --secondary-bg: #f8f9fa;
-  --tertiary-bg: #e9ecef;
-  --primary-text: #212529;
-  --secondary-text: #495057;
-  --muted-text: #6c757d;
-  --accent-color: #007bff;
-  --accent-color-hover: #0056b3;
-  --border-color: #dee2e6;
-  --card-bg: #ffffff;
-  --card-border-color: var(--border-color);
-  --card-header-bg: #f8f9fa;
-  --link-color: var(--accent-color);
-  --link-hover-color: var(--accent-color-hover);
-  --sidebar-bg: #f0f2f5;
-  --sidebar-link-color: #333;
-  --sidebar-link-hover-bg: #d1d7e0;
-  --sidebar-link-active-color: var(--accent-color);
-  --sidebar-link-active-bg: #c5cdd8;
-  --sidebar-border-color: var(--border-color);
-  --top-navbar-bg: var(--primary-bg);
-  --top-navbar-border-color: var(--border-color);
-  --footer-bg: var(--primary-bg);
-  --footer-border-color: var(--border-color);
-  --footer-text-color: var(--muted-text);
-  --button-primary-bg: var(--accent-color);
-  --button-primary-text: #ffffff;
-  --button-primary-hover-bg: var(--accent-color-hover);
-  --input-bg: #fff;
-  --input-border-color: #ced4da;
-  --input-text-color: #495057;
-  --input-focus-border-color: #80bdff;
-  --box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-  --box-shadow-lg: 0 1rem 3rem rgba(0,0,0,.175);
+    --sidebar-bg: #f5f5f5; /* Bulma's $white-ter / var(--bulma-white-ter) equivalent */
+    --sidebar-link-color: #4a4a4a; /* Bulma's $grey-darker / var(--bulma-grey-darker) */
+    --sidebar-link-hover-bg: #e8e8e8;
+    --sidebar-link-active-color: var(--bulma-primary);
+    --sidebar-link-active-bg: var(--bulma-primary-light);
+    --sidebar-border-color: #dbdbdb; /* Bulma's $grey-lighter / var(--bulma-grey-lighter) */
+
+    --bulma-radius: var(--bulma-card-radius);
+    --bulma-radius-small: 2;
+    --bulma-radius-large: 7;
+
+    --top-navbar-bg: var(--sidebar-bg);
+    --top-navbar-border-color: var(--sidebar-border-color);
+
+    --content-area-bg: var(--bulma-background);
+
+    --footer-bg: var(--sidebar-bg);
+    --footer-border-color: var(--sidebar-border-color);
+    --footer-text-color: var(--bulma-text-light);
+
+    --custom-card-bg: var(--bulma-card-background-color);
+    --custom-card-header-bg: transparent; /* Bulma card headers are often transparent */
+    --custom-card-border-color: var(--bulma-card-shadow-color, hsla(0, 0%, 0%, 0.1)); /* Using shadow color for border idea*/
+
+    --kpi-card-value-color: var(--bulma-link); /* Or var(--bulma-primary) */
+
+    --box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
 
-[data-theme="dark"] {
-  --primary-bg: #121212;
-  --secondary-bg: #1e1e1e;
-  --tertiary-bg: #2a2a2a;
-  --primary-text: #e0e0e0;
-  --secondary-text: #b3b3b3;
-  --muted-text: #868e96;
-  --accent-color: #bb86fc; /* Material Design Dark Theme Purple */
-  --accent-color-hover: #a76bf4;
-  --border-color: #393939;
-  --card-bg: var(--secondary-bg);
-  --card-border-color: var(--border-color);
-  --card-header-bg: var(--tertiary-bg);
-  --link-color: var(--accent-color);
-  --link-hover-color: var(--accent-color-hover);
-  --sidebar-bg: #171717;
-  --sidebar-link-color: var(--primary-text);
-  --sidebar-link-hover-bg: #2f2f2f;
-  --sidebar-link-active-color: var(--accent-color);
-  --sidebar-link-active-bg: #3a3a3a;
-  --sidebar-border-color: var(--border-color);
-  --top-navbar-bg: var(--secondary-bg);
-  --top-navbar-border-color: var(--border-color);
-  --footer-bg: var(--secondary-bg);
-  --footer-border-color: var(--border-color);
-  --footer-text-color: var(--muted-text);
-  --button-primary-bg: var(--accent-color);
-  --button-primary-text: #121212; /* Dark text for light button */
-  --button-primary-hover-bg: var(--accent-color-hover);
-  --input-bg: #2a2a2a;
-  --input-border-color: #444;
-  --input-text-color: var(--primary-text);
-  --input-focus-border-color: var(--accent-color);
-  --box-shadow: 0 0.125rem 0.25rem rgba(255, 255, 255, 0.05);
-  --box-shadow-lg: 0 1rem 3rem rgba(255,255,255,.075);
+/* --- Dark Theme Overrides --- */
+html[data-theme="dark"] {
+    --bulma-body-background-color: #1f1f1f; /* Darker background */
+    --bulma-body-color: #f0f0f0; /* Lighter text */
+    --bulma-link: #48a2e8; /* Lighter blue for links */
+    --bulma-link-hover: #75bcf0;
+    --bulma-primary: hsl(200, 71%, 65%); /* Adjust primary for dark */
+    --bulma-primary-light: hsl(200, 71%, 55%);
+    --bulma-primary-dark: hsl(200, 71%, 75%);
+    --bulma-text: #e0e0e0;
+    --bulma-text-light: #b3b3b3;
+    --bulma-text-strong: #ffffff;
+    --bulma-border: #444444;
+    --bulma-border-hover: #666666;
+    --bulma-background: #2a2a2a; /* Background for content area */
+
+    /* Bulma component variable overrides for dark theme */
+    --bulma-card-background-color: #2c2c2c;
+    --bulma-card-header-color: var(--bulma-text-strong);
+    --bulma-card-shadow-color: hsla(0, 0%, 0%, 0.3);
+    --bulma-table-background-color: #2c2c2c;
+    --bulma-table-color: var(--bulma-text);
+    --bulma-table-row-hover-background-color: #333333;
+    --bulma-table-striped-background-color: #303030;
+    --bulma-input-background-color: #383838;
+    --bulma-input-color: var(--bulma-text);
+    --bulma-input-border-color: #555555;
+    --bulma-input-placeholder-color: #888888;
+    --bulma-button-background-color: #444;
+    --bulma-button-color: var(--bulma-text-strong);
+    --bulma-button-border-color: #555;
+    --bulma-button-static-color: var(--bulma-text);
+    --bulma-primary-invert: var(--sidebar-bg); /* Text color on primary buttons */
+
+
+    /* Custom variables for dark theme */
+    --sidebar-bg: #252525;
+    --sidebar-link-color: var(--bulma-text);
+    --sidebar-link-hover-bg: #333333;
+    --sidebar-link-active-color: var(--bulma-primary);
+    --sidebar-link-active-bg: #3a3a3a;
+    --sidebar-border-color: var(--bulma-border);
+
+    --top-navbar-bg: #252525;
+    --top-navbar-border-color: var(--bulma-border);
+
+    --content-area-bg: var(--bulma-background);
+
+    --footer-bg: #252525;
+    --footer-border-color: var(--bulma-border);
+    --footer-text-color: var(--bulma-text-light);
+
+    --custom-card-bg: var(--bulma-card-background-color);
+    --custom-card-header-bg: #2c2c2c; /* Slightly darker card headers */
+    --custom-card-border-color: var(--bulma-border);
+
+    --kpi-card-value-color: var(--bulma-link);
+
+    --box-shadow: 0 0.125rem 0.25rem rgba(255, 255, 255, 0.05);
 }
 
-/* Apply base theme colors to body */
-body {
-  background-color: var(--primary-bg);
-  color: var(--primary-text);
-}
 
-/* Layout specific styles from _Layout.cshtml (refactored to use variables) */
+/* Layout specific styles */
 .main-wrapper {
-  display: flex;
-  flex-grow: 1;
+    display: flex;
+    flex-grow: 1;
+    /* If using Bulma columns for main layout, this might change */
 }
 
 .sidebar {
-  width: 250px;
-  min-height: 100vh;
-  background-color: var(--sidebar-bg);
-  padding-top: 1rem;
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  z-index: 1000;
-  transition: width 0.3s ease; /* Smoother collapse */
-  border-right: 1px solid var(--sidebar-border-color);
-  box-shadow: var(--box-shadow);
+    width: 250px;
+    min-height: 100vh; /* Fallback if not using 'vh-100' or similar Bulma helper */
+    background-color: var(--sidebar-bg);
+    padding-top: 1rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1000;
+    transition: width 0.3s ease;
+    border-right: 1px solid var(--sidebar-border-color);
+    box-shadow: var(--box-shadow);
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar .navbar-brand {
-  padding-left: 1rem;
-  padding-right: 1rem;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center; /* Center brand text when not collapsed */
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold; /* Bulma uses .is-size-X for sizing */
+    font-size: 1.25rem; /* Example size */
+    color: var(--sidebar-link-color);
 }
 
-.sidebar .navbar-brand span {
-  color: var(--primary-text);
-  font-weight: 600;
-  font-size: 1.25rem;
+/* Adapting .nav-link for Bulma's menu-list structure */
+.sidebar .menu-list a { /* Bulma uses <aside class="menu"> <ul class="menu-list"> <li><a>...</a></li> */
+    color: var(--sidebar-link-color);
+    border-radius: 0; 
+    padding: 0.85rem 1.25rem;
+    border-left: 3px solid transparent;
+    transition: background-color 0.2s ease, color 0.2s ease, border-left-color 0.2s ease;
+}
+.sidebar .menu-list a:hover {
+    background-color: var(--sidebar-link-hover-bg);
+    color: var(--sidebar-link-active-color); /* Using active color for hover distinction */
+    border-left-color: var(--sidebar-link-active-color);
+}
+.sidebar .menu-list a.is-active { /* Bulma's active class for menu links */
+    background-color: var(--sidebar-link-active-bg);
+    color: var(--sidebar-link-active-color);
+    font-weight: bold;
+    border-left-color: var(--sidebar-link-active-color);
+}
+.sidebar .menu-list a i {
+    width: 20px;
+    text-align: center;
+    margin-right: 0.5rem;
 }
 
-.sidebar .nav-link {
-  color: var(--sidebar-link-color);
-  padding: 0.85rem 1.25rem; /* Increased padding for better touch */
-  border-left: 3px solid transparent;
-  transition: background-color 0.2s ease, color 0.2s ease, border-left-color 0.2s ease;
-  font-size: 0.95rem;
-}
-.sidebar .nav-link i {
-  width: 20px; /* Ensure icons align */
-  text-align: center;
-}
-
-.sidebar .nav-link:hover {
-  background-color: var(--sidebar-link-hover-bg);
-  color: var(--accent-color);
-  border-left-color: var(--accent-color);
-}
-
-.sidebar .nav-link.active {
-  color: var(--sidebar-link-active-color);
-  background-color: var(--sidebar-link-active-bg);
-  font-weight: 500;
-  border-left-color: var(--sidebar-link-active-color);
-}
 
 .content-area {
-  margin-left: 250px;
-  padding: 2rem; /* Increased padding */
-  flex-grow: 1;
-  width: calc(100% - 250px);
-  background-color: var(--secondary-bg);
-  transition: margin-left 0.3s ease, width 0.3s ease;
+    margin-left: 250px;
+    padding: 1.5rem; /* Bulma uses 'rem' extensively. 'p-5' or 'p-6' could be Bulma classes too */
+    flex-grow: 1;
+    width: calc(100% - 250px);
+    background-color: var(--content-area-bg);
+    transition: margin-left 0.3s ease, width 0.3s ease;
+    overflow-y: auto; /* Allow content to scroll if it overflows */
 }
+
 
 .top-navbar {
-  margin-left: 250px;
-  width: calc(100% - 250px);
-  z-index: 999;
-  transition: margin-left 0.3s ease, width 0.3s ease;
-  position: sticky; /* Make top-navbar sticky */
-  top: 0;
-}
-
-.top-navbar nav {
-  background-color: var(--top-navbar-bg) !important; /* Important to override Bootstrap */
-  border-bottom: 1px solid var(--top-navbar-border-color) !important;
-  box-shadow: var(--box-shadow);
-  min-height: 60px; /* Give it some height */
-  display: flex;
-  align-items: center;
+    margin-left: 250px;
+    width: calc(100% - 250px);
+    z-index: 999; /* Below sidebar but above content for stickiness */
+    transition: margin-left 0.3s ease, width 0.3s ease;
+    position: sticky;
+    top: 0;
+    background-color: var(--top-navbar-bg);
+    border-bottom: 1px solid var(--top-navbar-border-color);
+    box-shadow: var(--box-shadow);
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 0 1rem; 
 }
 
 .footer {
-  margin-left: 250px;
-  width: calc(100% - 250px);
-  background-color: var(--footer-bg);
-  border-top: 1px solid var(--footer-border-color) !important;
-  color: var(--footer-text-color);
-  padding: 1rem 2rem; /* Consistent padding */
-  transition: margin-left 0.3s ease, width 0.3s ease;
-  font-size: 0.875rem;
+    margin-left: 250px;
+    width: calc(100% - 250px);
+    background-color: var(--footer-bg);
+    border-top: 1px solid var(--footer-border-color);
+    color: var(--footer-text-color);
+    padding: 1rem 1.5rem;
+    transition: margin-left 0.3s ease, width 0.3s ease;
+    font-size: 0.875rem; 
+    text-align: center;
 }
-
 .footer a {
-  color: var(--link-color);
-  text-decoration: none;
+    color: var(--bulma-link);
 }
 .footer a:hover {
-  color: var(--link-hover-color);
-  text-decoration: underline;
+    color: var(--bulma-link-hover);
 }
 
 /* Sidebar collapsed styles */
 .sidebar.collapsed {
-  width: 60px;
+    width: 60px;
 }
-
-.sidebar.collapsed .nav-link span,
-.sidebar.collapsed .navbar-brand span {
-  display: none;
+.sidebar.collapsed .navbar-brand span,
+.sidebar.collapsed .menu-label, 
+.sidebar.collapsed .menu-list a span { 
+    display: none;
 }
-
-.sidebar.collapsed .nav-link i {
-  margin-right: 0;
+.sidebar.collapsed .menu-list a i {
+    margin-right: 0;
 }
-.sidebar.collapsed .nav-link {
+.sidebar.collapsed .menu-list a {
     padding: 0.85rem 0;
     text-align: center;
 }
-
 .sidebar.collapsed .navbar-brand {
     padding-left: 0;
     padding-right: 0;
 }
-/* Add App Icon when collapsed - replace with your actual icon if you have one */
 .sidebar.collapsed .navbar-brand::before {
-    content: "MA"; /* MetricsApp Initials or a FontAwesome Icon */
+    content: "MA";
     font-size: 1.5rem;
-    color: var(--accent-color);
+    color: var(--bulma-primary);
     display: block;
     width: 100%;
     text-align: center;
 }
 
-
 .content-area.collapsed,
 .top-navbar.collapsed,
 .footer.collapsed {
-  margin-left: 60px;
-  width: calc(100% - 60px);
+    margin-left: 60px;
+    width: calc(100% - 60px);
 }
+
 
 /* Toggle Buttons */
 #sidebarToggle, #themeToggle {
-  background: none;
-  border: none;
-  color: var(--accent-color);
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 50%;
-  transition: background-color 0.2s ease, color 0.2s ease;
+    /* Using Bulma button classes in HTML is preferred: <button class="button is-primary" id="themeToggle"> */
+    /* If not using Bulma button classes, style them: */
+    background: none;
+    border: 1px solid var(--bulma-border);
+    color: var(--bulma-text);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.5rem 0.75rem; 
+    border-radius: var(--bulma-radius); 
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    margin-left: 0.5rem;
 }
 #sidebarToggle:hover, #themeToggle:hover {
-    background-color: var(--tertiary-bg);
+    background-color: var(--bulma-background);
+    border-color: var(--bulma-border-hover);
+    color: var(--bulma-link-hover);
 }
-
 #themeToggle i {
-    font-size: 1.2rem; /* Slightly smaller icon for theme toggle */
+    font-size: 1rem; 
 }
 
 
-/* Bootstrap Component Theming */
+/* Component Theming */
 
-/* General Link Styling */
-a {
-    color: var(--link-color);
-    text-decoration: none; /* Optional: remove underline globally */
-}
-a:hover {
-    color: var(--link-hover-color);
-    /* text-decoration: underline; Optional */
-}
-
-/* Headings */
-h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
-    color: var(--primary-text);
-    font-weight: 500; /* Slightly bolder headings */
-}
-
-/* Cards */
+/* Cards (Use <div class="card"> ... </div> in HTML) */
 .card {
-  background-color: var(--card-bg);
-  border: 1px solid var(--card-border-color);
-  box-shadow: var(--box-shadow);
-  border-radius: 0.375rem; /* Bootstrap's default is 0.25rem, slightly more rounded */
+    background-color: var(--custom-card-bg);
 }
-.card-header {
-  background-color: var(--card-header-bg);
-  border-bottom: 1px solid var(--card-border-color);
-  color: var(--primary-text);
-  font-weight: 500;
-}
-.card-body {
-  color: var(--secondary-text);
-}
-.card-footer {
-  background-color: var(--card-header-bg);
-  border-top: 1px solid var(--card-border-color);
+.card .card-header-title { /* For Bulma card headers */
+    font-weight: bold;
+    /* background-color: var(--custom-card-header-bg); */ 
 }
 
-/* Tables */
-.table {
-  background-color: var(--card-bg); /* Use card-bg for table background */
-  color: var(--primary-text);
-  border: 1px solid var(--border-color);
-}
-.table th, .table td {
-  border-color: var(--border-color);
-  vertical-align: middle;
-}
-.table thead th {
-  background-color: var(--tertiary-bg);
-  color: var(--primary-text);
-  border-bottom-width: 2px; /* Thicker bottom border for header */
-}
-.table-striped tbody tr:nth-of-type(odd) {
-    background-color: rgba(0,0,0,0.025); /* Subtle striping */
-}
-[data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
-    background-color: rgba(255,255,255,0.035); /* Dark theme subtle striping */
-}
-.table-hover tbody tr:hover {
-  background-color: var(--tertiary-bg);
-  color: var(--primary-text);
+/* Tables (Use <table class="table is-striped is-hoverable is-fullwidth"> ... </table>) */
+
+/* Forms (Use Bulma's form classes: .label, .input, .select, .button, .field, .control) */
+.filters-container .field { /* Example for filter grouping */
+    margin-bottom: 0.75rem; /* Default Bulma field margin */
 }
 
-/* Buttons */
-.btn {
-    border-radius: 0.3rem; /* Slightly more rounded buttons */
-    font-weight: 500;
-    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-}
-.btn-primary {
-  background-color: var(--button-primary-bg);
-  border-color: var(--button-primary-bg);
-  color: var(--button-primary-text);
-}
-.btn-primary:hover, .btn-primary:focus {
-  background-color: var(--button-primary-hover-bg);
-  border-color: var(--button-primary-hover-bg);
-  color: var(--button-primary-text);
-  box-shadow: 0 0 0 0.2rem rgba(var(--accent-color), 0.5);
-}
-.btn-secondary {
-    background-color: var(--muted-text);
-    border-color: var(--muted-text);
-    color: var(--primary-bg); /* Text color that contrasts with muted-text */
-}
-.btn-secondary:hover {
-    background-color: var(--secondary-text);
-    border-color: var(--secondary-text);
-    color: var(--primary-bg);
-}
-/* Add more btn styles (btn-success, btn-danger, etc.) if needed, using CSS variables */
-.btn-outline-primary {
-    color: var(--accent-color);
-    border-color: var(--accent-color);
-}
-.btn-outline-primary:hover {
-    background-color: var(--accent-color);
-    color: var(--button-primary-text);
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem; /* Bulma uses 'rem' for spacing */
+    margin-bottom: 1.5rem;
 }
 
-
-/* Forms */
-.form-control, .form-select {
-  background-color: var(--input-bg);
-  border: 1px solid var(--input-border-color);
-  color: var(--input-text-color);
-  border-radius: 0.3rem;
+/* KPI cards */
+.metric-card { /* Assumes <div class="card metric-card"> */
 }
-.form-control:focus, .form-select:focus {
-  border-color: var(--input-focus-border-color);
-  background-color: var(--input-bg); /* Ensure bg doesn't change on focus */
-  color: var(--input-text-color); /* Ensure text color doesn't change on focus */
-  box-shadow: 0 0 0 0.2rem rgba(var(--accent-color), 0.25);
-}
-.form-control::placeholder {
-    color: var(--muted-text);
-    opacity: 0.7;
-}
-label {
-    color: var(--secondary-text);
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-}
-
-/* Modals */
-.modal-content {
-  background-color: var(--card-bg);
-  border: 1px solid var(--border-color);
-  color: var(--primary-text);
-  border-radius: 0.5rem; /* More prominent radius for modals */
-}
-.modal-header {
-  background-color: var(--tertiary-bg);
-  border-bottom: 1px solid var(--border-color);
-  color: var(--primary-text);
-}
-.modal-header .btn-close {
-    filter: var(--primary-text) == #e0e0e0 ? invert(1) brightness(2) : none; /* Make close button visible on dark bg */
-}
-.modal-footer {
-  border-top: 1px solid var(--border-color);
-  background-color: var(--tertiary-bg);
-}
-
-/* List Groups */
-.list-group-item {
-    background-color: var(--card-bg);
-    border-color: var(--border-color);
-    color: var(--primary-text);
-}
-.list-group-item.active {
-    background-color: var(--accent-color);
-    border-color: var(--accent-color);
-    color: var(--button-primary-text);
-}
-a.list-group-item:hover, button.list-group-item:hover {
-    background-color: var(--tertiary-bg);
-    color: var(--accent-color);
-}
-
-/* Navbar specific overrides (if any top navbar items exist beyond toggles) */
-.navbar-light .navbar-nav .nav-link { /* Bootstrap class for light navbar text */
-    color: var(--primary-text);
-}
-.navbar-light .navbar-nav .nav-link:hover, .navbar-light .navbar-nav .nav-link:focus {
-    color: var(--accent-color);
-}
-.navbar-brand { /* Ensure brand in top bar also adapts if used there */
-    color: var(--primary-text) !important;
-}
-
-/* Utility classes */
-.text-primary { color: var(--accent-color) !important; }
-.bg-primary { background-color: var(--accent-color) !important; }
-.border-primary { border-color: var(--accent-color) !important; }
-/* Add more as needed */
-
-.text-muted {
-    color: var(--muted-text) !important;
-}
-
-/* Responsive adjustments (Bootstrap handles most, but you can add specific tweaks) */
-@media (max-width: 768px) {
-  /* Example: Adjust sidebar for smaller screens if needed, though Bootstrap handles basic collapse */
-  /* .sidebar { width: 100%; height: auto; position: relative; border-right: none; border-bottom: 1px solid var(--sidebar-border-color); } */
-  /* .content-area, .top-navbar, .footer { margin-left: 0; width: 100%; } */
-}
-
-/* Specific application styles */
-/* Placeholder for any app-specific styles not covered by Bootstrap theming */
-/* For example, styles for your metric divs if they are custom elements */
-.metric-card { /* Assuming your metric divs might have a class like this */
-    background-color: var(--card-bg);
-    border: 1px solid var(--card-border-color);
-    color: var(--primary-text);
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border-radius: 0.375rem;
-    box-shadow: var(--box-shadow);
-}
-.metric-card-title {
+.metric-card .card-content .title { /* Bulma's .title class for card titles */
+    margin-bottom: 0.5rem !important; /* Override Bulma's larger title margin if needed */
     font-size: 1.1rem;
-    font-weight: 500;
-    color: var(--primary-text);
-    margin-bottom: 0.5rem;
 }
+.metric-card .card-content .subtitle.is-1, /* Using a large subtitle for value */
 .metric-card-value {
     font-size: 2rem;
-    font-weight: 600;
-    color: var(--accent-color);
+    font-weight: bold;
+    color: var(--kpi-card-value-color);
+    line-height: 1.1;
+    margin-bottom: 0.25rem;
 }
+.metric-card .card-content .content p, /* For description */
 .metric-card-description {
-    font-size: 0.875rem;
-    color: var(--secondary-text);
+    font-size: 0.875rem; 
+    color: var(--bulma-text-light);
 }
 
-/* Make sure Bootstrap's default white/light backgrounds and text colors are overridden */
-[data-bs-theme="light"] body, /* If you were using Bootstrap's data-bs-theme */
-[data-bs-theme="dark"] body {
-    background-color: var(--primary-bg) !important;
-    color: var(--primary-text) !important;
+.chart-container {
+    /* Could be a Bulma 'box' or 'card' */
+    padding: 1.5rem;
+    background-color: var(--custom-card-bg); /* Uses card background */
+    border-radius: var(--bulma-radius-large); /* Or var(--bulma-card-radius) */
+    margin-bottom: 1.5rem;
+    box-shadow: var(var(--box-shadow)); /* Use Bulma's card shadow or fallback */
+}
+.chart-container .title { /* For chart titles */
+    margin-top: 0;
+    margin-bottom: 1rem;
 }
 
-/* Ensure container backgrounds are transparent to let body background through */
-.container, .container-fluid {
-    background-color: transparent;
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) { /* Bulma's mobile breakpoint */
+    .sidebar {
+        width: 0;
+        padding-top: 0;
+        overflow: hidden;
+        border-right: none; /* Hide border when fully collapsed */
+    }
+    .sidebar.is-active-mobile { 
+        width: 250px;
+        border-right: 1px solid var(--sidebar-border-color);
+    }
+
+    .content-area.collapsed-sidebar, /* Add class when sidebar is collapsed */
+    .top-navbar.collapsed-sidebar,
+    .footer.collapsed-sidebar {
+        margin-left: 60px; /* Width of collapsed sidebar */
+        width: calc(100% - 60px);
+    }
+
+    .content-area,
+    .top-navbar,
+    .footer {
+        margin-left: 0; /* Full width when sidebar is hidden on mobile (not .is-active-mobile) */
+        width: 100%;
+    }
+
+    .top-navbar .navbar-burger { /* Bulma's burger icon for mobile nav toggle if you use it */
+        display: block; 
+    }
+    .sidebarToggle.is-hidden-desktop { 
+        display: block !important;
+    }
 }
 
-/* Improve focus states for accessibility */
-*:focus-visible {
-    outline: 2px solid var(--accent-color) !important;
-    outline-offset: 2px;
-    box-shadow: 0 0 0 0.2rem rgba(var(--accent-color), 0.25) !important;
-}
-/* Remove default outline if focus-visible is supported and used */
-*:focus:not(:focus-visible) {
-  outline: none;
-  box-shadow: none;
-}
-
-/* Custom Scrollbars (Optional - Webkit only but can be a nice touch) */
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 ::-webkit-scrollbar-track {
-    background: var(--secondary-bg);
+    background: var(--bulma-background);
 }
 ::-webkit-scrollbar-thumb {
-    background: var(--muted-text);
-    border-radius: 4px;
+    background: var(--bulma-text-light);
+    border-radius: var(--bulma-radius-small);
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--secondary-text);
+    background: var(--bulma-text);
 }
-

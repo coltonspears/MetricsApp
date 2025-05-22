@@ -4,136 +4,171 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - MetricsApp</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-    <div class="sidebar" id="sidebar">
-        <div class="d-flex justify-content-between align-items-center px-3 mb-3">
-             <a class="navbar-brand" asp-area="" asp-page="/Index"><span>MetricsApp</span></a>
-        </div>
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link" asp-area="" asp-page="/Index"><i class="fas fa-tachometer-alt me-2"></i><span>Dashboard</span></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" asp-area="" asp-page="/MetricsOverview"><i class="fas fa-chart-bar me-2"></i><span>Metrics Overview</span></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" asp-area="" asp-page="/PerformanceCounters"><i class="fas fa-cogs me-2"></i><span>Perf Counters</span></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" asp-area="" asp-page="/Settings"><i class="fas fa-cog me-2"></i><span>Settings</span></a>
-            </li>
-        </ul>
-    </div>
+    <div class="main-wrapper">
+        <aside class="sidebar menu" id="appSidebar">
+            <div class="navbar-brand is-justify-content-center mt-4 mb-4">
+                <a asp-page="/Index" class="has-text-weight-bold is-size-4 has-text-grey-dark">
+                    <span>MetricsApp</span>
+                </a>
+            </div>
 
-    <div class="main-wrapper flex-column flex-grow-1">
-        <header class="top-navbar sticky-top">
-             <nav class="navbar navbar-expand-sm navbar-toggleable-sm border-bottom box-shadow">
-                <div class="container-fluid">
-                    <button id="sidebarToggle" class="ms-2"><i class="fas fa-bars"></i></button>
-                    <div class="ms-auto">
-                         <button id="themeToggle" class="btn">
-                            <i class="fas fa-moon"></i> <!-- Default to moon, JS will set sun if light -->
-                        </button>
+            <p class="menu-label">
+                General
+            </p>
+            <ul class="menu-list">
+                <li><a asp-page="/Index" class="is-active"> <i class="fas fa-chart-line fa-fw"></i> <span>Dashboard</span></a></li>
+                <li><a asp-page="/MetricsOverview"> <i class="fas fa-tasks fa-fw"></i> <span>Metrics Overview</span></a></li>
+                </ul>
+            <p class="menu-label">
+                Admin
+            </p>
+            <ul class="menu-list">
+                <li><a asp-page="/PerformanceCounters"> <i class="fas fa-tachometer-alt fa-fw"></i> <span>Performance</span></a></li>
+                <li><a asp-page="/Settings"> <i class="fas fa-cog fa-fw"></i> <span>Settings</span></a></li>
+            </ul>
+            </aside>
+
+        <div class="content-wrapper is-flex-grow-1">
+            <nav class="top-navbar" role="navigation" aria-label="main navigation">
+                <div class="navbar-start">
+                    <button class="button is-ghost" id="sidebarToggle" aria-label="menu" aria-expanded="false">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+                <div class="navbar-end">
+                    <div class="navbar-item">
+                        <button class="button is-ghost" id="themeToggle" aria-label="toggle theme">
+                            <i class="fas fa-moon"></i> </button>
                     </div>
                 </div>
             </nav>
-        </header>
 
-        <div class="content-area" id="contentArea">
-            <main role="main" class="pb-3">
+            <main class="content-area section">
                 @RenderBody()
             </main>
-        </div>
 
-        <footer class="border-top footer text-muted mt-auto" id="pageFooter">
-            <div class="container-fluid">
-                &copy; @DateTime.Now.Year - MetricsApp - <a asp-area="" asp-page="/Privacy">Privacy</a>
-            </div>
-        </footer>
+            <footer class="footer">
+                <div class="content has-text-centered">
+                    <p>
+                        &copy; @DateTime.Now.Year - MetricsApp - <a asp-page="/Privacy">Privacy</a>
+                    </p>
+                </div>
+            </footer>
+        </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const sidebar = document.getElementById('sidebar');
-        const contentArea = document.getElementById('contentArea');
-        const topNavbar = document.querySelector('.top-navbar');
-        const pageFooter = document.getElementById('pageFooter');
-        const sidebarToggle = document.getElementById('sidebarToggle');
         const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = themeToggle.querySelector('i');
         const htmlElement = document.documentElement;
+        const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
 
-        function setTheme(theme) {
-            htmlElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-            if (theme === 'dark') {
-                themeIcon.classList.remove('fa-moon');
-                themeIcon.classList.add('fa-sun');
+        if (currentTheme) {
+            htmlElement.setAttribute('data-theme', currentTheme);
+            if (currentTheme === 'dark') {
+                themeToggle.querySelector('i').classList.remove('fa-moon');
+                themeToggle.querySelector('i').classList.add('fa-sun');
+            }
+        } else { 
+             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                htmlElement.setAttribute('data-theme', 'dark');
+                themeToggle.querySelector('i').classList.remove('fa-moon');
+                themeToggle.querySelector('i').classList.add('fa-sun');
+             }
+        }
+
+
+        themeToggle.addEventListener('click', () => {
+            let currentMode = htmlElement.getAttribute('data-theme');
+            if (currentMode === 'dark') {
+                htmlElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+                themeToggle.querySelector('i').classList.remove('fa-sun');
+                themeToggle.querySelector('i').classList.add('fa-moon');
             } else {
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
+                htmlElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeToggle.querySelector('i').classList.remove('fa-moon');
+                themeToggle.querySelector('i').classList.add('fa-sun');
+            }
+        });
+
+
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const appSidebar = document.getElementById('appSidebar');
+        const contentWrapper = document.querySelector('.content-wrapper') || {}; // Includes top-navbar, content-area, footer
+
+        const topNavbar = document.querySelector('.top-navbar');
+        const contentArea = document.querySelector('.content-area');
+        const pageFooter = document.querySelector('.footer');
+
+
+        const isDesktop = () => window.innerWidth > 768; // Bulma's mobile breakpoint
+
+        function applySidebarState() {
+            let sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (isDesktop()) {
+                appSidebar.classList.remove('is-active-mobile'); // Ensure mobile overlay is off
+                if (sidebarCollapsed) {
+                    appSidebar.classList.add('collapsed');
+                    if(topNavbar) topNavbar.classList.add('collapsed-sidebar');
+                    if(contentArea) contentArea.classList.add('collapsed-sidebar');
+                    if(pageFooter) pageFooter.classList.add('collapsed-sidebar');
+                } else {
+                    appSidebar.classList.remove('collapsed');
+                    if(topNavbar) topNavbar.classList.remove('collapsed-sidebar');
+                    if(contentArea) contentArea.classList.remove('collapsed-sidebar');
+                    if(pageFooter) pageFooter.classList.remove('collapsed-sidebar');
+                }
+            } else { // Mobile
+                appSidebar.classList.remove('collapsed'); // Desktop collapse doesn't apply
+                 if(topNavbar) topNavbar.classList.remove('collapsed-sidebar');
+                 if(contentArea) contentArea.classList.remove('collapsed-sidebar');
+                 if(pageFooter) pageFooter.classList.remove('collapsed-sidebar');
+                // Mobile sidebar is an overlay, not affecting content margin
+                // Its open/close state is managed by 'is-active-mobile'
             }
         }
 
-        if (sidebarToggle) {
-            sidebarToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('collapsed');
-                contentArea.classList.toggle('collapsed');
-                topNavbar.classList.toggle('collapsed');
-                pageFooter.classList.toggle('collapsed');
-            });
-        }
+
+        sidebarToggle.addEventListener('click', () => {
+            if (isDesktop()) {
+                let isCollapsed = appSidebar.classList.toggle('collapsed');
+                localStorage.setItem('sidebarCollapsed', isCollapsed);
+                if(topNavbar) topNavbar.classList.toggle('collapsed-sidebar', isCollapsed);
+                if(contentArea) contentArea.classList.toggle('collapsed-sidebar', isCollapsed);
+                if(pageFooter) pageFooter.classList.toggle('collapsed-sidebar', isCollapsed);
+
+            } else { // Mobile: toggle overlay
+                appSidebar.classList.toggle('is-active-mobile');
+            }
+        });
         
-        if (themeToggle) {
-            themeToggle.addEventListener('click', () => {
-                const currentTheme = htmlElement.getAttribute('data-theme');
-                setTheme(currentTheme === 'dark' ? 'light' : 'dark');
-            });
-        }
+        // Initial state application
+        applySidebarState();
+        window.addEventListener('resize', applySidebarState);
 
-        // Load saved theme from localStorage or default to light
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            setTheme(savedTheme);
-
-            // Active link highlighting
-            const sidebarElement = document.getElementById('sidebar');
-            if (!sidebarElement) return;
-            let currentPath = window.location.pathname;
-            if (currentPath !== '/' && currentPath.endsWith('/')) {
-                currentPath = currentPath.slice(0, -1);
-            }
-            if (!currentPath.startsWith('/')) {
-                currentPath = '/' + currentPath;
-            }
-            if (currentPath === '') {
-                currentPath = '/';
-            }
-            const navLinks = sidebarElement.querySelectorAll(".nav-link");
-            navLinks.forEach(link => {
-                link.classList.remove("active"); // Ensure all are inactive first
-                let linkHref = link.getAttribute("href");
-                if (!linkHref) return;
-                if (linkHref !== '/' && linkHref.endsWith('/')) {
-                    linkHref = linkHref.slice(0, -1);
-                }
-                if (!linkHref.startsWith('/')) {
-                    linkHref = '/' + linkHref;
-                }
-                 if (linkHref === '') {
-                    linkHref = '/';
-                }
-                if (linkHref === currentPath) {
-                    link.classList.add("active");
+        // Active sidebar link (simple version, can be improved with Razor)
+        document.addEventListener('DOMContentLoaded', function () {
+            const currentPage = window.location.pathname;
+            const sidebarLinks = appSidebar.querySelectorAll('.menu-list a');
+            sidebarLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPage) {
+                    link.classList.add('is-active');
+                } else {
+                    link.classList.remove('is-active');
                 }
             });
         });
+
     </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
-

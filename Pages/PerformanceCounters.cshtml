@@ -7,5 +7,21 @@
 <div class="text-center">
     <h1 class="display-4">@ViewData["Title"]</h1>
     <p>Configure and view Windows Performance Counters here.</p>
-    <!-- Content for Performance Counters will go here -->
-</div> 
+    
+    <div class="container">
+        <h2>Available Counters</h2>
+        <ul class="list-group">
+            <li class="list-group-item">Processor Time (%)</li>
+            <li class="list-group-item">Memory Usage (MB)</li>
+            <li class="list-group-item">Disk Read Time (%)</li>
+            <li class="list-group-item">Network Interface Bytes Total/sec</li>
+        </ul>
+        <button class="btn btn-primary mt-3">Refresh Counters</button>
+        
+        <div class="mt-4">
+            <h3>Counter Details</h3>
+            <p><em>Detailed information about selected or active counters will be displayed here.</em></p>
+            <!-- Placeholder for charts or detailed data views -->
+        </div>
+    </div>
+</div>

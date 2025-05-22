@@ -23,9 +23,9 @@ body {
     --sidebar-link-active-bg: var(--bulma-primary-light);
     --sidebar-border-color: #dbdbdb; /* Bulma's $grey-lighter / var(--bulma-grey-lighter) */
 
-    --bulma-radius: var(--bulma-card-radius);
-    --bulma-radius-small: 2;
-    --bulma-radius-large: 7;
+    --bulma-radius:3px; /* Default Bulma border radius */
+    --bulma-radius-small: 2px;
+    --bulma-radius-large: 7px;
 
     --top-navbar-bg: var(--sidebar-bg);
     --top-navbar-border-color: var(--sidebar-border-color);
@@ -282,7 +282,7 @@ html[data-theme="dark"] {
 }
 .card .card-header-title { /* For Bulma card headers */
     font-weight: bold;
-    /* background-color: var(--custom-card-header-bg); */ 
+    background-color: var(--custom-card-header-bg); 
 }
 
 /* Tables (Use <table class="table is-striped is-hoverable is-fullwidth"> ... </table>) */

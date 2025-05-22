@@ -1,5 +1,6 @@
 using System.Text.Json;
 using StackExchange.Redis;
+using Microsoft.Extensions.Logging;
 
 namespace MetricsApp.Services
 {
@@ -13,11 +14,9 @@ namespace MetricsApp.Services
     public class RedisCacheService : ICacheService
     {
         private readonly IDatabase _db;
-        private readonly IConnectionMultiplexer _redis;
 
         public RedisCacheService(IConnectionMultiplexer redis)
         {
-            _redis = redis;
             _db = redis.GetDatabase();
         }
 

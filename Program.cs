@@ -10,18 +10,30 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<MetricsDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Add Memory Cache for fallback
+builder.Services.AddMemoryCache();
+
 // Configure Redis Cache
 var redisConfiguration = builder.Configuration.GetConnectionString("RedisConnection");
 if (string.IsNullOrEmpty(redisConfiguration))
 {
-    Console.WriteLine("Redis connection string 'RedisConnection' not found in configuration. Caching will be disabled or use a fallback.");
-    // In a real app, you might register a NullCacheService or InMemoryCacheService here
-    // For this project, we'll assume Redis is available if configured.
+    Console.WriteLine("Redis connection string 'RedisConnection' not found in configuration. Using FallbackCacheService.");
+    builder.Services.AddSingleton<ICacheService, FallbackCacheService>();
 }
 else
 {
-    builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisConfiguration));
-    builder.Services.AddSingleton<ICacheService, RedisCacheService>();
+    try
+    {
+        var redisConnectionMultiplexer = await ConnectionMultiplexer.ConnectAsync(redisConfiguration);
+        builder.Services.AddSingleton<IConnectionMultiplexer>(redisConnectionMultiplexer);
+        builder.Services.AddSingleton<ICacheService, RedisCacheService>();
+        Console.WriteLine("Redis cache service configured successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Failed to connect to Redis: {ex.Message}. Using FallbackCacheService instead.");
+        builder.Services.AddSingleton<ICacheService, FallbackCacheService>();
+    }
 }
 
 builder.Services.AddMcpServer();
@@ -58,5 +70,5 @@ app.UseAuthorization();
 app.MapRazorPages(); // Map requests to Razor Pages
 app.MapControllers(); // Map requests to API controllers
 
-app.Run();
+await app.RunAsync();
 

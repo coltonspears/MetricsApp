@@ -1,174 +1,262 @@
 ﻿<!DOCTYPE html>
 <html lang="en" data-theme="light">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - MetricsApp</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    
+    <link rel="stylesheet" href="~/css/shadcn-inspired.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body>
-    <div class="main-wrapper">
-        <aside class="sidebar menu" id="appSidebar">
-            <div class="navbar-brand is-justify-content-center mt-4 mb-4">
-                <a asp-page="/Index" class="has-text-weight-bold is-size-4 has-text-grey-dark">
-                    <span>MetricsApp</span>
-                </a>
+
+<body class="bg-background text-foreground">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <a asp-page="/Index">
+                        <div class="sidebar-logo">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <span class="sidebar-title">MetricsApp</span>
+                    </a>
+                </div>
+                <button class="sidebar-toggle btn btn-icon btn-ghost" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
             </div>
 
-            <p class="menu-label">
-                General
-            </p>
-            <ul class="menu-list">
-                <li><a asp-page="/Index" class="is-active"> <i class="fas fa-chart-line fa-fw"></i> <span>Dashboard</span></a></li>
-                <li><a asp-page="/MetricsOverview"> <i class="fas fa-tasks fa-fw"></i> <span>Metrics Overview</span></a></li>
-                </ul>
-            <p class="menu-label">
-                Admin
-            </p>
-            <ul class="menu-list">
-                <li><a asp-page="/PerformanceCounters"> <i class="fas fa-tachometer-alt fa-fw"></i> <span>Performance</span></a></li>
-                <li><a asp-page="/Settings"> <i class="fas fa-cog fa-fw"></i> <span>Settings</span></a></li>
-            </ul>
-            </aside>
-
-        <div class="content-wrapper is-flex-grow-1">
-            <nav class="top-navbar" role="navigation" aria-label="main navigation">
-                <div class="navbar-start">
-                    <button class="button is-ghost" id="sidebarToggle" aria-label="menu" aria-expanded="false">
-                        <i class="fas fa-bars"></i>
-                    </button>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">General</div>
+                    <ul class="nav-list">
+                        <li>
+                            <a asp-page="/Index" class="nav-link">
+                                <i class="fas fa-chart-line nav-icon"></i>
+                                <span class="nav-text">Dashboard</span>
+                            </a>
+                        </li>
+                        <li> 
+                            <a asp-page="/MetricsOverview" class="nav-link"> 
+                                <i class="fa-thin fa-city nav-icon"></i>
+                                <span class="nav-text">Analytics Overview</span> 
+                            </a> 
+                        </li>
+                    </ul>
                 </div>
-                <div class="navbar-end">
-                    <div class="navbar-item">
-                        <button class="button is-ghost" id="themeToggle" aria-label="toggle theme">
-                            <i class="fas fa-moon"></i> </button>
-                    </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Admin</div>
+                    <ul class="nav-list">
+                        <li>
+                            <a asp-page="/PerformanceCounters" class="nav-link">
+                                <i class="fas fa-tachometer-alt nav-icon"></i>
+                                <span class="nav-text">Performance</span>
+                            </a>
+                        </li>
+                        <li> 
+                            <a asp-page="/Settings" class="nav-link"> 
+                                <i class="fas fa-sliders-h nav-icon"></i> 
+                                <span class="nav-text">Dashboard Config</span> 
+                            </a> 
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Design System</div>
+                    <ul class="nav-list">
+                        <li>
+                            <a asp-page="/ShadcnDemo" class="nav-link">
+                                <i class="fas fa-palette nav-icon"></i>
+                                <span class="nav-text">Components</span>
+                            </a>
+                        </li>
+                    </ul>
                 </div>
             </nav>
 
-            <main class="content-area section">
-                @RenderBody()
-            </main>
+            <!-- Theme Toggle in Sidebar Footer -->
+            <div class="sidebar-footer">
+                <button class="theme-toggle btn btn-ghost w-full" id="themeToggle">
+                    <i class="fas fa-moon theme-icon"></i>
+                    <span class="nav-text">Toggle Theme</span>
+                </button>
+            </div>
+        </aside>
 
-            <footer class="footer">
-                <div class="content has-text-centered">
-                    <p>
-                        &copy; @DateTime.Now.Year - MetricsApp
-                    </p>
-                </div>
-            </footer>
-        </div>
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <div class="content-container">
+                @RenderBody()
+            </div>
+        </main>
     </div>
 
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <!-- Toast Container -->
+    @* <div class="toast-viewport" id="toastContainer"></div> *@
+    @* *@
+    <!-- Toast Container -->
+    <div id="toastContainer" style="position: fixed; top: 1rem; right: 1rem; z-index: 100;"></div>
+
     <script>
-        const themeToggle = document.getElementById('themeToggle');
-        const htmlElement = document.documentElement;
-        const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
+        class MetricsApp {
+            constructor() {
+                this.sidebar = document.getElementById('sidebar');
+                this.mainContent = document.getElementById('mainContent');
+                this.sidebarToggle = document.getElementById('sidebarToggle');
+                this.themeToggle = document.getElementById('themeToggle');
+                this.mobileOverlay = document.getElementById('mobileOverlay');
+                this.toastContainer = document.getElementById('toastContainer');
 
-        if (currentTheme) {
-            htmlElement.setAttribute('data-theme', currentTheme);
-            if (currentTheme === 'dark') {
-                themeToggle.querySelector('i').classList.remove('fa-moon');
-                themeToggle.querySelector('i').classList.add('fa-sun');
+                this.init();
             }
-        } else { 
-             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                htmlElement.setAttribute('data-theme', 'dark');
-                themeToggle.querySelector('i').classList.remove('fa-moon');
-                themeToggle.querySelector('i').classList.add('fa-sun');
-             }
+
+            init() {
+                this.initSidebar();
+                this.initTheme();
+                this.setActiveNavLink();
+                this.attachEventListeners();
+            }
+
+            initTheme() {
+                const savedTheme = localStorage.getItem('theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+                this.setTheme(theme);
+            }
+
+            setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                document.documentElement.className = theme;
+                localStorage.setItem('theme', theme);
+
+                const icon = this.themeToggle.querySelector('.theme-icon');
+                icon.className = theme === 'dark' ? 'fas fa-sun theme-icon' : 'fas fa-moon theme-icon';
+
+                // Notify charts about theme change
+                if (window.updateAllChartThemes) {
+                    window.updateAllChartThemes(theme);
+                }
+            }
+
+            toggleTheme() {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                this.setTheme(newTheme);
+                this.showToast(`Switched to ${newTheme} mode`, 'success');
+            }
+
+            initSidebar() {
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (window.innerWidth > 768 && isCollapsed) {
+                    this.sidebar.classList.add('collapsed');
+                }
+            }
+
+            toggleSidebar() {
+                if (window.innerWidth <= 768) {
+                    // Mobile behavior
+                    this.sidebar.classList.toggle('mobile-open');
+                    this.mobileOverlay.classList.toggle('active');
+                } else {
+                    // Desktop behavior
+                    this.sidebar.classList.toggle('collapsed');
+                    localStorage.setItem('sidebarCollapsed', this.sidebar.classList.contains('collapsed'));
+                }
+            }
+
+            closeMobileSidebar() {
+                this.sidebar.classList.remove('mobile-open');
+                this.mobileOverlay.classList.remove('active');
+            }
+
+            setActiveNavLink() {
+                const currentPath = window.location.pathname;
+                const navLinks = document.querySelectorAll('.nav-link');
+
+                navLinks.forEach(link => {
+                    const linkPath = link.getAttribute('href') || link.getAttribute('asp-page');
+                    link.classList.remove('active');
+
+                    if (linkPath === currentPath ||
+                        (currentPath === '/' && (linkPath === '/Index' || linkPath === '/')) ||
+                        (linkPath && currentPath.includes(linkPath) && linkPath !== '/')) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+
+            showToast(message, type = 'default', duration = 3000) {
+                const toast = document.createElement('div');
+                toast.className = `toast-item ${type}`;
+                toast.innerHTML = `
+                    <div class="toast-content">
+                        <div class="toast-title">${this.getToastTitle(type)}</div>
+                        <div class="toast-description">${message}</div>
+                    </div>
+                    <button class="toast-close" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+
+                this.toastContainer.appendChild(toast);
+
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.style.opacity = '0';
+                        toast.style.transform = 'translateX(100%)';
+                        setTimeout(() => toast.remove(), 300);
+                    }
+                }, duration);
+            }
+
+            getToastTitle(type) {
+                const titles = {
+                    success: 'Success',
+                    error: 'Error',
+                    warning: 'Warning',
+                    info: 'Info'
+                };
+                return titles[type] || 'Notification';
+            }
+
+            attachEventListeners() {
+                this.sidebarToggle?.addEventListener('click', () => this.toggleSidebar());
+                this.themeToggle?.addEventListener('click', () => this.toggleTheme());
+                this.mobileOverlay?.addEventListener('click', () => this.closeMobileSidebar());
+
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    if (window.innerWidth > 768) {
+                        this.closeMobileSidebar();
+                    }
+                });
+
+                // Handle navigation changes
+                window.addEventListener('popstate', () => this.setActiveNavLink());
+            }
         }
 
-
-        themeToggle.addEventListener('click', () => {
-            let currentMode = htmlElement.getAttribute('data-theme');
-            if (currentMode === 'dark') {
-                htmlElement.setAttribute('data-theme', 'light');
-                localStorage.setItem('theme', 'light');
-                themeToggle.querySelector('i').classList.remove('fa-sun');
-                themeToggle.querySelector('i').classList.add('fa-moon');
-            } else {
-                htmlElement.setAttribute('data-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
-                themeToggle.querySelector('i').classList.remove('fa-moon');
-                themeToggle.querySelector('i').classList.add('fa-sun');
-            }
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            window.metricsApp = new MetricsApp();
         });
 
-
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const appSidebar = document.getElementById('appSidebar');
-        const contentWrapper = document.querySelector('.content-wrapper') || {}; // Includes top-navbar, content-area, footer
-
-        const topNavbar = document.querySelector('.top-navbar');
-        const contentArea = document.querySelector('.content-area');
-        const pageFooter = document.querySelector('.footer');
-
-
-        const isDesktop = () => window.innerWidth > 768; // Bulma's mobile breakpoint
-
-        function applySidebarState() {
-            let sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-            if (isDesktop()) {
-                appSidebar.classList.remove('is-active-mobile'); // Ensure mobile overlay is off
-                if (sidebarCollapsed) {
-                    appSidebar.classList.add('collapsed');
-                    if(topNavbar) topNavbar.classList.add('collapsed-sidebar');
-                    if(contentArea) contentArea.classList.add('collapsed-sidebar');
-                    if(pageFooter) pageFooter.classList.add('collapsed-sidebar');
-                } else {
-                    appSidebar.classList.remove('collapsed');
-                    if(topNavbar) topNavbar.classList.remove('collapsed-sidebar');
-                    if(contentArea) contentArea.classList.remove('collapsed-sidebar');
-                    if(pageFooter) pageFooter.classList.remove('collapsed-sidebar');
-                }
-            } else { // Mobile
-                appSidebar.classList.remove('collapsed'); // Desktop collapse doesn't apply
-                 if(topNavbar) topNavbar.classList.remove('collapsed-sidebar');
-                 if(contentArea) contentArea.classList.remove('collapsed-sidebar');
-                 if(pageFooter) pageFooter.classList.remove('collapsed-sidebar');
-                // Mobile sidebar is an overlay, not affecting content margin
-                // Its open/close state is managed by 'is-active-mobile'
+        // Global theme update function for charts
+        window.updateChartsTheme = function (theme) {
+            if (window.updateAllChartThemes) {
+                window.updateAllChartThemes(theme);
             }
-        }
-
-
-        sidebarToggle.addEventListener('click', () => {
-            if (isDesktop()) {
-                let isCollapsed = appSidebar.classList.toggle('collapsed');
-                localStorage.setItem('sidebarCollapsed', isCollapsed);
-                if(topNavbar) topNavbar.classList.toggle('collapsed-sidebar', isCollapsed);
-                if(contentArea) contentArea.classList.toggle('collapsed-sidebar', isCollapsed);
-                if(pageFooter) pageFooter.classList.toggle('collapsed-sidebar', isCollapsed);
-
-            } else { // Mobile: toggle overlay
-                appSidebar.classList.toggle('is-active-mobile');
-            }
-        });
-        
-        // Initial state application
-        applySidebarState();
-        window.addEventListener('resize', applySidebarState);
-
-        // Active sidebar link (simple version, can be improved with Razor)
-        document.addEventListener('DOMContentLoaded', function () {
-            const currentPage = window.location.pathname;
-            const sidebarLinks = appSidebar.querySelectorAll('.menu-list a');
-            sidebarLinks.forEach(link => {
-                if (link.getAttribute('href') === currentPage) {
-                    link.classList.add('is-active');
-                } else {
-                    link.classList.remove('is-active');
-                }
-            });
-        });
-
+        };
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
+
 </html>

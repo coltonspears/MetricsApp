@@ -11,5 +11,6 @@ namespace MetricsApp.Data
         }
 
         public DbSet<MetricItem> MetricItems { get; set; } = null!;
+        public DbSet<DashboardConfig> DashboardConfigs { get; set; } = null!;
     }
 }

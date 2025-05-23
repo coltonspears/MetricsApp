@@ -210,6 +210,83 @@ namespace MetricsApp.Controllers
                 .ToListAsync<object>();
             return Ok(distribution);
         }
+
+        // GET: api/Metrics/breakdown
+        [HttpGet("breakdown")]
+        public async Task<ActionResult<IEnumerable<object>>> GetMetricsBreakdown()
+        {
+            // This is an alias for the overview endpoint to support the new analytics dashboard
+            return await GetMetricTypesOverview();
+        }
+
+        // GET: api/Metrics/alerts/summary
+        [HttpGet("alerts/summary")]
+        public async Task<ActionResult<object>> GetAlertsSummary()
+        {
+            // For now, return mock alert data until a proper alerting system is implemented
+            // In a real application, this would query an alerts database or monitoring system
+            
+            var alertsSummary = new
+            {
+                ActiveAlerts = 2, // Mock data - would be dynamically calculated
+                CriticalAlerts = 0,
+                WarningAlerts = 2,
+                InfoAlerts = 0,
+                LastAlertTime = DateTime.UtcNow.AddMinutes(-15), // Mock recent alert
+                AlertsLast24Hours = 5,
+                AlertsResolved = 3
+            };
+
+            return Ok(alertsSummary);
+        }
+
+        // GET: api/Metrics/recent-alerts
+        [HttpGet("recent-alerts")]
+        public Task<ActionResult<IEnumerable<object>>> GetRecentAlerts()
+        {
+            // Mock recent alerts data - in a real application this would come from an alerts service
+            var recentAlerts = new[]
+            {
+                new
+                {
+                    Id = 1,
+                    Severity = "warning",
+                    Message = "High CPU usage detected on PROD-WEB-01",
+                    Timestamp = DateTime.UtcNow.AddMinutes(-5),
+                    ServerName = "PROD-WEB-01",
+                    MetricType = "CPUUsage",
+                    Value = 85.5,
+                    Threshold = 80,
+                    Acknowledged = false
+                },
+                new
+                {
+                    Id = 2,
+                    Severity = "info",
+                    Message = "Memory usage returned to normal on DEV-DB-02",
+                    Timestamp = DateTime.UtcNow.AddMinutes(-15),
+                    ServerName = "DEV-DB-02",
+                    MetricType = "MemoryUsage",
+                    Value = 65.0,
+                    Threshold = 85,
+                    Acknowledged = true
+                },
+                new
+                {
+                    Id = 3,
+                    Severity = "warning",
+                    Message = "Disk space running low on PROD-APP-03",
+                    Timestamp = DateTime.UtcNow.AddHours(-2),
+                    ServerName = "PROD-APP-03",
+                    MetricType = "DiskUsage",
+                    Value = 88.2,
+                    Threshold = 85,
+                    Acknowledged = false
+                }
+            };
+
+            return Task.FromResult<ActionResult<IEnumerable<object>>>(Ok(recentAlerts));
+        }
     }
 }
 

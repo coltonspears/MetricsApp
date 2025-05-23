@@ -1,5 +1,7 @@
 # ASP.NET Core Metrics Application
 
+> ⚠️ **Work in Progress**: This is an early development version of the MetricsApp. Features are actively being developed and the codebase is subject to significant changes. Please refer to the development history below to see recent progress.
+
 This application provides a professional, modern dashboard to display metrics from QA and production servers. It includes REST endpoints for posting new metrics, loading metrics data for the web interface, and managing application settings. Data is stored in a SQLite database and cached using Redis for performance. The frontend features interactive charts, key performance indicators (KPIs), a dedicated metrics overview page, and a settings management page.
 
 ## Features
@@ -75,7 +77,7 @@ This application provides a professional, modern dashboard to display metrics fr
 
 ### Prerequisites
 
-1.  **.NET 8 SDK**: Ensure the .NET 8 SDK is installed. This project was built with .NET 8.0.x.
+1.  **.NET 9 SDK**: Ensure the .NET 9 SDK is installed. This project was built with .NET 9.0.x.
 2.  **Redis Server**: A Redis server instance must be running and accessible. Default: `localhost:6379` (configurable in `appsettings.json`).
 
 ### Steps to Run
@@ -102,8 +104,8 @@ The application is designed for easy expansion:
 
 1.  **`MetricItem` Model**: `MetricType` (string) and `MetricValue` (string) allow diverse data.
 2.  **Posting New Types**: No backend changes needed to *start* posting. Send a POST to `/api/Metrics` with the new `metricType`.
-    ```json
     // Example: New "TransactionCount" metric
+    ```json
     {
       "serverName": "PROD-API-03",
       "environment": "Production",
@@ -121,13 +123,24 @@ The application is designed for easy expansion:
 
 -   **`POST /api/Metrics`**: Submit a new metric.
 -   **`GET /api/Metrics`**: Retrieve metrics with filters.
+-   **`GET /api/Metrics/{id}`**: Get specific metric by ID.
 -   **`GET /api/Metrics/summary`**: KPIs for dashboard.
 -   **`GET /api/Metrics/overview`**: Data for Metrics Overview page.
+-   **`GET /api/Metrics/breakdown`**: Enhanced analytics data (alias for overview).
 -   **`GET /api/Metrics/distribution/environment`**: Data for environment chart.
 -   **`GET /api/Metrics/distribution/type`**: Data for metric type chart.
 -   **`GET /api/Metrics/distribution/server`**: Data for server chart.
+-   **`GET /api/Metrics/alerts/summary`**: Alert system summary statistics.
+-   **`GET /api/Metrics/recent-alerts`**: Recent alerts with severity levels.
 -   **`GET /api/Settings`**: Retrieve current application settings.
 -   **`POST /api/Settings`**: Update application settings.
+-   **`GET /api/Dashboard/configs`**: Retrieve all dashboard configurations.
+-   **`GET /api/Dashboard/configs/{id}`**: Get specific dashboard configuration.
+-   **`GET /api/Dashboard/configs/default`**: Get default dashboard configuration.
+-   **`POST /api/Dashboard/configs`**: Create new dashboard configuration.
+-   **`PUT /api/Dashboard/configs/{id}`**: Update dashboard configuration.
+-   **`DELETE /api/Dashboard/configs/{id}`**: Delete dashboard configuration.
+-   **`POST /api/Dashboard/configs/{id}/set-default`**: Set dashboard as default.
 
 ## Caching Strategy
 
@@ -136,14 +149,62 @@ The application is designed for easy expansion:
 -   POSTing new metrics invalidates relevant caches (e.g., `all_metrics`, `metrics_summary`, `metric_types_overview`). Filtered results rely on TTL or prefix-based invalidation for simplicity, which could be enhanced.
 -   The `/api/Settings` endpoint currently reads directly from/writes directly to `applicationSettings.json` and does not use Redis caching.
 
+## Development History
+
+Recent commits showing active development progress:
+
+- `0b82537` - Add sample data generation HTTP requests for metrics simulation
+- `23a752d` - Remove reference to dashboard design principles document from README  
+- `13aaec2` - Add FallbackCacheService and application settings management
+- `1b13fde` - Switched from Bootstrap to Pico for CSS
+- `fdc5748` - Update .gitignore to exclude /bin, /obj, and SQLite files
+- `3509ba4` - Create .gitignore
+- `41eee63` - Add Razor Pages for Metrics Overview, Settings, and Performance Counters
+- `057cc6a` - Add initial project structure with Razor Pages and static assets      
+- `fbedaa5` - Initial commit
+
+### Current Pending Changes (In Development)
+
+**🚀 New Features Currently Being Developed:**
+
+- **Dashboard Configuration System**: Complete dashboard layout management with customizable widgets and templates
+- **Enhanced Analytics Overview**: Advanced metrics breakdown and real-time monitoring capabilities  
+- **Alert System Foundation**: Mock alerting system with severity levels and notification framework
+- **Improved UI Components**: Migrated from site.css to shadcn-inspired.css for modern design system
+- **Settings Management**: Comprehensive settings page with dashboard configuration tools
+
+**📊 New API Endpoints Added:**
+- **Dashboard Configuration (`/api/Dashboard`)**:
+  - `GET /api/Dashboard/configs` - Retrieve all dashboard configurations
+  - `GET /api/Dashboard/configs/{id}` - Get specific dashboard configuration
+  - `GET /api/Dashboard/configs/default` - Get default dashboard configuration
+  - `POST /api/Dashboard/configs` - Create new dashboard configuration
+  - `PUT /api/Dashboard/configs/{id}` - Update dashboard configuration
+  - `DELETE /api/Dashboard/configs/{id}` - Delete dashboard configuration
+  - `POST /api/Dashboard/configs/{id}/set-default` - Set dashboard as default
+
+- **Enhanced Metrics Endpoints**:
+  - `GET /api/Metrics/breakdown` - Alias for overview with analytics focus
+  - `GET /api/Metrics/alerts/summary` - Alert system summary statistics
+  - `GET /api/Metrics/recent-alerts` - Recent alerts with severity and acknowledgment status
+
+**🔧 Infrastructure Improvements:**
+- Database migration for DashboardConfig model
+- Enhanced caching strategy for dashboard configurations
+- Improved error handling and fallback mechanisms
+- Modern CSS framework implementation with custom design tokens
+
+*This project is under active development with regular commits and feature additions. Current work focuses on dashboard customization and alerting capabilities.*
+
 ## Work in Progress / Future Enhancements
 
--   More sophisticated, granular cache invalidation for metrics.
--   User authentication and authorization for accessing the application and API endpoints.
--   Dedicated UI components/charts for specific complex metric types.
--   Pagination for the detailed metrics table on the dashboard.
--   Full implementation of the `/Settings` page UI to interact with the `/api/Settings` endpoint.
--   Full implementation of the `/PerformanceCounters` page.
--   User-configurable dashboard layouts or chart selections.
--   Alerting based on metric thresholds (configurable via the Settings page).
--   Consider caching for `/api/Settings` if read frequency becomes very high.
+-   **Alerting System**: Complete implementation of real-time alerting with configurable thresholds and notification channels.
+-   **User Authentication**: User authentication and authorization for accessing the application and API endpoints.
+-   **Performance Counters**: Full implementation of Windows Performance Counters monitoring and visualization.
+-   **Advanced Analytics**: More sophisticated metrics analysis, correlation detection, and predictive insights.
+-   **Dashboard Templates**: Pre-built dashboard templates for common monitoring scenarios.
+-   **Export Functionality**: Enhanced data export capabilities (PDF reports, CSV, Excel).
+-   **Mobile Responsiveness**: Optimized mobile and tablet experience for on-the-go monitoring.
+-   **Plugin System**: Extensible plugin architecture for custom metric collectors and visualizations.
+-   **Multi-tenancy**: Support for multiple organizations/teams with isolated data.
+-   **Cache Optimization**: More sophisticated, granular cache invalidation strategies.

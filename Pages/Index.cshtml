@@ -6,79 +6,130 @@
 
 @section Styles {
     <style>
-        .kpi-card .icon {
-            margin-right: 0.75rem;
+        .metrics-overview {
+            margin-bottom: 2rem;
         }
-        #metricsTable th, #metricsTable td {
-            vertical-align: middle;
+        
+        .chart-grid {
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-grid-full {
+            grid-template-columns: 1fr;
+        }
+        
+        .chart-grid-half {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        @@media (max-width: 768px) {
+            .chart-grid-half {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .filters-section {
+            margin-bottom: 2rem;
+        }
+        
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        @@media (max-width: 640px) {
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+        
+        @@media (max-width: 640px) {
+            .filter-actions {
+                justify-content: stretch;
+            }
+            
+            .filter-actions .btn {
+                flex: 1;
+            }
         }
     </style>
 }
 
-<div class="columns is-multiline kpi-grid mb-5">
-    <div class="column is-one-quarter-desktop is-half-tablet">
+<!-- KPI Metrics Grid -->
+<div class="metrics-overview">
+    <h1 class="text-3xl font-bold text-foreground mb-6">Metrics Dashboard</h1>
+    
+    <div class="metrics-kpi-grid">
         <div class="card metric-card">
             <div class="card-content">
-                <div class="media">
-                    <div class="media-left">
-                        <span class="icon is-large has-text-primary">
-                            <i class="fas fa-wave-square fa-2x"></i>
-                        </span>
+                <div class="flex items-center">
+                    <div class="metric-icon bg-primary/10 text-primary">
+                        <i class="fas fa-wave-square"></i>
                     </div>
-                    <div class="media-content">
-                        <p class="title is-4 has-text-weight-semibold metric-card-title" id="kpiTotalMetrics">Loading...</p>
-                        <p class="subtitle is-6 metric-card-description">Total Metrics</p>
+                    <div class="flex-1">
+                        <div class="metric-value" id="kpiTotalMetrics">
+                            <div class="loading-skeleton" style="height: 2rem; width: 4rem;"></div>
+                        </div>
+                        <div class="metric-label">Total Metrics</div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="column is-one-quarter-desktop is-half-tablet">
+        
         <div class="card metric-card">
             <div class="card-content">
-                <div class="media">
-                    <div class="media-left">
-                        <span class="icon is-large has-text-info">
-                            <i class="fas fa-server fa-2x"></i>
-                        </span>
+                <div class="flex items-center">
+                    <div class="metric-icon bg-info/10 text-info">
+                        <i class="fas fa-server"></i>
                     </div>
-                    <div class="media-content">
-                        <p class="title is-4 has-text-weight-semibold metric-card-title" id="kpiUniqueServers">Loading...</p>
-                        <p class="subtitle is-6 metric-card-description">Unique Servers</p>
+                    <div class="flex-1">
+                        <div class="metric-value" id="kpiUniqueServers">
+                            <div class="loading-skeleton" style="height: 2rem; width: 3rem;"></div>
+                        </div>
+                        <div class="metric-label">Unique Servers</div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="column is-one-quarter-desktop is-half-tablet">
+        
         <div class="card metric-card">
             <div class="card-content">
-                <div class="media">
-                    <div class="media-left">
-                        <span class="icon is-large has-text-success">
-                            <i class="fas fa-tags fa-2x"></i>
-                        </span>
+                <div class="flex items-center">
+                    <div class="metric-icon bg-success/10 text-success">
+                        <i class="fas fa-tags"></i>
                     </div>
-                    <div class="media-content">
-                        <p class="title is-4 has-text-weight-semibold metric-card-title" id="kpiUniqueMetricTypes">Loading...</p>
-                        <p class="subtitle is-6 metric-card-description">Unique Metric Types</p>
+                    <div class="flex-1">
+                        <div class="metric-value" id="kpiUniqueMetricTypes">
+                            <div class="loading-skeleton" style="height: 2rem; width: 3rem;"></div>
+                        </div>
+                        <div class="metric-label">Metric Types</div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="column is-one-quarter-desktop is-half-tablet">
+        
         <div class="card metric-card">
             <div class="card-content">
-                <div class="media">
-                    <div class="media-left">
-                        <span class="icon is-large has-text-warning">
-                            <i class="fas fa-clock fa-2x"></i>
-                        </span>
+                <div class="flex items-center">
+                    <div class="metric-icon bg-warning/10 text-warning">
+                        <i class="fas fa-clock"></i>
                     </div>
-                    <div class="media-content">
-                        <p class="title is-4 has-text-weight-semibold metric-card-title" id="kpiLastMetricTime">Loading...</p>
-                        <p class="subtitle is-6 metric-card-description">Last Metric Received</p>
+                    <div class="flex-1">
+                        <div class="metric-value" id="kpiLastMetricTime" style="font-size: 1.125rem;">
+                            <div class="loading-skeleton" style="height: 1.5rem; width: 8rem;"></div>
+                        </div>
+                        <div class="metric-label">Last Updated</div>
                     </div>
                 </div>
             </div>
@@ -86,128 +137,189 @@
     </div>
 </div>
 
-
-
-<div class="columns is-multiline">
-<div class="column is-full">
-    <div class="box chart-container">
-        <h2 class="title is-5">Filters</h2>
-        <div class="columns is-multiline is-variable is-2">
-            <div class="column is-half-tablet is-one-quarter-desktop">
+<!-- Filters Section -->
+<div class="filters-section">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Filters</h2>
+            <p class="card-description">Filter metrics by server, environment, type, or date range</p>
+        </div>
+        <div class="card-content">
+            <div class="filters-grid">
                 <div class="field">
                     <label class="label" for="serverNameFilter">Server Name</label>
-                    <div class="control">
-                        <input class="input" type="text" id="serverNameFilter" placeholder="e.g., PROD-WEB-01">
-                    </div>
+                    <input class="input" type="text" id="serverNameFilter" placeholder="e.g., PROD-WEB-01">
                 </div>
-            </div>
-            <div class="column is-half-tablet is-one-quarter-desktop">
+                
                 <div class="field">
                     <label class="label" for="environmentFilter">Environment</label>
-                    <div class="control">
-                        <div class="select is-fullwidth">
-                            <select id="environmentFilter">
-                                <option value="">All</option>
-                                <option value="Production">Production</option>
-                                <option value="QA">QA</option>
-                                <option value="Development">Development</option>
-                            </select>
-                        </div>
+                    <div class="select">
+                        <select id="environmentFilter">
+                            <option value="">All Environments</option>
+                            <option value="Production">Production</option>
+                            <option value="QA">QA</option>
+                            <option value="Development">Development</option>
+                        </select>
                     </div>
                 </div>
-            </div>
-            <div class="column is-half-tablet is-one-quarter-desktop">
+                
                 <div class="field">
                     <label class="label" for="metricTypeFilter">Metric Type</label>
-                    <div class="control">
-                        <input class="input" type="text" id="metricTypeFilter" placeholder="e.g., CPUUsage">
-                    </div>
+                    <input class="input" type="text" id="metricTypeFilter" placeholder="e.g., CPUUsage">
                 </div>
-            </div>
-            <div class="column is-half-tablet is-one-quarter-desktop">
+                
                 <div class="field">
                     <label class="label" for="startDateFilter">Start Date</label>
-                    <div class="control">
-                        <input class="input" type="date" id="startDateFilter">
-                    </div>
+                    <input class="input" type="date" id="startDateFilter">
                 </div>
-            </div>
-            <div class="column is-half-tablet is-one-quarter-desktop">
+                
                 <div class="field">
                     <label class="label" for="endDateFilter">End Date</label>
-                    <div class="control">
-                        <input class="input" type="date" id="endDateFilter">
-                    </div>
+                    <input class="input" type="date" id="endDateFilter">
                 </div>
             </div>
-            <div class="column is-full-tablet is-half-desktop">
-                <div class="field is-grouped is-grouped-right">
-                    <div class="control">
-                        <button class="button is-link" id="applyFilters">
-                            <span class="icon"><i class="fas fa-filter"></i></span>
-                            <span>Apply Filters</span>
-                        </button>
-                    </div>
-                    <div class="control">
-                        <button class="button is-light" id="clearFilters">
-                            <span class="icon"><i class="fas fa-times"></i></span>
-                            <span>Clear Filters</span>
-                        </button>
-                    </div>
+            
+            <div class="filter-actions">
+                <button class="btn btn-outline" id="clearFilters">
+                    <i class="fas fa-times"></i>
+                    Clear Filters
+                </button>
+                <button class="btn btn-default" id="applyFilters">
+                    <i class="fas fa-filter"></i>
+                    Apply Filters
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="chart-grid chart-grid-full">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Metric Timeline</h3>
+            <p class="card-description">Real-time metric values over time</p>
+        </div>
+        <div class="card-content">
+            <div id="chartMetricTimeline">
+                <div class="chart-loading">
+                    <div class="loading-spinner"></div>
+                    <span>Loading timeline chart...</span>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="columns is-multiline">
-    <div class="column is-full">
-        <div class="box chart-container">
-            <h3 class="title is-5">Metric Timeline</h3>
-            <div id="chartMetricTimeline"></div>
+<div class="chart-grid chart-grid-half">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Environment Distribution</h3>
+            <p class="card-description">Metrics breakdown by environment</p>
+        </div>
+        <div class="card-content">
+            <div id="chartEnvironmentDistribution">
+                <div class="chart-loading">
+                    <div class="loading-spinner"></div>
+                    <span>Loading distribution...</span>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="column is-half-desktop">
-        <div class="box chart-container">
-            <h3 class="title is-5">Metrics by Environment</h3>
-            <div id="chartEnvironmentDistribution"></div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Top Metric Types</h3>
+            <p class="card-description">Most common metric types</p>
         </div>
-    </div>
-    <div class="column is-half-desktop">
-        <div class="box chart-container">
-            <h3 class="title is-5">Top Metric Types</h3>
-            <div id="chartMetricsByType"></div>
-        </div>
-    </div>
-    <div class="column is-full"> <div class="box chart-container">
-            <h3 class="title is-5">Top Servers by Metric Count</h3>
-            <div id="chartMetricsByServer"></div>
+        <div class="card-content">
+            <div id="chartMetricsByType">
+                <div class="chart-loading">
+                    <div class="loading-spinner"></div>
+                    <span>Loading metric types...</span>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="box data-table-container mt-5">
-    <h2 class="title is-5">Detailed Metrics</h2>
-    <div class="table-container">
-        <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth" id="metricsTable">
-            <thead>
-                <tr>
-                    <th>Timestamp</th>
-                    <th>Server Name</th>
-                    <th>Environment</th>
-                    <th>Metric Type</th>
-                    <th>Value</th>
-                    <th>Source</th>
-                </tr>
-            </thead>
-            <tbody id="metricsTableBody">
-                <tr><td colspan="6" class="has-text-centered">Loading metrics...</td></tr>
-            </tbody>
-        </table>
+<div class="chart-grid chart-grid-full">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Server Activity</h3>
+            <p class="card-description">Top servers by metric count</p>
+        </div>
+        <div class="card-content">
+            <div id="chartMetricsByServer">
+                <div class="chart-loading">
+                    <div class="loading-spinner"></div>
+                    <span>Loading server data...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Table Section -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Detailed Metrics</h2>
+        <p class="card-description">Raw metric data with filtering applied</p>
+    </div>
+    <div class="card-content">
+        <div class="table-wrapper">
+            <table class="table" id="metricsTable">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Server Name</th>
+                        <th>Environment</th>
+                        <th>Metric Type</th>
+                        <th>Value</th>
+                        <th>Source</th>
+                    </tr>
+                </thead>
+                <tbody id="metricsTableBody">
+                    <tr>
+                        <td colspan="6" class="text-center py-8">
+                            <div class="flex items-center justify-center gap-2">
+                                <div class="loading-spinner"></div>
+                                <span>Loading metrics data...</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script src="~/js/metrics.js" asp-append-version="true"></script>
+    
+    <script>
+        // Additional utility classes for this page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add utility classes that might not be in the main CSS
+            const style = document.createElement('style');
+            style.textContent = `
+                .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+                .font-bold { font-weight: 700; }
+                .mb-6 { margin-bottom: 1.5rem; }
+                .text-center { text-align: center; }
+                .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+                .gap-2 { gap: 0.5rem; }
+                .flex-1 { flex: 1 1 0%; }
+                .bg-primary\\/10 { background-color: hsl(var(--primary) / 0.1); }
+                .bg-info\\/10 { background-color: hsl(var(--info) / 0.1); }
+                .bg-success\\/10 { background-color: hsl(var(--success) / 0.1); }
+                .bg-warning\\/10 { background-color: hsl(var(--warning) / 0.1); }
+                .text-info { color: hsl(var(--info)); }
+                .text-success { color: hsl(var(--success)); }
+                .text-warning { color: hsl(var(--warning)); }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
 }

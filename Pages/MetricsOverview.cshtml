@@ -1,35 +1,477 @@
 @page
 @model MetricsApp.Pages.MetricsOverviewModel
-@{ ViewData["Title"] = "Metrics Overview"; }
+@{ ViewData["Title"] = "Dashboard Overview & Analytics"; }
 
-<div class="container mt-4">
-    <h1 class="mb-4">Metrics Overview</h1>
+@section Styles {
+    <style>
+        .overview-container {
+            max-width: 100%;
+            margin: 0;
+            padding: 1rem 2rem;
+            width: 100%;
+        }
+        
+        .overview-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--app-surface);
+            border: 1px solid var(--app-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            border-color: var(--app-primary);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(45deg, var(--app-primary), var(--app-secondary));
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--app-foreground);
+        }
+        
+        .stat-label {
+            color: var(--app-text-muted);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .stat-change {
+            display: flex;
+            align-items: center;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .stat-change.positive {
+            color: var(--app-success);
+        }
+        
+        .stat-change.negative {
+            color: var(--app-danger);
+        }
+        
+        .overview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        @@media (max-width: 1024px) {
+            .overview-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .metrics-table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--app-border);
+            border-radius: 8px;
+        }
+        
+        .metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .metrics-table th,
+        .metrics-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--app-border);
+        }
+        
+        .metrics-table th {
+            background: var(--app-surface);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        
+        .metrics-table tr:hover {
+            background: var(--app-hover);
+        }
+        
+        .health-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .health-excellent {
+            background: var(--app-success-faded);
+            color: var(--app-success);
+        }
+        
+        .health-good {
+            background: var(--app-info-faded);
+            color: var(--app-info);
+        }
+        
+        .health-warning {
+            background: var(--app-warning-faded);
+            color: var(--app-warning);
+        }
+        
+        .health-critical {
+            background: var(--app-danger-faded);
+            color: var(--app-danger);
+        }
+        
+        .refresh-controls {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--app-surface);
+            border: 1px solid var(--app-border);
+            border-radius: 8px;
+        }
+        
+        .insight-card {
+            background: linear-gradient(135deg, var(--app-primary-faded), var(--app-secondary-faded));
+            border: 1px solid var(--app-primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .trend-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .trend-up {
+            color: var(--app-success);
+        }
+        
+        .trend-down {
+            color: var(--app-danger);
+        }
+        
+        .trend-stable {
+            color: var(--app-info);
+        }
+        
+        .dashboard-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        
+        .mini-chart {
+            height: 60px;
+            margin-top: 1rem;
+        }
+        
+        .alert-summary {
+            background: var(--app-surface);
+            border: 1px solid var(--app-border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .alert-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--app-border);
+        }
+        
+        .alert-item:last-child {
+            border-bottom: none;
+        }
+        
+        .alert-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+    </style>
+}
 
+<div class="overview-container">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-foreground">Dashboard Overview & Analytics</h1>
+        <div class="dashboard-actions">
+            <button class="btn btn-outline" id="refreshOverview">
+                <i class="fas fa-sync-alt"></i>
+                Refresh Data
+            </button>
+            <button class="btn btn-outline" id="exportReport">
+                <i class="fas fa-download"></i>
+                Export Report
+            </button>
+            <button class="btn btn-default" id="configureDashboard">
+                <i class="fas fa-cog"></i>
+                Configure Dashboard
+            </button>
+        </div>
+    </div>
+    
+    <!-- Key Performance Indicators -->
+    <div class="overview-stats">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: var(--app-primary-faded); color: var(--app-primary);">
+                <i class="fas fa-database"></i>
+            </div>
+            <div class="stat-value" id="totalMetricsCount">
+                <div class="loading-skeleton" style="height: 2rem; width: 4rem;"></div>
+            </div>
+            <div class="stat-label">Total Metrics Collected</div>
+            <div class="stat-change positive" id="metricsGrowth">
+                <i class="fas fa-arrow-up"></i>
+                <span>+12.5% from last week</span>
+            </div>
+            <div class="mini-chart" id="metricsChart"></div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon" style="background: var(--app-success-faded); color: var(--app-success);">
+                <i class="fas fa-server"></i>
+            </div>
+            <div class="stat-value" id="activeServersCount">
+                <div class="loading-skeleton" style="height: 2rem; width: 3rem;"></div>
+            </div>
+            <div class="stat-label">Active Servers</div>
+            <div class="stat-change positive" id="serversStatus">
+                <i class="fas fa-check-circle"></i>
+                <span>All systems operational</span>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon" style="background: var(--app-warning-faded); color: var(--app-warning);">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-value" id="activeAlertsCount">
+                <div class="loading-skeleton" style="height: 2rem; width: 2rem;"></div>
+            </div>
+            <div class="stat-label">Active Alerts</div>
+            <div class="stat-change negative" id="alertsStatus">
+                <i class="fas fa-bell"></i>
+                <span>2 new alerts</span>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon" style="background: var(--app-info-faded); color: var(--app-info);">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-value" id="dataHealthScore">
+                <div class="loading-skeleton" style="height: 2rem; width: 3rem;"></div>
+            </div>
+            <div class="stat-label">Data Health Score</div>
+            <div class="stat-change positive" id="healthTrend">
+                <i class="fas fa-thumbs-up"></i>
+                <span>Excellent</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Insights Section -->
+    <div class="insight-card">
+        <h3 class="text-lg font-semibold mb-3">
+            <i class="fas fa-lightbulb mr-2"></i>
+            Smart Insights
+        </h3>
+        <div id="insightsContainer">
+            <div class="loading-skeleton" style="height: 1rem; width: 100%; margin-bottom: 0.5rem;"></div>
+            <div class="loading-skeleton" style="height: 1rem; width: 80%;"></div>
+        </div>
+    </div>
+    
+    <!-- Alert Summary -->
+    <div class="alert-summary">
+        <h3 class="text-lg font-semibold mb-3">
+            <i class="fas fa-bell mr-2"></i>
+            Recent Alerts
+        </h3>
+        <div id="alertSummaryContainer">
+            <div class="loading-skeleton" style="height: 3rem; width: 100%; margin-bottom: 0.5rem;"></div>
+            <div class="loading-skeleton" style="height: 3rem; width: 100%;"></div>
+        </div>
+    </div>
+    
+    <!-- Main Content Grid -->
+    <div class="overview-grid">
+        <!-- Metrics Breakdown -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Metrics Breakdown by Type</h3>
+                <p class="card-description">Detailed view of all metric types and their current status</p>
+            </div>
+            <div class="card-content">
+                <div class="metrics-table-container">
+                    <table class="metrics-table">
+                        <thead>
+                            <tr>
+                                <th>Metric Type</th>
+                                <th>Count</th>
+                                <th>Last Update</th>
+                                <th>Health</th>
+                                <th>Trend</th>
+                            </tr>
+                        </thead>
+                        <tbody id="metricsBreakdownTable">
+                            <tr>
+                                <td colspan="5" class="text-center">Loading metrics breakdown...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Server Performance -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Server Performance Overview</h3>
+                <p class="card-description">Current status and performance metrics for all monitored servers</p>
+            </div>
+            <div class="card-content">
+                <div class="metrics-table-container">
+                    <table class="metrics-table">
+                        <thead>
+                            <tr>
+                                <th>Server</th>
+                                <th>Environment</th>
+                                <th>CPU</th>
+                                <th>Memory</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="serverPerformanceTable">
+                            <tr>
+                                <td colspan="5" class="text-center">Loading server performance...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Environment Distribution Chart -->
     <div class="card">
         <div class="card-header">
-            <h5 class="mb-0">Available Metric Types</h5>
+            <h3 class="card-title">Environment & Type Distribution</h3>
+            <p class="card-description">Visual breakdown of metrics across environments and types</p>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-bordered table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Metric Type</th>
-                            <th>Quantity</th>
-                            <th>Last Update Time</th>
-                        </tr>
-                    </thead>
-                    <tbody id="metricsOverviewTableBody">
-                        <tr>
-                            <td colspan="3" class="text-center">Loading overview data...</td>
-                        </tr>
-                    </tbody>
-                </table>
+        <div class="card-content">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="text-md font-semibold mb-3">By Environment</h4>
+                    <div id="environmentChart" style="height: 300px;"></div>
+                </div>
+                <div>
+                    <h4 class="text-md font-semibold mb-3">By Metric Type</h4>
+                    <div id="metricTypeChart" style="height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Timeline Analysis -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">24-Hour Activity Timeline</h3>
+            <p class="card-description">Metric collection patterns and activity over the last 24 hours</p>
+        </div>
+        <div class="card-content">
+            <div id="timelineChart" style="height: 300px;"></div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Quick Actions</h3>
+        </div>
+        <div class="card-content">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button class="btn btn-outline p-4 h-auto flex flex-col items-center" onclick="window.location.href='/Settings'">
+                    <i class="fas fa-cog text-2xl mb-2"></i>
+                    <span class="font-semibold">Configure Dashboard</span>
+                    <span class="text-sm text-muted">Customize layouts and widgets</span>
+                </button>
+                
+                <button class="btn btn-outline p-4 h-auto flex flex-col items-center" onclick="window.location.href='/'">
+                    <i class="fas fa-tachometer-alt text-2xl mb-2"></i>
+                    <span class="font-semibold">View Dashboard</span>
+                    <span class="text-sm text-muted">Go to main metrics dashboard</span>
+                </button>
+                
+                <button class="btn btn-outline p-4 h-auto flex flex-col items-center" id="createAlert">
+                    <i class="fas fa-bell text-2xl mb-2"></i>
+                    <span class="font-semibold">Create Alert</span>
+                    <span class="text-sm text-muted">Set up monitoring alerts</span>
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script src="~/js/metricsOverview.js"></script>
+    <!-- ApexCharts CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    
+    <script src="~/js/metricsOverview.js" asp-append-version="true"></script>
 }

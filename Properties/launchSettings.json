@@ -12,8 +12,18 @@
     "http": {
       "commandName": "Project",
       "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "launchUrl": "/",
+      "applicationUrl": "http://localhost:5190",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "http-w-scalar": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
       "launchBrowser": true,
-      "launchUrl": "swagger",
+      "launchUrl": "scalar/v1",
       "applicationUrl": "http://localhost:5190",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"

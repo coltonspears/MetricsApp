@@ -1,48 +1,563 @@
 @page
 @model MetricsApp.Pages.SettingsModel
 @{
-    ViewData["Title"] = "Settings";
+    ViewData["Title"] = "Settings & Dashboard Configuration";
 }
 
-<div class="text-center">
-    <h1 class="display-4">@ViewData["Title"]</h1>
-    <p>Application settings will be managed here.</p>
+@section Styles {
+    <style>
+        .settings-container {            max-width: 100%;            margin: 0;            padding: 1rem 2rem;            width: 100%;        }
+        
+        .settings-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--app-border);
+            margin-bottom: 2rem;
+        }
+        
+        .settings-tab {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: var(--app-text-muted);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .settings-tab.active {
+            color: var(--app-primary);
+            border-bottom: 2px solid var(--app-primary);
+            background: var(--app-primary-faded);
+        }
+        
+        .settings-tab:hover {
+            background: var(--app-hover);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .dashboard-grid-preview {
+            border: 2px dashed var(--app-border);
+            border-radius: 8px;
+            padding: 1rem;
+            min-height: 300px;
+            background: var(--app-surface);
+            position: relative;
+        }
+        
+        .widget-placeholder {
+            border: 1px solid var(--app-border);
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 0.5rem;
+            background: var(--app-background);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .widget-placeholder:hover {
+            background: var(--app-hover);
+            border-color: var(--app-primary);
+        }
+        
+        .widget-library {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .widget-card {
+            border: 1px solid var(--app-border);
+            border-radius: 8px;
+            padding: 1rem;
+            background: var(--app-surface);
+            cursor: grab;
+            transition: all 0.3s ease;
+        }
+        
+        .widget-card:hover {
+            border-color: var(--app-primary);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .widget-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+        
+        .layout-grid {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .layout-1x1 { grid-template-columns: 1fr; }
+        .layout-2x1 { grid-template-columns: 1fr 1fr; }
+        .layout-3x1 { grid-template-columns: 1fr 1fr 1fr; }
+        .layout-2x2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+        
+        .color-palette {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .color-option.selected {
+            border-color: var(--app-primary);
+            box-shadow: 0 0 0 2px var(--app-primary-faded);
+        }
+        
+        .alert-rule {
+            border: 1px solid var(--app-border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: var(--app-surface);
+        }
+        
+        .alert-rule.enabled {
+            border-left: 4px solid var(--app-success);
+        }
+        
+        .alert-rule.disabled {
+            border-left: 4px solid var(--app-muted);
+            opacity: 0.7;
+        }
+    </style>
+}
 
-    <div class="container" style="max-width: 600px; margin-top: 20px;">
-        <form>
-            <fieldset>
-                <legend>General Settings</legend>
-                <div class="form-group">
-                    <label for="refreshInterval">Data Refresh Interval (seconds):</label>
-                    <input type="number" class="form-control" id="refreshInterval" value="60">
-                </div>
-                <div class="form-group">
-                    <label for="themeSelection">Theme:</label>
-                    <select class="form-control" id="themeSelection">
-                        <option>Light</option>
-                        <option>Dark</option>
-                        <option>System Default</option>
-                    </select>
-                </div>
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="enableNotifications">
-                    <label class="form-check-label" for="enableNotifications">Enable Notifications</label>
-                </div>
-            </fieldset>
+<div class="settings-container">
+    <h1 class="text-3xl font-bold text-foreground mb-6">Settings & Dashboard Configuration</h1>
+    
+    <!-- Settings Navigation Tabs -->
+    <div class="settings-tabs">
+        <button class="settings-tab active" data-tab="dashboard">
+            <i class="fas fa-tachometer-alt"></i>
+            Dashboard Layout
+        </button>
+        <button class="settings-tab" data-tab="widgets">
+            <i class="fas fa-puzzle-piece"></i>
+            Widget Library
+        </button>
+        <button class="settings-tab" data-tab="themes">
+            <i class="fas fa-palette"></i>
+            Themes & Colors
+        </button>
+        <button class="settings-tab" data-tab="alerts">
+            <i class="fas fa-bell"></i>
+            Alerts & Thresholds
+        </button>
+        <button class="settings-tab" data-tab="general">
+            <i class="fas fa-cog"></i>
+            General Settings
+        </button>
+    </div>
 
-            <fieldset style="margin-top: 20px;">
-                <legend>Alerting</legend>
-                <div class="form-group">
-                    <label for="cpuThreshold">CPU Usage Threshold (%):</label>
-                    <input type="number" class="form-control" id="cpuThreshold" value="80">
+    <!-- Dashboard Layout Configuration -->
+    <div class="tab-content active" id="dashboard">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Dashboard Layout Builder</h3>
+                <p class="card-description">Design your custom dashboard by arranging widgets and charts</p>
+            </div>
+            <div class="card-content">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Layout Options -->
+                    <div class="lg:col-span-1">
+                        <h4 class="text-lg font-semibold mb-4">Layout Templates</h4>
+                        <div class="space-y-3">
+                            <button class="w-full btn btn-outline layout-btn" data-layout="1x1">
+                                <div class="flex items-center">
+                                    <div class="layout-preview mr-3">
+                                        <div class="w-8 h-6 border border-current rounded"></div>
+                                    </div>
+                                    Single Column
+                                </div>
+                            </button>
+                            <button class="w-full btn btn-outline layout-btn" data-layout="2x1">
+                                <div class="flex items-center">
+                                    <div class="layout-preview mr-3 flex gap-1">
+                                        <div class="w-4 h-6 border border-current rounded"></div>
+                                        <div class="w-4 h-6 border border-current rounded"></div>
+                                    </div>
+                                    Two Columns
+                                </div>
+                            </button>
+                            <button class="w-full btn btn-outline layout-btn" data-layout="3x1">
+                                <div class="flex items-center">
+                                    <div class="layout-preview mr-3 flex gap-1">
+                                        <div class="w-2 h-6 border border-current rounded"></div>
+                                        <div class="w-2 h-6 border border-current rounded"></div>
+                                        <div class="w-2 h-6 border border-current rounded"></div>
+                                    </div>
+                                    Three Columns
+                                </div>
+                            </button>
+                            <button class="w-full btn btn-outline layout-btn" data-layout="2x2">
+                                <div class="flex items-center">
+                                    <div class="layout-preview mr-3">
+                                        <div class="grid grid-cols-2 gap-1">
+                                            <div class="w-4 h-3 border border-current rounded"></div>
+                                            <div class="w-4 h-3 border border-current rounded"></div>
+                                            <div class="w-4 h-3 border border-current rounded"></div>
+                                            <div class="w-4 h-3 border border-current rounded"></div>
+                                        </div>
+                                    </div>
+                                    Grid 2x2
+                                </div>
+                            </button>
+                        </div>
+                        
+                        <h4 class="text-lg font-semibold mb-4 mt-6">Dashboard Settings</h4>
+                        <div class="space-y-4">
+                            <div class="field">
+                                <label class="label">Dashboard Name</label>
+                                <input class="input" type="text" id="dashboardName" value="Main Dashboard" placeholder="Enter dashboard name">
+                            </div>
+                            <div class="field">
+                                <label class="label">Auto Refresh (seconds)</label>
+                                <input class="input" type="number" id="dashboardRefresh" value="60" min="10" max="3600">
+                            </div>
+                            <div class="field">
+                                <label class="checkbox">
+                                    <input type="checkbox" id="dashboardFullscreen" checked>
+                                    <span class="checkmark"></span>
+                                    Enable fullscreen mode
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dashboard Preview -->
+                    <div class="lg:col-span-2">
+                        <h4 class="text-lg font-semibold mb-4">Dashboard Preview</h4>
+                        <div class="dashboard-grid-preview layout-2x1" id="dashboardPreview">
+                            <div class="widget-placeholder" data-widget-type="timeline">
+                                <div>
+                                    <i class="fas fa-chart-line text-2xl mb-2"></i>
+                                    <p>Metric Timeline</p>
+                                </div>
+                            </div>
+                            <div class="widget-placeholder" data-widget-type="donut">
+                                <div>
+                                    <i class="fas fa-chart-pie text-2xl mb-2"></i>
+                                    <p>Environment Distribution</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between mt-4">
+                            <div class="space-x-2">
+                                <button class="btn btn-outline" id="previewDashboard">
+                                    <i class="fas fa-eye"></i>
+                                    Preview
+                                </button>
+                                <button class="btn btn-outline" id="resetDashboard">
+                                    <i class="fas fa-undo"></i>
+                                    Reset
+                                </button>
+                            </div>
+                            <button class="btn btn-default" id="saveDashboard">
+                                <i class="fas fa-save"></i>
+                                Save Dashboard
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="memoryThreshold">Memory Usage Threshold (MB):</label>
-                    <input type="number" class="form-control" id="memoryThreshold" value="1024">
+            </div>
+        </div>
+    </div>
+
+    <!-- Widget Library -->
+    <div class="tab-content" id="widgets">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Available Widgets</h3>
+                <p class="card-description">Drag and drop widgets to your dashboard</p>
+            </div>
+            <div class="card-content">
+                <div class="widget-library">
+                    <div class="widget-card" draggable="true" data-widget="timeline">
+                        <div class="text-center">
+                            <i class="fas fa-chart-line text-3xl mb-3 text-primary"></i>
+                            <h4 class="font-semibold">Timeline Chart</h4>
+                            <p class="text-sm text-muted">Shows metrics over time</p>
+                        </div>
+                    </div>
+                    <div class="widget-card" draggable="true" data-widget="bar">
+                        <div class="text-center">
+                            <i class="fas fa-chart-bar text-3xl mb-3 text-info"></i>
+                            <h4 class="font-semibold">Bar Chart</h4>
+                            <p class="text-sm text-muted">Compare values across categories</p>
+                        </div>
+                    </div>
+                    <div class="widget-card" draggable="true" data-widget="donut">
+                        <div class="text-center">
+                            <i class="fas fa-chart-pie text-3xl mb-3 text-success"></i>
+                            <h4 class="font-semibold">Donut Chart</h4>
+                            <p class="text-sm text-muted">Show distribution percentages</p>
+                        </div>
+                    </div>
+                    <div class="widget-card" draggable="true" data-widget="kpi">
+                        <div class="text-center">
+                            <i class="fas fa-tachometer-alt text-3xl mb-3 text-warning"></i>
+                            <h4 class="font-semibold">KPI Cards</h4>
+                            <p class="text-sm text-muted">Key performance indicators</p>
+                        </div>
+                    </div>
+                    <div class="widget-card" draggable="true" data-widget="table">
+                        <div class="text-center">
+                            <i class="fas fa-table text-3xl mb-3 text-danger"></i>
+                            <h4 class="font-semibold">Data Table</h4>
+                            <p class="text-sm text-muted">Detailed metrics listing</p>
+                        </div>
+                    </div>
+                    <div class="widget-card" draggable="true" data-widget="gauge">
+                        <div class="text-center">
+                            <i class="fas fa-gauge-high text-3xl mb-3 text-purple-500"></i>
+                            <h4 class="font-semibold">Gauge Chart</h4>
+                            <p class="text-sm text-muted">Show current vs target values</p>
+                        </div>
+                    </div>
                 </div>
-            </fieldset>
+            </div>
+        </div>
+    </div>
+
+    <!-- Themes & Colors -->
+    <div class="tab-content" id="themes">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Theme Selection</h3>
+                </div>
+                <div class="card-content space-y-4">
+                    <div class="field">
+                        <label class="label">Color Theme</label>
+                        <div class="select">
+                            <select id="themeSelection">
+                                <option value="light">Light Theme</option>
+                                <option value="dark">Dark Theme</option>
+                                <option value="auto">Auto (System Default)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="field">
+                        <label class="label">Primary Color</label>
+                        <div class="color-palette">
+                            <div class="color-option selected" style="background: #3b82f6;" data-color="#3b82f6"></div>
+                            <div class="color-option" style="background: #10b981;" data-color="#10b981"></div>
+                            <div class="color-option" style="background: #f59e0b;" data-color="#f59e0b"></div>
+                            <div class="color-option" style="background: #ef4444;" data-color="#ef4444"></div>
+                            <div class="color-option" style="background: #8b5cf6;" data-color="#8b5cf6"></div>
+                            <div class="color-option" style="background: #06b6d4;" data-color="#06b6d4"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="field">
+                        <label class="checkbox">
+                            <input type="checkbox" id="enableAnimations" checked>
+                            <span class="checkmark"></span>
+                            Enable chart animations
+                        </label>
+                    </div>
+                    
+                    <div class="field">
+                        <label class="checkbox">
+                            <input type="checkbox" id="reducedMotion">
+                            <span class="checkmark"></span>
+                            Reduce motion (accessibility)
+                        </label>
+                    </div>
+                </div>
+            </div>
             
-            <button type="submit" class="btn btn-primary" style="margin-top: 20px;">Save Settings</button>
-        </form>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Chart Customization</h3>
+                </div>
+                <div class="card-content space-y-4">
+                    <div class="field">
+                        <label class="label">Default Chart Height</label>
+                        <input class="input" type="number" id="chartHeight" value="350" min="200" max="800">
+                    </div>
+                    
+                    <div class="field">
+                        <label class="label">Grid Style</label>
+                        <div class="select">
+                            <select id="gridStyle">
+                                <option value="solid">Solid Lines</option>
+                                <option value="dashed">Dashed Lines</option>
+                                <option value="dotted">Dotted Lines</option>
+                                <option value="none">No Grid</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="field">
+                        <label class="checkbox">
+                            <input type="checkbox" id="showDataLabels">
+                            <span class="checkmark"></span>
+                            Show data labels on charts
+                        </label>
+                    </div>
+                    
+                    <div class="field">
+                        <label class="checkbox">
+                            <input type="checkbox" id="enableTooltips" checked>
+                            <span class="checkmark"></span>
+                            Enable chart tooltips
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts & Thresholds -->
+    <div class="tab-content" id="alerts">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Alert Rules</h3>
+                <p class="card-description">Configure thresholds and notifications for your metrics</p>
+                <button class="btn btn-default" id="addAlertRule">
+                    <i class="fas fa-plus"></i>
+                    Add Alert Rule
+                </button>
+            </div>
+            <div class="card-content">
+                <div id="alertRulesContainer">
+                    <!-- Alert rules will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- General Settings -->
+    <div class="tab-content" id="general">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Application Settings</h3>
+                </div>
+                <div class="card-content space-y-4">
+                    <div class="field">
+                        <label class="label">Data Refresh Interval (seconds)</label>
+                        <input class="input" type="number" id="refreshInterval" value="60" min="10" max="3600">
+                    </div>
+                    
+                    <div class="field">
+                        <label class="label">Page Size (records per page)</label>
+                        <input class="input" type="number" id="pageSize" value="50" min="10" max="500">
+                    </div>
+                    
+                    <div class="field">
+                        <label class="checkbox">
+                            <input type="checkbox" id="enableNotifications" checked>
+                            <span class="checkmark"></span>
+                            Enable browser notifications
+                        </label>
+                    </div>
+                    
+                    <div class="field">
+                        <label class="checkbox">
+                            <input type="checkbox" id="enableSounds">
+                            <span class="checkmark"></span>
+                            Enable alert sounds
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Data Management</h3>
+                </div>
+                <div class="card-content space-y-4">
+                    <div class="field">
+                        <label class="label">Default Time Range</label>
+                        <div class="select">
+                            <select id="defaultTimeRange">
+                                <option value="15m">Last 15 minutes</option>
+                                <option value="1h">Last hour</option>
+                                <option value="6h">Last 6 hours</option>
+                                <option value="24h" selected>Last 24 hours</option>
+                                <option value="7d">Last 7 days</option>
+                                <option value="30d">Last 30 days</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="field">
+                        <label class="checkbox">
+                            <input type="checkbox" id="autoApplyFilters">
+                            <span class="checkmark"></span>
+                            Auto-apply filters on change
+                        </label>
+                    </div>
+                    
+                    <div class="field">
+                        <label class="checkbox">
+                            <input type="checkbox" id="persistFilters" checked>
+                            <span class="checkmark"></span>
+                            Remember filter settings
+                        </label>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <button class="btn btn-outline btn-danger" id="clearAllData">
+                            <i class="fas fa-trash"></i>
+                            Clear All Cached Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Button -->
+    <div class="flex justify-between items-center mt-8 pt-6 border-t border-border">
+        <div class="text-sm text-muted">
+            Changes are automatically saved
+        </div>
+        <div class="space-x-3">
+            <button class="btn btn-outline" id="exportSettings">
+                <i class="fas fa-download"></i>
+                Export Settings
+            </button>
+            <button class="btn btn-outline" id="importSettings">
+                <i class="fas fa-upload"></i>
+                Import Settings
+            </button>
+            <button class="btn btn-default" id="saveAllSettings">
+                <i class="fas fa-save"></i>
+                Save All Settings
+            </button>
+        </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/settings.js"></script>
+}

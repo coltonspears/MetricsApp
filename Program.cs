@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using MetricsApp.Data;
 using MetricsApp.Models;
-using MetricsApp.Services; 
-using StackExchange.Redis; 
+using MetricsApp.Services;
+using Scalar.AspNetCore;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,8 @@ builder.Services.AddDbContext<MetricsDbContext>(options =>
 
 // Add Memory Cache for fallback
 builder.Services.AddMemoryCache();
+
+builder.Services.AddOpenApi();
 
 // Configure Redis Cache
 var redisConfiguration = builder.Configuration.GetConnectionString("RedisConnection");
@@ -36,9 +39,16 @@ else
     }
 }
 
-builder.Services.AddMcpServer();
 builder.Services.AddControllers(); // For API Controllers
-builder.Services.AddRazorPages(); // For Razor Pages UI
+builder.Services.AddRazorPages(); 
+
+// Add HttpClient for dependency injection
+builder.Services.AddHttpClient();
+
+// Add Blazor services
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
+
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -49,13 +59,22 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.UseDeveloperExceptionPage(); // Useful for debugging Razor Pages issues
+    //app.UseSwagger();
+    //app.UseSwaggerUI();
+    app.MapOpenApi();
+    app.MapScalarApiReference(options =>
+    {
+        options
+            .WithTheme(ScalarTheme.Kepler)
+            .WithDarkModeToggle(true)
+            .WithClientButton(true);
+    });
+    
+    app.UseDeveloperExceptionPage(); // Useful for debugging
 }
 else
 {
-    app.UseExceptionHandler("/Error"); // Basic error handling for Razor Pages
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     // app.UseHsts(); // Not enabling HSTS as --no-https was used for simplicity
 }
@@ -63,12 +82,13 @@ else
 // app.UseHttpsRedirection(); // Not using HTTPS for simplicity as per --no-https
 app.UseStaticFiles(); // To serve CSS, JS, images from wwwroot
 
+
 app.UseRouting();
 
-app.UseAuthorization();
+app.UseAntiforgery();
 
-app.MapRazorPages(); // Map requests to Razor Pages
 app.MapControllers(); // Map requests to API controllers
+app.MapRazorPages();
 
 await app.RunAsync();
 

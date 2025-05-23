@@ -1,0 +1,419 @@
+@page
+@model MetricsApp.Pages.ShadcnDemoModel
+@{
+    ViewData["Title"] = "shadcn/ui Components Demo";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/shadcn-inspired.css" asp-append-version="true" />
+    <style>
+        .demo-section {
+            margin-bottom: 3rem;
+        }
+        
+        .component-preview {
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin: 1rem 0;
+            background-color: hsl(var(--background));
+        }
+        
+        .code-block {
+            background-color: hsl(var(--muted));
+            padding: 1rem;
+            border-radius: var(--radius);
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+    </style>
+}
+
+<div class="container" style="max-width: 100%; margin: 0; padding: 1rem 2rem; width: 100%;">
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">🎨 shadcn/ui Component System Demo</h1>
+            <p class="card-description">
+                Explore how to use shadcn/ui design principles in your ASP.NET Core Razor Pages
+            </p>
+        </div>
+    </div>
+
+    <!-- Buttons Section -->
+    <div class="demo-section">
+        <h2 style="color: hsl(var(--foreground)); margin-bottom: 1rem;">Button Components</h2>
+        
+        <div class="component-preview">
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+                <button class="btn btn-default">Default</button>
+                <button class="btn btn-secondary">Secondary</button>
+                <button class="btn btn-destructive">Destructive</button>
+                <button class="btn btn-outline">Outline</button>
+                <button class="btn btn-ghost">Ghost</button>
+                <button class="btn btn-link">Link</button>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 1rem; align-items: center;">
+                <button class="btn btn-default btn-sm">Small</button>
+                <button class="btn btn-default">Default</button>
+                <button class="btn btn-default btn-lg">Large</button>
+                <button class="btn btn-default btn-icon">
+                    <i class="fas fa-heart"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="code-block">
+&lt;button class="btn btn-default"&gt;Default&lt;/button&gt;
+&lt;button class="btn btn-outline"&gt;Outline&lt;/button&gt;
+&lt;button class="btn btn-default btn-sm"&gt;Small&lt;/button&gt;
+        </div>
+    </div>
+
+    <!-- Cards Section -->
+    <div class="demo-section">
+        <h2 style="color: hsl(var(--foreground)); margin-bottom: 1rem;">Card Components</h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Card Title</h3>
+                    <p class="card-description">Card description goes here</p>
+                </div>
+                <div class="card-content">
+                    <p>This is the card content area where you can place any content.</p>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-default">Action</button>
+                    <button class="btn btn-outline">Cancel</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Metrics Overview</h3>
+                    <p class="card-description">Real-time system metrics</p>
+                </div>
+                <div class="card-content">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                        <span>CPU Usage</span>
+                        <span class="badge badge-default">78%</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                        <span>Memory</span>
+                        <span class="badge badge-secondary">4.2GB</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Status</span>
+                        <span class="badge badge-outline">Online</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="code-block">
+&lt;div class="card"&gt;
+    &lt;div class="card-header"&gt;
+        &lt;h3 class="card-title"&gt;Card Title&lt;/h3&gt;
+        &lt;p class="card-description"&gt;Description&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class="card-content"&gt;
+        Content goes here
+    &lt;/div&gt;
+&lt;/div&gt;
+        </div>
+    </div>
+
+    <!-- Form Components -->
+    <div class="demo-section">
+        <h2 style="color: hsl(var(--foreground)); margin-bottom: 1rem;">Form Components</h2>
+        
+        <div class="component-preview">
+            <form style="max-width: 400px;">
+                <div class="form-item">
+                    <label class="form-label" for="email">Email</label>
+                    <input class="input" type="email" id="email" placeholder="Enter your email">
+                    <p class="form-description">We'll never share your email with anyone else.</p>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label" for="password">Password</label>
+                    <input class="input" type="password" id="password" placeholder="Enter your password">
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label" for="environment">Environment</label>
+                    <div class="select">
+                        <select id="environment">
+                            <option value="">Select environment</option>
+                            <option value="production">Production</option>
+                            <option value="staging">Staging</option>
+                            <option value="development">Development</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn btn-default">Submit</button>
+                    <button type="button" class="btn btn-outline">Cancel</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="code-block">
+&lt;div class="form-item"&gt;
+    &lt;label class="form-label" for="email"&gt;Email&lt;/label&gt;
+    &lt;input class="input" type="email" id="email" placeholder="Enter email"&gt;
+    &lt;p class="form-description"&gt;Helper text&lt;/p&gt;
+&lt;/div&gt;
+        </div>
+    </div>
+
+    <!-- Badges and Alerts -->
+    <div class="demo-section">
+        <h2 style="color: hsl(var(--foreground)); margin-bottom: 1rem;">Badges & Alerts</h2>
+        
+        <div class="component-preview">
+            <div style="margin-bottom: 2rem;">
+                <h4 style="margin-bottom: 1rem;">Badges</h4>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+                    <span class="badge badge-default">Default</span>
+                    <span class="badge badge-secondary">Secondary</span>
+                    <span class="badge badge-destructive">Error</span>
+                    <span class="badge badge-outline">Outline</span>
+                </div>
+            </div>
+            
+            <div>
+                <h4 style="margin-bottom: 1rem;">Alerts</h4>
+                <div class="alert" style="margin-bottom: 1rem;">
+                    <h4 class="alert-title">Info</h4>
+                    <p class="alert-description">This is an informational alert message.</p>
+                </div>
+                
+                <div class="alert alert-destructive">
+                    <h4 class="alert-title">Error</h4>
+                    <p class="alert-description">Something went wrong. Please try again.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="code-block">
+&lt;span class="badge badge-default"&gt;Badge&lt;/span&gt;
+
+&lt;div class="alert"&gt;
+    &lt;h4 class="alert-title"&gt;Alert Title&lt;/h4&gt;
+    &lt;p class="alert-description"&gt;Alert description&lt;/p&gt;
+&lt;/div&gt;
+        </div>
+    </div>
+
+    <!-- Table Component -->
+    <div class="demo-section">
+        <h2 style="color: hsl(var(--foreground)); margin-bottom: 1rem;">Table Component</h2>
+        
+        <div class="component-preview">
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead class="table-header">
+                        <tr>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Environment</th>
+                            <th>Last Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-body">
+                        <tr>
+                            <td>web-server-01</td>
+                            <td><span class="badge badge-default">Online</span></td>
+                            <td>Production</td>
+                            <td>2 minutes ago</td>
+                            <td>
+                                <button class="btn btn-ghost btn-sm">View</button>
+                                <button class="btn btn-ghost btn-sm">Edit</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>api-server-02</td>
+                            <td><span class="badge badge-destructive">Offline</span></td>
+                            <td>Staging</td>
+                            <td>1 hour ago</td>
+                            <td>
+                                <button class="btn btn-ghost btn-sm">View</button>
+                                <button class="btn btn-ghost btn-sm">Edit</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>db-server-03</td>
+                            <td><span class="badge badge-secondary">Maintenance</span></td>
+                            <td>Development</td>
+                            <td>5 minutes ago</td>
+                            <td>
+                                <button class="btn btn-ghost btn-sm">View</button>
+                                <button class="btn btn-ghost btn-sm">Edit</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="code-block">
+&lt;div class="table-wrapper"&gt;
+    &lt;table class="table"&gt;
+        &lt;thead class="table-header"&gt;
+            &lt;tr&gt;&lt;th&gt;Name&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;&lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody class="table-body"&gt;
+            &lt;tr&gt;&lt;td&gt;Data&lt;/td&gt;&lt;td&gt;Value&lt;/td&gt;&lt;/tr&gt;
+        &lt;/tbody&gt;
+    &lt;/table&gt;
+&lt;/div&gt;
+        </div>
+    </div>
+
+    <!-- Loading States -->
+    <div class="demo-section">
+        <h2 style="color: hsl(var(--foreground)); margin-bottom: 1rem;">Loading States</h2>
+        
+        <div class="component-preview">
+            <div style="display: flex; gap: 2rem; align-items: center; margin-bottom: 2rem;">
+                <div class="spinner"></div>
+                <span>Loading spinner</span>
+            </div>
+            
+            <div>
+                <h4 style="margin-bottom: 1rem;">Skeleton Loading</h4>
+                <div style="space-y: 1rem;">
+                    <div class="skeleton" style="height: 1rem; width: 60%;"></div>
+                    <div class="skeleton" style="height: 1rem; width: 80%;"></div>
+                    <div class="skeleton" style="height: 1rem; width: 40%;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="code-block">
+&lt;div class="spinner"&gt;&lt;/div&gt;
+&lt;div class="skeleton" style="height: 1rem; width: 60%;"&gt;&lt;/div&gt;
+        </div>
+    </div>
+
+    <!-- Interactive Demo -->
+    <div class="demo-section">
+        <h2 style="color: hsl(var(--foreground)); margin-bottom: 1rem;">Interactive Demo</h2>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Test Components</h3>
+                <p class="card-description">Try out the interactive components</p>
+            </div>
+            <div class="card-content">
+                <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                    <button class="btn btn-default" onclick="showToast('Success!', 'default')">Show Success</button>
+                    <button class="btn btn-destructive" onclick="showToast('Error!', 'destructive')">Show Error</button>
+                    <button class="btn btn-secondary" onclick="showToast('Info message', 'default')">Show Info</button>
+                </div>
+                
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn btn-outline" onclick="toggleLoading(this)">Toggle Loading</button>
+                    <button class="btn btn-ghost" onclick="addTableRow()">Add Table Row</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Integration Guide -->
+    <div class="demo-section">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🚀 How to Integrate in Your Project</h2>
+                <p class="card-description">Step-by-step guide to using shadcn/ui components in ASP.NET Core</p>
+            </div>
+            <div class="card-content">
+                <div class="alert" style="margin-bottom: 1.5rem;">
+                    <h4 class="alert-title">Quick Start</h4>
+                    <p class="alert-description">Add the shadcn-inspired.css file to your layout and start using the components!</p>
+                </div>
+                
+                <ol style="space-y: 1rem; color: hsl(var(--foreground));">
+                    <li><strong>Add the CSS:</strong> Include <code>shadcn-inspired.css</code> in your layout</li>
+                    <li><strong>Replace Bulma classes:</strong> Use shadcn classes instead (e.g., <code>.btn</code> instead of <code>.button</code>)</li>
+                    <li><strong>Use semantic HTML:</strong> Build components with proper structure</li>
+                    <li><strong>Customize themes:</strong> Modify CSS variables for your brand colors</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    <script>
+        function showToast(message, type = 'default') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast-item ${type}`;
+            toast.innerHTML = `
+                <div>
+                    <div class="toast-title">${type === 'destructive' ? 'Error' : 'Success'}</div>
+                    <div class="toast-description">${message}</div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 3000);
+        }
+        
+        function toggleLoading(button) {
+            if (button.innerHTML.includes('spinner')) {
+                button.innerHTML = 'Toggle Loading';
+                button.disabled = false;
+            } else {
+                button.innerHTML = '<div class="spinner" style="margin-right: 0.5rem;"></div>Loading...';
+                button.disabled = true;
+                
+                setTimeout(() => {
+                    button.innerHTML = 'Toggle Loading';
+                    button.disabled = false;
+                }, 2000);
+            }
+        }
+        
+        function addTableRow() {
+            const tbody = document.querySelector('.table-body');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>new-server-${Math.floor(Math.random() * 100)}</td>
+                <td><span class="badge badge-default">Online</span></td>
+                <td>Development</td>
+                <td>Just now</td>
+                <td>
+                    <button class="btn btn-ghost btn-sm">View</button>
+                    <button class="btn btn-ghost btn-sm">Edit</button>
+                </td>
+            `;
+            tbody.appendChild(newRow);
+        }
+        
+        // Show welcome toast on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                showToast('Welcome to shadcn/ui components demo!', 'default');
+            }, 500);
+        });
+    </script>
+} 

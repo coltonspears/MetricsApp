@@ -22,6 +22,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsApp.Repository.InMem
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsApp.Worker", "MetricsApp.Worker\MetricsApp.Worker.csproj", "{29153558-8FEC-46A5-983F-3C634B7C81BA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsApp.Agent.Core", "MetricsApp.Agent.Core\MetricsApp.Agent.Core.csproj", "{9AE32DDE-62FD-440F-A328-576A61580356}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsApp.Agent.Collectors.WindowsPerfCounters", "MetricsApp.Agent.Collectors.WindowsPerfCounters\MetricsApp.Agent.Collectors.WindowsPerfCounters.csproj", "{099D2ECD-689F-4793-839A-C04FC248B505}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsApp.Agent.Emitters.Queue", "MetricsApp.Agent.Emitters.Queue\MetricsApp.Agent.Emitters.Queue.csproj", "{7397CCDE-3073-48BC-B22C-EF86FCF51BB0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Demo", "Demo", "{304AFF9F-AF4E-4775-A55A-7596882723A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsApp.Demo.SampleHostApp", "MetricsApp.Demo.SampleHostApp\MetricsApp.Demo.SampleHostApp.csproj", "{9C5A11B8-8572-48B8-8E31-861330780954}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsApp.Agent.Emitters.Http", "MetricsApp.Agent.Emitters.Http\MetricsApp.Agent.Emitters.Http.csproj", "{660FBE81-7E28-49B2-BD48-F27DC2B7C3BC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -68,11 +80,34 @@ Global
 		{29153558-8FEC-46A5-983F-3C634B7C81BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29153558-8FEC-46A5-983F-3C634B7C81BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{29153558-8FEC-46A5-983F-3C634B7C81BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9AE32DDE-62FD-440F-A328-576A61580356}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9AE32DDE-62FD-440F-A328-576A61580356}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9AE32DDE-62FD-440F-A328-576A61580356}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9AE32DDE-62FD-440F-A328-576A61580356}.Release|Any CPU.Build.0 = Release|Any CPU
+		{099D2ECD-689F-4793-839A-C04FC248B505}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{099D2ECD-689F-4793-839A-C04FC248B505}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{099D2ECD-689F-4793-839A-C04FC248B505}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{099D2ECD-689F-4793-839A-C04FC248B505}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7397CCDE-3073-48BC-B22C-EF86FCF51BB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7397CCDE-3073-48BC-B22C-EF86FCF51BB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7397CCDE-3073-48BC-B22C-EF86FCF51BB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7397CCDE-3073-48BC-B22C-EF86FCF51BB0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C5A11B8-8572-48B8-8E31-861330780954}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C5A11B8-8572-48B8-8E31-861330780954}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C5A11B8-8572-48B8-8E31-861330780954}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C5A11B8-8572-48B8-8E31-861330780954}.Release|Any CPU.Build.0 = Release|Any CPU
+		{660FBE81-7E28-49B2-BD48-F27DC2B7C3BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{660FBE81-7E28-49B2-BD48-F27DC2B7C3BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{660FBE81-7E28-49B2-BD48-F27DC2B7C3BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{660FBE81-7E28-49B2-BD48-F27DC2B7C3BC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8036AD63-B9BA-4701-8C15-D2EF5BAB752E}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9C5A11B8-8572-48B8-8E31-861330780954} = {304AFF9F-AF4E-4775-A55A-7596882723A1}
 	EndGlobalSection
 EndGlobal

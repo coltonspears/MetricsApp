@@ -25,6 +25,17 @@ A modern, responsive web interface for monitoring and analyzing infrastructure m
 - **Server Activity**: Horizontal bar charts of server-level metrics
 - **Custom Charts**: Extensible system for adding new visualization types
 
+![dashboard.png](docs/images/dashboard.png)
+
+## Search
+![search.png](docs/images/search.png)
+
+## Alert Management (WIP)
+![alert_management.png](docs/images/alert_management.png)
+
+## User Monitoring (WIP)
+![user_monitoring.png](docs/images/user_monitoring.png)
+
 ## Quick Start
 
 ### Prerequisites

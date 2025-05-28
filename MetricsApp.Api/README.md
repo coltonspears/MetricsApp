@@ -12,6 +12,11 @@ The API project provides REST endpoints for data ingestion and querying in the M
 - **Validation**: Input validation and error handling
 - **Async Processing**: Queue-based processing for scalability
 
+# Scalar Support
+![scalar_api_client.png](docs/images/scalar_api_client.png)
+
+![scalar_api_reference.png](docs/images/scalar_api_reference.png)
+
 ## Endpoints
 
 ### Ingestion Controller

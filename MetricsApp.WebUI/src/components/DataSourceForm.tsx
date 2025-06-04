@@ -93,46 +93,90 @@ export default function DataSourceForm({
       return
     }
 
-    if (!formData.url.trim()) {
-      setTestResult({
-        isSuccess: false,
-        responseTimeMs: 0,
-        errorMessage: 'URL is required',
-        details: 'Please enter a valid URL'
-      })
-      return
-    }
-
-    // Validate authentication fields if authentication is enabled
-    if (formData.authentication?.type === 'Basic') {
-      if (!formData.authentication.username?.trim() || !formData.authentication.password?.trim()) {
+    // Validate based on datasource type
+    if (selectedType === 'sqlserver') {
+      // Validate SQL Server specific fields
+      const server = formData.properties['server']?.trim()
+      const database = formData.properties['database']?.trim()
+      const authType = formData.properties['authType'] || 'Windows'
+      
+      if (!server) {
         setTestResult({
           isSuccess: false,
           responseTimeMs: 0,
-          errorMessage: 'Username and password are required for basic authentication',
-          details: 'Please enter both username and password'
+          errorMessage: 'Server is required',
+          details: 'Please enter a SQL Server instance name or IP address'
         })
         return
       }
-    } else if (formData.authentication?.type === 'Bearer') {
-      if (!formData.authentication.token?.trim()) {
+      
+      if (!database) {
         setTestResult({
           isSuccess: false,
           responseTimeMs: 0,
-          errorMessage: 'Bearer token is required',
-          details: 'Please enter a bearer token'
+          errorMessage: 'Database is required',
+          details: 'Please enter a database name'
         })
         return
       }
-    } else if (formData.authentication?.type === 'ApiKey') {
-      if (!formData.authentication.apiKey?.trim()) {
+      
+      if (authType === 'SqlServer') {
+        const username = formData.properties['username']?.trim()
+        const password = formData.properties['password']?.trim()
+        
+        if (!username || !password) {
+          setTestResult({
+            isSuccess: false,
+            responseTimeMs: 0,
+            errorMessage: 'Username and password are required for SQL Server authentication',
+            details: 'Please enter both username and password'
+          })
+          return
+        }
+      }
+    } else {
+      // For other datasources, validate URL
+      if (!formData.url.trim()) {
         setTestResult({
           isSuccess: false,
           responseTimeMs: 0,
-          errorMessage: 'API key is required',
-          details: 'Please enter an API key'
+          errorMessage: 'URL is required',
+          details: 'Please enter a valid URL'
         })
         return
+      }
+      
+      // Validate authentication fields if authentication is enabled
+      if (formData.authentication?.type === 'Basic') {
+        if (!formData.authentication.username?.trim() || !formData.authentication.password?.trim()) {
+          setTestResult({
+            isSuccess: false,
+            responseTimeMs: 0,
+            errorMessage: 'Username and password are required for basic authentication',
+            details: 'Please enter both username and password'
+          })
+          return
+        }
+      } else if (formData.authentication?.type === 'Bearer') {
+        if (!formData.authentication.token?.trim()) {
+          setTestResult({
+            isSuccess: false,
+            responseTimeMs: 0,
+            errorMessage: 'Bearer token is required',
+            details: 'Please enter a bearer token'
+          })
+          return
+        }
+      } else if (formData.authentication?.type === 'ApiKey') {
+        if (!formData.authentication.apiKey?.trim()) {
+          setTestResult({
+            isSuccess: false,
+            responseTimeMs: 0,
+            errorMessage: 'API key is required',
+            details: 'Please enter an API key'
+          })
+          return
+        }
       }
     }
 
@@ -214,6 +258,16 @@ export default function DataSourceForm({
   const renderField = (field: ConfigurationField) => {
     const value = field.name === 'url' ? formData.url : formData.properties[field.name] || ''
     
+    // For SQL Server datasource, conditionally render username/password fields
+    if (selectedType === 'sqlserver') {
+      const authType = formData.properties['authType'] || 'Windows'
+      
+      // Hide username/password fields when using Windows Authentication
+      if ((field.name === 'username' || field.name === 'password') && authType === 'Windows') {
+        return null
+      }
+    }
+    
     switch (field.type) {
       case 'Boolean':
         return (
@@ -281,7 +335,7 @@ export default function DataSourceForm({
           >
             <option value="">Select {field.label}</option>
             {field.options?.map(option => (
-              <option key={option} value={option}>{option}</option>
+              <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
         )
@@ -428,11 +482,37 @@ export default function DataSourceForm({
 
   // Helper function to check if test connection should be enabled
   const canTestConnection = () => {
-    if (!selectedTypeInfo || !formData.name.trim() || !formData.url.trim()) {
+    if (!selectedTypeInfo || !formData.name.trim()) {
       return false
     }
 
-    // Check authentication requirements
+    // Check required fields based on datasource type
+    if (selectedType === 'sqlserver') {
+      // For SQL Server, check server and database fields
+      const server = formData.properties['server']?.trim()
+      const database = formData.properties['database']?.trim()
+      const authType = formData.properties['authType'] || 'Windows'
+      
+      if (!server || !database) {
+        return false
+      }
+      
+      // If using SQL Server authentication, check username/password
+      if (authType === 'SqlServer') {
+        const username = formData.properties['username']?.trim()
+        const password = formData.properties['password']?.trim()
+        return !!(username && password)
+      }
+      
+      return true
+    } else {
+      // For other datasources, check URL field
+      if (!formData.url.trim()) {
+        return false
+      }
+    }
+
+    // Check authentication requirements for other datasources
     if (formData.authentication?.type === 'Basic') {
       return !!(formData.authentication.username?.trim() && formData.authentication.password?.trim())
     } else if (formData.authentication?.type === 'Bearer') {
@@ -507,17 +587,26 @@ export default function DataSourceForm({
             {selectedTypeInfo.description}
           </p>
           
-          {selectedTypeInfo.configurationSchema.fields.map(field => (
-            <div key={field.name}>
-              <label htmlFor={field.name} className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                {field.label} {field.required && '*'}
-              </label>
-              {field.description && (
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{field.description}</p>
-              )}
-              {renderField(field)}
-            </div>
-          ))}
+          {selectedTypeInfo.configurationSchema.fields.map(field => {
+            const renderedField = renderField(field)
+            
+            // Skip rendering if field is conditionally hidden
+            if (renderedField === null) {
+              return null
+            }
+            
+            return (
+              <div key={field.name}>
+                <label htmlFor={field.name} className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {field.label} {field.required && '*'}
+                </label>
+                {field.description && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{field.description}</p>
+                )}
+                {renderedField}
+              </div>
+            )
+          })}
         </div>
       )}
 
@@ -616,7 +705,7 @@ export default function DataSourceForm({
         </button>
         <button
           type="submit"
-          disabled={isLoading || !selectedType || !formData.name || !formData.url}
+          disabled={isLoading || !selectedType || !formData.name || (selectedType !== 'sqlserver' && !formData.url)}
           className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}

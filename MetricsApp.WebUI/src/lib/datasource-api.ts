@@ -45,7 +45,12 @@ export interface ConfigurationField {
   required: boolean
   defaultValue?: any
   placeholder?: string
-  options?: string[]
+  options?: SelectOption[]
+}
+
+export interface SelectOption {
+  value: string
+  label: string
 }
 
 export interface ValidationRule {

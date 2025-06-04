@@ -30,7 +30,9 @@ builder.Services.AddInMemoryCaching();
 builder.Services.AddInMemoryRepository();
 builder.Services.AddWindowsPerfCounterParser();
 
+// Register data sources
 builder.Services.AddDataSources();
+builder.Services.AddSqlServerDataSource();
 builder.Services.AddPrometheusDataSource(httpClient =>
 {
     httpClient.Timeout = TimeSpan.FromSeconds(60);

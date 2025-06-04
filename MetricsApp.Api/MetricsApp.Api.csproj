@@ -17,6 +17,7 @@
       <ProjectReference Include="..\MetricsApp.Cache.InMemory\MetricsApp.Cache.InMemory.csproj" />
       <ProjectReference Include="..\MetricsApp.DataSources.Core\MetricsApp.DataSources.Core.csproj" />
       <ProjectReference Include="..\MetricsApp.DataSources.Prometheus\MetricsApp.DataSources.Prometheus.csproj" />
+      <ProjectReference Include="..\MetricsApp.DataSources.SqlServer\MetricsApp.DataSources.SqlServer.csproj" />
       <ProjectReference Include="..\MetricsApp.Parser.WindowsPerfCounters\MetricsApp.Parser.WindowsPerfCounters.csproj" />
       <ProjectReference Include="..\MetricsApp.Queue.InMemory\MetricsApp.Queue.InMemory.csproj" />
       <ProjectReference Include="..\MetricsApp.Repository.InMemory\MetricsApp.Repository.InMemory.csproj" />

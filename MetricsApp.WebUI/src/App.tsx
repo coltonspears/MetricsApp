@@ -4,6 +4,7 @@ import { ThemeProvider } from './lib/theme'
 import { rumCollector, trackPageView } from './lib/rum-collector'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
+import Explore from './pages/Explore'
 import Search from './pages/Search'
 import AddConnection from './pages/AddConnection'
 import DataSourceDetails from './pages/DataSourceDetails'
@@ -45,6 +46,7 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/explore" element={<Explore />} />
           <Route path="/search" element={<Search />} />
           <Route path="/connections/add" element={<AddConnection />} />
           <Route path="/connections/datasources/:dataSourceType" element={<DataSourceDetails />} />

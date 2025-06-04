@@ -179,7 +179,7 @@ export default function DataSources() {
   const handleExplore = (dataSource: DataSourceConfiguration) => {
     // TODO: Navigate to data exploration page
     console.log('Explore data source:', dataSource.name)
-    // navigate(`/explore?datasource=${dataSource.id}`)
+    navigate(`/explore?datasource=${dataSource.id}`)
   }
 
   const getStatusColor = (isEnabled: boolean) => {
@@ -246,7 +246,7 @@ export default function DataSources() {
         </div>
         <button
           onClick={() => navigate('/connections/add')}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+          className="inline-flex items-center px-4 py-2 border border-transparent rounded-sm shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
         >
           <Plus className="h-4 w-4 mr-2" />
           Add Data Source
@@ -255,7 +255,7 @@ export default function DataSources() {
 
       {/* Success Message */}
       {successMessage && (
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-4">
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-sm p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <CheckCircle className="h-5 w-5 text-green-400" />
@@ -281,7 +281,7 @@ export default function DataSources() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-sm p-4">
           <div className="flex">
             <AlertCircle className="h-5 w-5 text-red-400" />
             <div className="ml-3">
@@ -315,7 +315,7 @@ export default function DataSources() {
                 placeholder="Search data sources..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 rounded-md focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white"
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white"
               />
             </div>
           </div>
@@ -327,7 +327,7 @@ export default function DataSources() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full pl-10 pr-8 py-2 border border-slate-300 dark:border-slate-600 rounded-md focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white appearance-none"
+                className="w-full pl-10 pr-8 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white appearance-none"
               >
                 {categories.map(category => (
                   <option key={category} value={category}>{category}</option>
@@ -343,7 +343,7 @@ export default function DataSources() {
               <select
                 value={sortBy}
                 onChange={(e) => handleSort(e.target.value)}
-                className="w-full pl-10 pr-8 py-2 border border-slate-300 dark:border-slate-600 rounded-md focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white appearance-none"
+                className="w-full pl-10 pr-8 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white appearance-none"
               >
                 {sortOptions.map(option => (
                   <option key={option.value} value={option.value}>{option.label}</option>
@@ -377,7 +377,7 @@ export default function DataSources() {
             <div className="mt-6">
               <button
                 onClick={() => navigate('/connections/add')}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Data Source
@@ -435,7 +435,7 @@ export default function DataSources() {
 
                   {/* Test Result */}
                   {testResult && (
-                    <div className={`mb-4 p-3 rounded-md text-sm ${
+                    <div className={`mb-4 p-3 rounded-sm text-sm ${
                       testResult.isSuccess 
                         ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300'
                         : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
@@ -464,14 +464,14 @@ export default function DataSources() {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleBuildDashboard(dataSource)}
-                        className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
                       >
                         <BarChart3 className="h-4 w-4 mr-1" />
                         Dashboard
                       </button>
                       <button
                         onClick={() => handleExplore(dataSource)}
-                        className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-md text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-sm text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
                       >
                         <Eye className="h-4 w-4 mr-1" />
                         Explore
@@ -481,7 +481,7 @@ export default function DataSources() {
                       <button
                         onClick={() => handleTest(dataSource)}
                         disabled={isTesting}
-                        className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-md text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-sm text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isTesting ? (
                           <Loader2 className="h-4 w-4 mr-1 animate-spin" />
@@ -492,7 +492,7 @@ export default function DataSources() {
                       </button>
                       <button
                         onClick={() => handleEdit(dataSource)}
-                        className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-md text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-sm text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
                       >
                         <Settings className="h-4 w-4 mr-1" />
                         Edit
@@ -508,7 +508,7 @@ export default function DataSources() {
 
       {/* Info Panel */}
       {filteredDataSources.length > 0 && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-sm p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">

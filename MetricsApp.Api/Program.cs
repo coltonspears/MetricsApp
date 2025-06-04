@@ -1,3 +1,4 @@
+using MetricsApp.DataSources.Prometheus;
 using MetricsApp.Worker.Workers;
 using Scalar.AspNetCore;
 
@@ -28,6 +29,13 @@ builder.Services.AddInMemoryQueue();
 builder.Services.AddInMemoryCaching();
 builder.Services.AddInMemoryRepository();
 builder.Services.AddWindowsPerfCounterParser();
+
+builder.Services.AddDataSources();
+builder.Services.AddPrometheusDataSource(httpClient =>
+{
+    httpClient.Timeout = TimeSpan.FromSeconds(60);
+    httpClient.DefaultRequestHeaders.Add("User-Agent", "MetricsApp/1.0");
+});
 
 builder.Services.AddHostedService<IngestionWorker>();
 

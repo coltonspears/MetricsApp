@@ -5,6 +5,10 @@ import { rumCollector, trackPageView } from './lib/rum-collector'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Search from './pages/Search'
+import AddConnection from './pages/AddConnection'
+import DataSourceDetails from './pages/DataSourceDetails'
+import DataSources from './pages/DataSources'
+import DataSourceMetadata from './pages/DataSourceMetadata'
 import RUM from './pages/RUM'
 import Alerts from './pages/Alerts'
 import Settings from './pages/Settings'
@@ -42,6 +46,10 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/connections/add" element={<AddConnection />} />
+          <Route path="/connections/datasources/:dataSourceType" element={<DataSourceDetails />} />
+          <Route path="/connections/datasources" element={<DataSources />} />
+          <Route path="/datasources/:id" element={<DataSourceMetadata />} />
           <Route path="/rum" element={<RUM />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/settings" element={<Settings />} />

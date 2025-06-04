@@ -8,6 +8,7 @@
         public static IServiceCollection AddInMemoryRepository(this IServiceCollection services)
         {
             services.AddSingleton<IDataRepository, InMemoryDataRepository>();
+            services.AddSingleton<IConfigurationRepository, InMemoryConfigurationRepository>();
             return services;
         }
     }

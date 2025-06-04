@@ -34,6 +34,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsApp.Demo.SampleHostA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsApp.Agent.Emitters.Http", "MetricsApp.Agent.Emitters.Http\MetricsApp.Agent.Emitters.Http.csproj", "{660FBE81-7E28-49B2-BD48-F27DC2B7C3BC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsApp.DataSources.Core", "MetricsApp.DataSources.Core\MetricsApp.DataSources.Core.csproj", "{995CAC85-F98B-4C4B-8B67-A8D3D37E00A2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsApp.DataSources.Prometheus", "MetricsApp.DataSources.Prometheus\MetricsApp.DataSources.Prometheus.csproj", "{CA78A3BA-4029-484B-B34B-EBEEA7F8C066}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -100,6 +104,14 @@ Global
 		{660FBE81-7E28-49B2-BD48-F27DC2B7C3BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{660FBE81-7E28-49B2-BD48-F27DC2B7C3BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{660FBE81-7E28-49B2-BD48-F27DC2B7C3BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{995CAC85-F98B-4C4B-8B67-A8D3D37E00A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{995CAC85-F98B-4C4B-8B67-A8D3D37E00A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{995CAC85-F98B-4C4B-8B67-A8D3D37E00A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{995CAC85-F98B-4C4B-8B67-A8D3D37E00A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA78A3BA-4029-484B-B34B-EBEEA7F8C066}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA78A3BA-4029-484B-B34B-EBEEA7F8C066}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA78A3BA-4029-484B-B34B-EBEEA7F8C066}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA78A3BA-4029-484B-B34B-EBEEA7F8C066}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -435,10 +435,10 @@ const DataVisualization = ({ data, datasourceType, viewMode }: DataVisualization
             <div className="ml-5 w-0 flex-1">
               <dl>
                 <dt className="text-sm font-medium text-themed-text-secondary truncate">
-                  Total Metrics
+                  Total Records
                 </dt>
                 <dd className="text-2xl font-semibold text-themed-text-primary">
-                  {data.totalMetrics || '0'}
+                  {data.length || '0'}
                 </dd>
               </dl>
             </div>
@@ -453,10 +453,10 @@ const DataVisualization = ({ data, datasourceType, viewMode }: DataVisualization
             <div className="ml-5 w-0 flex-1">
               <dl>
                 <dt className="text-sm font-medium text-themed-text-secondary truncate">
-                  Avg Response Time
+                  Chart Points
                 </dt>
                 <dd className="text-2xl font-semibold text-themed-text-primary">
-                  {data.avgResponseTime || '0ms'}
+                  {chartData.length || '0'}
                 </dd>
               </dl>
             </div>
@@ -471,10 +471,10 @@ const DataVisualization = ({ data, datasourceType, viewMode }: DataVisualization
             <div className="ml-5 w-0 flex-1">
               <dl>
                 <dt className="text-sm font-medium text-themed-text-secondary truncate">
-                  Error Rate
+                  Data Series
                 </dt>
                 <dd className="text-2xl font-semibold text-themed-text-primary">
-                  {data.errorRate || '0%'}
+                  {seriesConfig.length || '0'}
                 </dd>
               </dl>
             </div>
@@ -489,10 +489,10 @@ const DataVisualization = ({ data, datasourceType, viewMode }: DataVisualization
             <div className="ml-5 w-0 flex-1">
               <dl>
                 <dt className="text-sm font-medium text-themed-text-secondary truncate">
-                  Data Points
+                  Data Source
                 </dt>
                 <dd className="text-2xl font-semibold text-themed-text-primary">
-                  {data.totalDataPoints || '0'}
+                  {datasourceType || 'N/A'}
                 </dd>
               </dl>
             </div>

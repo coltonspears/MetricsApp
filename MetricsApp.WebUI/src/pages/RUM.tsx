@@ -155,27 +155,33 @@ const RUM = () => {
     }
   }
 
+  const getPerformanceColor = (score: number) => {
+    if (score >= 0.9) return 'text-themed-status-success'
+    if (score >= 0.5) return 'text-themed-status-warning'
+    return 'text-themed-status-error'
+  }
+
   const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16']
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600"></div>
-        <span className="ml-4 text-slate-600 dark:text-slate-400">Loading RUM data...</span>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-themed-interactive-primary"></div>
+        <span className="ml-4 text-themed-text-secondary">Loading RUM data...</span>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+      <div className="bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-lg p-4">
         <div className="flex">
-          <AlertTriangle className="h-5 w-5 text-red-400 mr-2 mt-0.5" />
+          <AlertTriangle className="h-5 w-5 text-themed-status-error mr-2 mt-0.5" />
           <div>
-            <h3 className="text-sm font-medium text-red-800 dark:text-red-200">RUM Dashboard Error</h3>
-            <p className="mt-1 text-sm text-red-700 dark:text-red-300">{error}</p>
-            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-              RUM endpoints are not yet implemented. This is a preview with mock data.
+            <h3 className="text-sm font-medium text-themed-status-error">RUM Dashboard Error</h3>
+            <p className="mt-1 text-sm text-themed-text-secondary">{error}</p>
+            <p className="mt-1 text-xs text-themed-text-muted">
+              Ensure your RUM data collection is properly configured
             </p>
           </div>
         </div>
@@ -191,10 +197,10 @@ const RUM = () => {
       <div className="border-b border-slate-200 dark:border-slate-700 pb-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+            <h1 className="text-3xl font-bold text-themed-text-primary">
               Real User Monitoring
             </h1>
-            <p className="mt-2 text-slate-600 dark:text-slate-400">
+            <p className="mt-2 text-themed-text-secondary">
               Monitor user experience, performance, and errors in real-time
             </p>
           </div>
@@ -207,7 +213,7 @@ const RUM = () => {
                   const range = timeRanges.find(r => r.value === e.target.value)
                   if (range) setSelectedTimeRange(range)
                 }}
-                className="appearance-none bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="appearance-none bg-themed-bg-surface border border-themed-border-primary rounded-lg px-4 py-2 pr-8 text-sm font-medium text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary"
               >
                 {timeRanges.map(range => (
                   <option key={range.value} value={range.value}>
@@ -215,89 +221,89 @@ const RUM = () => {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-themed-text-muted pointer-events-none" />
             </div>
             
             <button
               onClick={loadRumData}
               disabled={loading}
-              className="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-lg text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors disabled:opacity-50"
+              className="inline-flex items-center px-4 py-2 border border-themed-border-primary text-sm font-medium rounded-lg text-themed-text-primary bg-themed-bg-surface hover:bg-themed-interactive-secondary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors disabled:opacity-50"
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </button>
           </div>
         </div>
       </div>
 
-      {/* Real-time Metrics */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="bg-white dark:bg-slate-800 overflow-hidden shadow-lg rounded-lg border border-slate-200 dark:border-slate-700">
-          <div className="p-6">
+      {/* Real-time metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-themed-bg-tertiary overflow-hidden shadow-lg rounded-lg border border-themed-border-primary">
+          <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="p-3 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg">
-                  <Activity className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                <div className="p-3 bg-themed-interactive-secondary rounded-lg">
+                  <Activity className="h-6 w-6 text-themed-interactive-primary" />
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">Active Sessions</dt>
-                  <dd className="text-2xl font-bold text-slate-900 dark:text-white">{realTimeMetrics.activeSessions}</dd>
+                  <dt className="text-sm font-medium text-themed-text-secondary truncate">Active Sessions</dt>
+                  <dd className="text-2xl font-bold text-themed-text-primary">{realTimeMetrics.activeSessions}</dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 overflow-hidden shadow-lg rounded-lg border border-slate-200 dark:border-slate-700">
-          <div className="p-6">
+        <div className="bg-themed-bg-tertiary overflow-hidden shadow-lg rounded-lg border border-themed-border-primary">
+          <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-                  <Eye className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <div className="p-3 bg-themed-status-info bg-opacity-20 rounded-lg">
+                  <Eye className="h-6 w-6 text-themed-status-info" />
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">Page Views</dt>
-                  <dd className="text-2xl font-bold text-slate-900 dark:text-white">{realTimeMetrics.currentPageViews}</dd>
+                  <dt className="text-sm font-medium text-themed-text-secondary truncate">Page Views</dt>
+                  <dd className="text-2xl font-bold text-themed-text-primary">{realTimeMetrics.currentPageViews}</dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 overflow-hidden shadow-lg rounded-lg border border-slate-200 dark:border-slate-700">
-          <div className="p-6">
+        <div className="bg-themed-bg-tertiary overflow-hidden shadow-lg rounded-lg border border-themed-border-primary">
+          <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-lg">
-                  <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+                <div className="p-3 bg-themed-status-error bg-opacity-20 rounded-lg">
+                  <AlertTriangle className="h-6 w-6 text-themed-status-error" />
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">Errors (1h)</dt>
-                  <dd className="text-2xl font-bold text-slate-900 dark:text-white">{realTimeMetrics.errorsLastHour}</dd>
+                  <dt className="text-sm font-medium text-themed-text-secondary truncate">Errors (1h)</dt>
+                  <dd className="text-2xl font-bold text-themed-text-primary">{realTimeMetrics.errorsLastHour}</dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 overflow-hidden shadow-lg rounded-lg border border-slate-200 dark:border-slate-700">
-          <div className="p-6">
+        <div className="bg-themed-bg-tertiary overflow-hidden shadow-lg rounded-lg border border-themed-border-primary">
+          <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-                  <Zap className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                <div className="p-3 bg-themed-status-success bg-opacity-20 rounded-lg">
+                  <Zap className="h-6 w-6 text-themed-status-success" />
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">Avg Response</dt>
-                  <dd className="text-2xl font-bold text-slate-900 dark:text-white">{realTimeMetrics.avgResponseTime}ms</dd>
+                  <dt className="text-sm font-medium text-themed-text-secondary truncate">Avg Response</dt>
+                  <dd className="text-2xl font-bold text-themed-text-primary">{realTimeMetrics.avgResponseTime}ms</dd>
                 </dl>
               </div>
             </div>
@@ -307,47 +313,47 @@ const RUM = () => {
 
       {/* Overview Stats */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
+        <div className="bg-themed-bg-tertiary p-6 rounded-lg shadow-lg border border-themed-border-primary">
           <div className="flex items-center mb-4">
-            <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mr-2" />
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Session Overview</h3>
+            <Users className="h-5 w-5 text-themed-interactive-primary mr-2" />
+            <h3 className="text-lg font-semibold text-themed-text-primary">Session Overview</h3>
           </div>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-slate-600 dark:text-slate-400">Total Sessions</span>
-              <span className="font-semibold text-slate-900 dark:text-white">{analytics.overview.totalSessions.toLocaleString()}</span>
+              <span className="text-themed-text-secondary">Total Sessions</span>
+              <span className="font-semibold text-themed-text-primary">{analytics.overview.totalSessions.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-600 dark:text-slate-400">Avg Duration</span>
-              <span className="font-semibold text-slate-900 dark:text-white">{formatDuration(analytics.overview.avgSessionDuration)}</span>
+              <span className="text-themed-text-secondary">Avg Duration</span>
+              <span className="font-semibold text-themed-text-primary">{formatDuration(analytics.overview.avgSessionDuration)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-600 dark:text-slate-400">Bounce Rate</span>
-              <span className="font-semibold text-slate-900 dark:text-white">{formatPercentage(analytics.overview.bounceRate)}</span>
+              <span className="text-themed-text-secondary">Bounce Rate</span>
+              <span className="font-semibold text-themed-text-primary">{formatPercentage(analytics.overview.bounceRate)}</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
+        <div className="bg-themed-bg-tertiary p-6 rounded-lg shadow-lg border border-themed-border-primary">
           <div className="flex items-center mb-4">
-            <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Performance</h3>
+            <TrendingUp className="h-5 w-5 text-themed-status-info mr-2" />
+            <h3 className="text-lg font-semibold text-themed-text-primary">Performance</h3>
           </div>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-slate-600 dark:text-slate-400">Avg Page Load</span>
+              <span className="text-themed-text-secondary">Avg Page Load</span>
               <span className={`font-semibold ${getRatingColor(getPerformanceRating('pageLoad', analytics.performance.avgPageLoadTime))}`}>
                 {analytics.performance.avgPageLoadTime}ms
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-600 dark:text-slate-400">LCP</span>
+              <span className="text-themed-text-secondary">LCP</span>
               <span className={`font-semibold ${getRatingColor(getPerformanceRating('lcp', analytics.performance.avgLcp))}`}>
                 {analytics.performance.avgLcp}ms
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-600 dark:text-slate-400">FID</span>
+              <span className="text-themed-text-secondary">FID</span>
               <span className={`font-semibold ${getRatingColor(getPerformanceRating('fid', analytics.performance.avgFid))}`}>
                 {analytics.performance.avgFid}ms
               </span>
@@ -355,23 +361,23 @@ const RUM = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
+        <div className="bg-themed-bg-tertiary p-6 rounded-lg shadow-lg border border-themed-border-primary">
           <div className="flex items-center mb-4">
-            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mr-2" />
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Error Tracking</h3>
+            <AlertTriangle className="h-5 w-5 text-themed-status-error mr-2" />
+            <h3 className="text-lg font-semibold text-themed-text-primary">Error Tracking</h3>
           </div>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-slate-600 dark:text-slate-400">Total Errors</span>
-              <span className="font-semibold text-slate-900 dark:text-white">{analytics.overview.totalErrors}</span>
+              <span className="text-themed-text-secondary">Total Errors</span>
+              <span className="font-semibold text-themed-text-primary">{analytics.overview.totalErrors}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-600 dark:text-slate-400">Error Rate</span>
-              <span className="font-semibold text-slate-900 dark:text-white">{formatPercentage(analytics.overview.errorRate)}</span>
+              <span className="text-themed-text-secondary">Error Rate</span>
+              <span className="font-semibold text-themed-text-primary">{formatPercentage(analytics.overview.errorRate)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-600 dark:text-slate-400">Unresolved</span>
-              <span className="font-semibold text-red-600 dark:text-red-400">{recentErrors.filter(e => !e.resolved).length}</span>
+              <span className="text-themed-text-secondary">Unresolved</span>
+              <span className="font-semibold text-themed-status-error">{recentErrors.filter(e => !e.resolved).length}</span>
             </div>
           </div>
         </div>
@@ -380,10 +386,10 @@ const RUM = () => {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Device Distribution */}
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
+        <div className="bg-themed-bg-tertiary p-6 rounded-lg shadow-lg border border-themed-border-primary">
           <div className="flex items-center mb-6">
-            <Monitor className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mr-2" />
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Device Distribution</h3>
+            <Monitor className="h-5 w-5 text-themed-interactive-primary mr-2" />
+            <h3 className="text-lg font-semibold text-themed-text-primary">Device Distribution</h3>
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -403,10 +409,10 @@ const RUM = () => {
               </Pie>
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: '#1e293b', 
-                  border: '1px solid #334155',
+                  backgroundColor: 'var(--bg-elevated)', 
+                  border: '1px solid var(--border-primary)',
                   borderRadius: '8px',
-                  color: '#f8fafc'
+                  color: 'var(--text-primary)'
                 }} 
               />
             </PieChart>
@@ -414,45 +420,47 @@ const RUM = () => {
         </div>
 
         {/* Browser Distribution */}
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
+        <div className="bg-themed-bg-tertiary p-6 rounded-lg shadow-lg border border-themed-border-primary">
           <div className="flex items-center mb-6">
-            <Globe className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Browser Distribution</h3>
+            <Globe className="h-5 w-5 text-themed-status-info mr-2" />
+            <h3 className="text-lg font-semibold text-themed-text-primary">Browser Distribution</h3>
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={analytics.browsers}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="name" stroke="#64748b" />
-              <YAxis stroke="#64748b" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-primary)" />
+              <XAxis dataKey="name" stroke="var(--text-secondary)" />
+              <YAxis stroke="var(--text-secondary)" />
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: '#1e293b', 
-                  border: '1px solid #334155',
+                  backgroundColor: 'var(--bg-elevated)', 
+                  border: '1px solid var(--border-primary)',
                   borderRadius: '8px',
-                  color: '#f8fafc'
+                  color: 'var(--text-primary)'
                 }} 
               />
-              <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="count" fill="var(--interactive-primary)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Top Pages */}
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
+        <div className="bg-themed-bg-tertiary p-6 rounded-lg shadow-lg border border-themed-border-primary">
           <div className="flex items-center mb-6">
-            <Eye className="h-5 w-5 text-amber-600 dark:text-amber-400 mr-2" />
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Top Pages</h3>
+            <Eye className="h-5 w-5 text-themed-status-warning mr-2" />
+            <h3 className="text-lg font-semibold text-themed-text-primary">Top Pages</h3>
           </div>
           <div className="space-y-4">
             {analytics.topPages.map((page, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
+              <div key={index} className="flex items-center justify-between p-3 bg-themed-bg-surface rounded-lg">
                 <div className="flex-1">
-                  <div className="font-medium text-slate-900 dark:text-white">{page.url}</div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400">
+                  <div className="font-medium text-themed-text-primary">{page.url}</div>
+                  <div className="text-sm text-themed-text-secondary">
                     {page.views} views • {page.avgLoadTime}ms avg load
                   </div>
                 </div>
-                <div className={`text-sm font-medium ${page.errorRate > 0.005 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+                <div className="text-sm font-medium" style={{
+                  color: page.errorRate > 0.005 ? 'var(--status-error)' : 'var(--status-success)'
+                }}>
                   {formatPercentage(page.errorRate)} errors
                 </div>
               </div>
@@ -461,25 +469,25 @@ const RUM = () => {
         </div>
 
         {/* Recent Errors */}
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
+        <div className="bg-themed-bg-tertiary p-6 rounded-lg shadow-lg border border-themed-border-primary">
           <div className="flex items-center mb-6">
-            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mr-2" />
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Recent Errors</h3>
+            <AlertTriangle className="h-5 w-5 text-themed-status-error mr-2" />
+            <h3 className="text-lg font-semibold text-themed-text-primary">Recent Errors</h3>
           </div>
           <div className="space-y-4">
             {recentErrors.map((error) => (
-              <div key={error.id} className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <div key={error.id} className="p-3 bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-lg">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="font-medium text-red-900 dark:text-red-200 truncate">{error.message}</div>
-                    <div className="text-sm text-red-700 dark:text-red-300 mt-1">
+                    <div className="font-medium text-themed-status-error truncate">{error.message}</div>
+                    <div className="text-sm text-themed-text-secondary mt-1">
                       {error.url} • {new Date(error.timestamp).toLocaleTimeString()}
                     </div>
                   </div>
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                     error.severity === 'high' 
-                      ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                      : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                      ? 'bg-themed-status-error bg-opacity-20 text-themed-status-error'
+                      : 'bg-themed-status-warning bg-opacity-20 text-themed-status-warning'
                   }`}>
                     {error.severity}
                   </span>

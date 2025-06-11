@@ -24,6 +24,104 @@ const GitHubAuth = () => {
   }
 
   return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="border-b border-themed-border-primary pb-4">
+        <div className="flex items-center space-x-4">
+          <GitBranch className="h-8 w-8 text-themed-interactive-primary" />
+          <h1 className="text-3xl font-bold text-themed-text-primary">GitHub OAuth Configuration</h1>
+        </div>
+        <div className="mt-2">
+          <p className="text-themed-text-secondary">
+            Configure GitHub OAuth for authentication and repository access
+          </p>
+        </div>
+      </div>
+
+      {/* Configuration Form */}
+      <div className="bg-themed-bg-tertiary rounded-lg shadow border border-themed-border-primary">
+        <div className="px-6 py-4 border-b border-themed-border-primary">
+          <h3 className="text-lg font-medium text-themed-text-primary">OAuth Settings</h3>
+        </div>
+        <div className="p-6 space-y-6">
+          <div>
+            <label htmlFor="displayName" className="block text-sm font-medium text-themed-text-secondary mb-2">
+              Display Name
+            </label>
+            <input
+              type="text"
+              id="displayName"
+              name="displayName"
+              value={formData.displayName}
+              onChange={handleChange}
+              placeholder="GitHub OAuth"
+              className="w-full px-3 py-2 border border-themed-border-primary rounded-sm shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="clientId" className="block text-sm font-medium text-themed-text-secondary mb-2">
+              Client ID
+            </label>
+            <input
+              type="text"
+              id="clientId"
+              name="clientId"
+              value={formData.clientId}
+              onChange={handleChange}
+              placeholder="Your GitHub OAuth App Client ID"
+              className="w-full px-3 py-2 border border-themed-border-primary rounded-sm shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="clientSecret" className="block text-sm font-medium text-themed-text-secondary mb-2">
+              Client Secret
+            </label>
+            <div className="relative">
+              <input
+                type={showClientSecret ? "text" : "password"}
+                id="clientSecret"
+                name="clientSecret"
+                value={formData.clientSecret}
+                onChange={handleChange}
+                placeholder="Your GitHub OAuth App Client Secret"
+                className="w-full px-3 py-2 pr-10 border border-themed-border-primary rounded-sm shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
+              />
+              <button
+                type="button"
+                onClick={() => setShowClientSecret(!showClientSecret)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-themed-text-muted hover:text-themed-text-primary"
+              >
+                {showClientSecret ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="scopes" className="block text-sm font-medium text-themed-text-secondary mb-2">
+              Scopes
+            </label>
+            <input
+              type="text"
+              id="scopes"
+              name="scopes"
+              value={formData.scopes}
+              onChange={handleChange}
+              placeholder="read:user,user:email"
+              className="w-full px-3 py-2 border border-themed-border-primary rounded-sm shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
+            />
+            <p className="mt-1 text-sm text-themed-text-muted">
+              Comma-separated list of GitHub OAuth scopes
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="redirectUrl" className="block text-sm font-medium text-themed-text-secondary mb-2">
+              Redirect URL
+            </label>
+            <input
+              type="url"
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
         <div className="flex items-center space-x-3 mb-4">

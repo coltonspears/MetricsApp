@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts'
-import { Activity, Server, Clock, TrendingUp, Database, AlertCircle, Settings } from 'lucide-react'
+import { Activity, Server, Clock, TrendingUp, Database, AlertCircle, Settings, BarChart3 } from 'lucide-react'
 import { MetricsApi } from '../lib/api'
 import { DashboardConfigManager, DashboardUtils, type DashboardConfig } from '../lib/dashboard-config'
 import DashboardConfigPanel from '../components/DashboardConfigPanel'
@@ -181,8 +181,8 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600"></div>
-        <span className="ml-4 text-slate-600 dark:text-slate-400">Loading dashboard...</span>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-themed-interactive-primary"></div>
+        <span className="ml-4 text-themed-text-secondary">Loading dashboard...</span>
       </div>
     )
   }
@@ -190,28 +190,28 @@ const Dashboard = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="border-b border-slate-200 dark:border-slate-700 pb-4">
+      <div className="border-b border-themed-border-primary pb-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+            <h1 className="text-3xl font-bold text-themed-text-primary">
               {config.tenant.name}
             </h1>
-            <p className="mt-2 text-slate-600 dark:text-slate-400">
+            <p className="mt-2 text-themed-text-secondary">
               Real-time monitoring and analytics for your infrastructure metrics
             </p>
             {config.tenant.theme !== 'default' && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300 mt-2">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-themed-status-info bg-opacity-20 text-themed-status-info mt-2">
                 {config.tenant.theme} theme
               </span>
             )}
           </div>
           <div className="flex items-center space-x-3">
-            <span className="text-sm text-slate-500 dark:text-slate-400">
+            <span className="text-sm text-themed-text-muted">
               Auto-refresh: {config.kpis.refreshInterval / 1000}s
             </span>
             <button
               onClick={() => setConfigPanelOpen(true)}
-              className="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-lg text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors"
+              className="inline-flex items-center px-4 py-2 border border-themed-border-primary text-sm font-medium rounded-lg text-themed-text-primary bg-themed-bg-surface hover:bg-themed-interactive-secondary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors"
             >
               <Settings className="h-4 w-4 mr-2" />
               Configure
@@ -219,7 +219,7 @@ const Dashboard = () => {
             <button
               onClick={loadDashboardData}
               disabled={loading}
-              className="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-lg text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors disabled:opacity-50"
+              className="inline-flex items-center px-4 py-2 border border-themed-border-primary text-sm font-medium rounded-lg text-themed-text-primary bg-themed-bg-surface hover:bg-themed-interactive-secondary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors disabled:opacity-50"
             >
               <TrendingUp className="h-4 w-4 mr-2" />
               Refresh
@@ -230,13 +230,13 @@ const Dashboard = () => {
 
       {/* Error Display */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <div className="bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-lg p-4">
           <div className="flex">
-            <AlertCircle className="h-5 w-5 text-red-400 mr-2 mt-0.5" />
+            <AlertCircle className="h-5 w-5 text-themed-status-error mr-2 mt-0.5" />
             <div>
-              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Dashboard Error</h3>
-              <p className="mt-1 text-sm text-red-700 dark:text-red-300">{error}</p>
-              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+              <h3 className="text-sm font-medium text-themed-status-error">Dashboard Error</h3>
+              <p className="mt-1 text-sm text-themed-text-secondary">{error}</p>
+              <p className="mt-1 text-xs text-themed-text-muted">
                 Ensure your MetricsApp API is running on localhost:7201
               </p>
             </div>
@@ -247,72 +247,72 @@ const Dashboard = () => {
       {/* KPI Cards */}
       {config.kpis.enabled && (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="bg-white dark:bg-slate-800 overflow-hidden shadow-lg rounded-lg border border-slate-200 dark:border-slate-700">
+          <div className="bg-themed-bg-tertiary overflow-hidden shadow-lg rounded-lg border border-themed-border-primary">
             <div className="p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="p-3 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg">
-                    <Activity className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                  <div className="p-3 bg-themed-status-success bg-opacity-20 rounded-lg">
+                    <Activity className="h-6 w-6 text-themed-status-success" />
                   </div>
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">Total Metrics</dt>
-                    <dd className="text-2xl font-bold text-slate-900 dark:text-white">{summary.totalMetrics.toLocaleString()}</dd>
+                    <dt className="text-sm font-medium text-themed-text-secondary truncate">Total Metrics</dt>
+                    <dd className="text-2xl font-bold text-themed-text-primary">{summary.totalMetrics.toLocaleString()}</dd>
                   </dl>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 overflow-hidden shadow-lg rounded-lg border border-slate-200 dark:border-slate-700">
+          <div className="bg-themed-bg-tertiary overflow-hidden shadow-lg rounded-lg border border-themed-border-primary">
             <div className="p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-                    <Server className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  <div className="p-3 bg-themed-status-info bg-opacity-20 rounded-lg">
+                    <Server className="h-6 w-6 text-themed-status-info" />
                   </div>
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">Active Servers</dt>
-                    <dd className="text-2xl font-bold text-slate-900 dark:text-white">{summary.uniqueServers}</dd>
+                    <dt className="text-sm font-medium text-themed-text-secondary truncate">Active Servers</dt>
+                    <dd className="text-2xl font-bold text-themed-text-primary">{summary.uniqueServers}</dd>
                   </dl>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 overflow-hidden shadow-lg rounded-lg border border-slate-200 dark:border-slate-700">
+          <div className="bg-themed-bg-tertiary overflow-hidden shadow-lg rounded-lg border border-themed-border-primary">
             <div className="p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="p-3 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
-                    <Database className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                  <div className="p-3 bg-themed-status-warning bg-opacity-20 rounded-lg">
+                    <Database className="h-6 w-6 text-themed-status-warning" />
                   </div>
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">Metric Types</dt>
-                    <dd className="text-2xl font-bold text-slate-900 dark:text-white">{summary.uniqueMetricTypes}</dd>
+                    <dt className="text-sm font-medium text-themed-text-secondary truncate">Metric Types</dt>
+                    <dd className="text-2xl font-bold text-themed-text-primary">{summary.uniqueMetricTypes}</dd>
                   </dl>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 overflow-hidden shadow-lg rounded-lg border border-slate-200 dark:border-slate-700">
+          <div className="bg-themed-bg-tertiary overflow-hidden shadow-lg rounded-lg border border-themed-border-primary">
             <div className="p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-                    <Clock className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                  <div className="p-3 bg-themed-interactive-secondary rounded-lg">
+                    <Clock className="h-6 w-6 text-themed-interactive-primary" />
                   </div>
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">Last Update</dt>
-                    <dd className="text-2xl font-bold text-slate-900 dark:text-white">{summary.lastMetricTime}</dd>
+                    <dt className="text-sm font-medium text-themed-text-secondary truncate">Last Update</dt>
+                    <dd className="text-2xl font-bold text-themed-text-primary">{summary.lastMetricTime}</dd>
                   </dl>
                 </div>
               </div>
@@ -325,33 +325,33 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Timeline Chart */}
         {config.charts.timeline.enabled && (
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
+          <div className="bg-themed-bg-tertiary p-6 rounded-lg shadow-lg border border-themed-border-primary">
             <div className="flex items-center mb-6">
-              <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mr-2" />
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Metrics Timeline</h3>
-              <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">({config.charts.timeline.timeRange})</span>
+              <TrendingUp className="h-5 w-5 text-themed-interactive-primary mr-2" />
+              <h3 className="text-lg font-semibold text-themed-text-primary">Metrics Timeline</h3>
+              <span className="ml-2 text-sm text-themed-text-muted">({config.charts.timeline.timeRange})</span>
             </div>
             {timelineData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={timelineData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="name" stroke="#64748b" />
-                  <YAxis stroke="#64748b" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-primary)" />
+                  <XAxis dataKey="name" stroke="var(--text-secondary)" />
+                  <YAxis stroke="var(--text-secondary)" />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: '#1e293b', 
-                      border: '1px solid #334155',
+                      backgroundColor: 'var(--bg-elevated)', 
+                      border: '1px solid var(--border-primary)',
                       borderRadius: '8px',
-                      color: '#f8fafc'
+                      color: 'var(--text-primary)'
                     }} 
                   />
                   <Line type="monotone" dataKey="value" stroke={COLORS[0]} strokeWidth={3} dot={{ fill: COLORS[0], strokeWidth: 2, r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-slate-500 dark:text-slate-400">
+              <div className="flex items-center justify-center h-[300px] text-themed-text-muted">
                 <div className="text-center">
-                  <TrendingUp className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No timeline data available</p>
                 </div>
               </div>
@@ -361,10 +361,10 @@ const Dashboard = () => {
 
         {/* Environment Distribution */}
         {config.charts.environment.enabled && (
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
+          <div className="bg-themed-bg-tertiary p-6 rounded-lg shadow-lg border border-themed-border-primary">
             <div className="flex items-center mb-6">
-              <Server className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Environment Distribution</h3>
+              <Database className="h-5 w-5 text-themed-status-info mr-2" />
+              <h3 className="text-lg font-semibold text-themed-text-primary">Environment Distribution</h3>
             </div>
             {environmentData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
@@ -374,10 +374,7 @@ const Dashboard = () => {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={config.charts.environment.showPercentages 
-                      ? ({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`
-                      : ({ name }) => name
-                    }
+                    label={({ name, value, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
@@ -388,18 +385,18 @@ const Dashboard = () => {
                   </Pie>
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: '#1e293b', 
-                      border: '1px solid #334155',
+                      backgroundColor: 'var(--bg-elevated)', 
+                      border: '1px solid var(--border-primary)',
                       borderRadius: '8px',
-                      color: '#f8fafc'
+                      color: 'var(--text-primary)'
                     }} 
                   />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-slate-500 dark:text-slate-400">
+              <div className="flex items-center justify-center h-[300px] text-themed-text-muted">
                 <div className="text-center">
-                  <Server className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <Database className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No environment data available</p>
                 </div>
               </div>
@@ -407,62 +404,34 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Metric Types Chart */}
+        {/* Metric Types */}
         {config.charts.metricTypes.enabled && (
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
+          <div className="bg-themed-bg-tertiary p-6 rounded-lg shadow-lg border border-themed-border-primary">
             <div className="flex items-center mb-6">
-              <Database className="h-5 w-5 text-amber-600 dark:text-amber-400 mr-2" />
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Top Metric Types</h3>
-              <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">(Top {config.charts.metricTypes.limit})</span>
+              <Activity className="h-5 w-5 text-themed-status-warning mr-2" />
+              <h3 className="text-lg font-semibold text-themed-text-primary">Top Metric Types</h3>
             </div>
             {metricTypeData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
-                {config.charts.metricTypes.chartType === 'pie' ? (
-                  <PieChart>
-                    <Pie
-                      data={metricTypeData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {metricTypeData.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: '#1e293b', 
-                        border: '1px solid #334155',
-                        borderRadius: '8px',
-                        color: '#f8fafc'
-                      }} 
-                    />
-                  </PieChart>
-                ) : (
-                  <BarChart data={metricTypeData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="name" stroke="#64748b" />
-                    <YAxis stroke="#64748b" />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: '#1e293b', 
-                        border: '1px solid #334155',
-                        borderRadius: '8px',
-                        color: '#f8fafc'
-                      }} 
-                    />
-                    <Bar dataKey="value" fill={COLORS[0]} radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                )}
+                <BarChart data={metricTypeData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-primary)" />
+                  <XAxis dataKey="name" stroke="var(--text-secondary)" />
+                  <YAxis stroke="var(--text-secondary)" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'var(--bg-elevated)', 
+                      border: '1px solid var(--border-primary)',
+                      borderRadius: '8px',
+                      color: 'var(--text-primary)'
+                    }} 
+                  />
+                  <Bar dataKey="value" fill="var(--interactive-primary)" radius={[4, 4, 0, 0]} />
+                </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-slate-500 dark:text-slate-400">
+              <div className="flex items-center justify-center h-[300px] text-themed-text-muted">
                 <div className="text-center">
-                  <Database className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No metric type data available</p>
                 </div>
               </div>
@@ -470,37 +439,34 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Server Activity Chart */}
+        {/* Server Distribution */}
         {config.charts.servers.enabled && (
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
+          <div className="bg-themed-bg-tertiary p-6 rounded-lg shadow-lg border border-themed-border-primary">
             <div className="flex items-center mb-6">
-              <Activity className="h-5 w-5 text-purple-600 dark:text-purple-400 mr-2" />
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Server Activity</h3>
-              <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">
-                (Top {config.charts.servers.limit}, sorted by {config.charts.servers.sortBy})
-              </span>
+              <Server className="h-5 w-5 text-themed-status-success mr-2" />
+              <h3 className="text-lg font-semibold text-themed-text-primary">Server Distribution</h3>
             </div>
             {serverData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={serverData} layout="horizontal">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis type="number" stroke="#64748b" />
-                  <YAxis dataKey="name" type="category" stroke="#64748b" width={100} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-primary)" />
+                  <XAxis type="number" stroke="var(--text-secondary)" />
+                  <YAxis dataKey="name" type="category" stroke="var(--text-secondary)" width={100} />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: '#1e293b', 
-                      border: '1px solid #334155',
+                      backgroundColor: 'var(--bg-elevated)', 
+                      border: '1px solid var(--border-primary)',
                       borderRadius: '8px',
-                      color: '#f8fafc'
+                      color: 'var(--text-primary)'
                     }} 
                   />
-                  <Bar dataKey="value" fill={COLORS[1]} radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="value" fill="var(--interactive-primary)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-slate-500 dark:text-slate-400">
+              <div className="flex items-center justify-center h-[300px] text-themed-text-muted">
                 <div className="text-center">
-                  <Activity className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <Server className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No server data available</p>
                 </div>
               </div>
@@ -509,12 +475,12 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Configuration Panel */}
+      {/* Dashboard Configuration Panel */}
       <DashboardConfigPanel
-        config={config}
-        onConfigChange={handleConfigChange}
         isOpen={configPanelOpen}
         onClose={() => setConfigPanelOpen(false)}
+        config={config}
+        onConfigChange={handleConfigChange}
       />
     </div>
   )

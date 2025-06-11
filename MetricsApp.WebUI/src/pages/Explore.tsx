@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Download, RefreshCw, Database, LineChart, Table, AlertCircle, Info, ExternalLink, HelpCircle, Clock, Play, Plus, X, ChevronDown, Code, Settings } from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { DataSourceApi, DataSourceConfiguration } from '../lib/datasource-api'
 import QueryBuilder from '../components/QueryBuilder'
 import DataVisualization from '../components/DataVisualization'
@@ -49,6 +50,7 @@ interface AvailableMetric {
 }
 
 const Explore = () => {
+  const navigate = useNavigate()
   const [datasources, setDatasources] = useState<DataSource[]>([])
   const [tabs, setTabs] = useState<QueryTab[]>([])
   const [activeTabId, setActiveTabId] = useState<string | null>(null)
@@ -395,67 +397,54 @@ const Explore = () => {
     }
   }, [activeTab?.datasourceId])
 
+  // Add formatTimeRange helper function
+  const formatTimeRange = (timeRange: { startTime: string; endTime: string }) => {
+    const start = new Date(timeRange.startTime)
+    const end = new Date(timeRange.endTime)
+    const diffMs = end.getTime() - start.getTime()
+    const diffHours = diffMs / (1000 * 60 * 60)
+    
+    if (diffHours < 1) {
+      const diffMinutes = Math.round(diffMs / (1000 * 60))
+      return `${diffMinutes}m`
+    } else if (diffHours < 24) {
+      return `${Math.round(diffHours)}h`
+    } else {
+      const diffDays = Math.round(diffHours / 24)
+      return `${diffDays}d`
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600"></div>
-        <span className="ml-4 text-slate-600 dark:text-slate-400">Loading explore interface...</span>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-themed-interactive-primary"></div>
+        <span className="ml-4 text-themed-text-secondary">Loading data sources...</span>
       </div>
     )
   }
 
-  // Show API connection error with troubleshooting steps
   if (apiConnectionError) {
     return (
-      <div className="max-w-2xl mx-auto py-16">
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-          <div className="flex items-start">
-            <AlertCircle className="h-6 w-6 text-red-500 mt-1 mr-3 flex-shrink-0" />
-            <div className="flex-1">
-              <h3 className="text-lg font-medium text-red-800 dark:text-red-200 mb-2">
-                API Connection Error
-              </h3>
-              <p className="text-red-700 dark:text-red-300 mb-4">
-                {apiConnectionError}
-              </p>
-              
-              <div className="bg-red-100 dark:bg-red-900/40 rounded-md p-4 mb-4">
-                <h4 className="font-medium text-red-800 dark:text-red-200 mb-2">Troubleshooting Steps:</h4>
-                <ol className="list-decimal list-inside space-y-1 text-sm text-red-700 dark:text-red-300">
-                  <li>Ensure the MetricsApp backend server is running</li>
-                  <li>Check if the API is accessible at <code className="bg-red-200 dark:bg-red-800 px-1 rounded">/api/v1</code></li>
-                  <li>Verify your network connection</li>
-                  <li>Check the browser console for more details</li>
-                </ol>
-              </div>
-
-              <div className="flex space-x-3">
-                <button
-                  onClick={loadDatasources}
-                  className="inline-flex items-center px-3 py-2 border border-red-300 dark:border-red-600 rounded-md text-sm font-medium text-red-700 dark:text-red-300 bg-white dark:bg-red-900/20 hover:bg-red-50 dark:hover:bg-red-900/40"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Retry Connection
-                </button>
-                <button
-                  onClick={() => setShowDebuggingInfo(!showDebuggingInfo)}
-                  className="inline-flex items-center px-3 py-2 border border-red-300 dark:border-red-600 rounded-md text-sm font-medium text-red-700 dark:text-red-300 bg-white dark:bg-red-900/20 hover:bg-red-50 dark:hover:bg-red-900/40"
-                >
-                  <HelpCircle className="h-4 w-4 mr-2" />
-                  Debug Info
-                </button>
-              </div>
-
-              {showDebuggingInfo && (
-                <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/40 rounded-md">
-                  <h5 className="font-medium text-red-800 dark:text-red-200 mb-2">Debug Information:</h5>
-                  <div className="text-xs text-red-700 dark:text-red-300 space-y-1">
-                    <div>API Base URL: <code>/api/v1</code></div>
-                    <div>Current URL: <code>{window.location.origin}/api/v1</code></div>
-                    <div>User Agent: <code>{navigator.userAgent}</code></div>
-                  </div>
-                </div>
-              )}
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-themed-text-primary">Data Exploration</h1>
+          <p className="mt-2 text-themed-text-secondary">Query and visualize your data sources</p>
+        </div>
+        
+        <div className="bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-lg p-4">
+          <div className="flex">
+            <AlertCircle className="h-5 w-5 text-themed-status-error mr-2 mt-0.5" />
+            <div>
+              <h3 className="text-sm font-medium text-themed-status-error">Connection Error</h3>
+              <p className="mt-1 text-sm text-themed-text-secondary">{apiConnectionError}</p>
+              <button
+                onClick={loadDatasources}
+                className="mt-3 inline-flex items-center px-3 py-2 border border-themed-status-error text-sm font-medium rounded-sm text-themed-status-error bg-themed-bg-surface hover:bg-themed-status-error hover:text-themed-text-inverse transition-colors"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry
+              </button>
             </div>
           </div>
         </div>
@@ -465,236 +454,382 @@ const Explore = () => {
 
   if (datasources.length === 0) {
     return (
-      <div className="text-center py-16">
-        <Database className="h-16 w-16 text-slate-400 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-          No Data Sources Available
-        </h2>
-        <p className="text-slate-600 dark:text-slate-400 mb-6">
-          You need to configure data sources before you can explore data.
-        </p>
-        
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 max-w-md mx-auto">
-          <div className="flex items-start">
-            <Info className="h-5 w-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
-            <div className="text-sm text-blue-700 dark:text-blue-300">
-              <p className="mb-2">To get started with data exploration:</p>
-              <ol className="list-decimal list-inside space-y-1">
-                <li>Configure at least one data source</li>
-                <li>Test the connection to ensure it works</li>
-                <li>Return here to explore your data</li>
-              </ol>
-            </div>
-          </div>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-themed-text-primary">Data Exploration</h1>
+          <p className="mt-2 text-themed-text-secondary">Query and visualize your data sources</p>
         </div>
         
-        <a
-          href="/connections/datasources"
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700"
-        >
-          <Database className="h-4 w-4 mr-2" />
-          Configure Data Sources
-          <ExternalLink className="h-4 w-4 ml-2" />
-        </a>
+        <div className="text-center py-12">
+          <Database className="mx-auto h-12 w-12 text-themed-text-muted" />
+          <h3 className="mt-2 text-sm font-medium text-themed-text-primary">No Data Sources</h3>
+          <p className="mt-1 text-sm text-themed-text-secondary">
+            No data sources are configured. Add a data source to start exploring your data.
+          </p>
+          <div className="mt-6">
+            <button
+              onClick={() => navigate('/connections/add')}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-sm shadow-sm text-themed-text-inverse bg-themed-interactive-primary hover:bg-themed-interactive-primary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Data Source
+            </button>
+          </div>
+        </div>
       </div>
     )
   }
 
+  const activeTab = tabs.find(tab => tab.id === activeTabId)
+  const activeDatasource = activeTab ? datasources.find(ds => ds.id === activeTab.datasourceId) : null
+
   return (
-    <div className="h-full flex flex-col">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
-        <div className="flex flex-col space-y-4">
-          {/* Top row: Title and description */}
+      <div className="border-b border-themed-border-primary pb-4">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Explore</h1>
-            <p className="mt-2 text-slate-600 dark:text-slate-400">
-              Query and visualize data from your connected data sources and ingested metrics
-              <span className="ml-2 text-sm text-emerald-600 dark:text-emerald-400">
-                ({datasources.filter(ds => ds.category === 'datasource').length} configured + {datasources.filter(ds => ds.category === 'ingested').length} ingested)
-              </span>
-            </p>
+            <h1 className="text-3xl font-bold text-themed-text-primary">Data Exploration</h1>
+            <p className="mt-2 text-themed-text-secondary">Query and visualize data from your connected sources</p>
           </div>
-          
-          {/* Bottom row: View mode and New Query buttons */}
           <div className="flex items-center space-x-3">
-            <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('chart')}
-                className={`flex items-center px-3 py-2 rounded-md text-sm font-medium ${
-                  viewMode === 'chart'
-                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                    : 'text-slate-500 dark:text-slate-400'
-                }`}
-              >
-                <LineChart className="h-4 w-4 mr-1" />
-                Chart
-              </button>
-              <button
-                onClick={() => setViewMode('table')}
-                className={`flex items-center px-3 py-2 rounded-md text-sm font-medium ${
-                  viewMode === 'table'
-                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                    : 'text-slate-500 dark:text-slate-400'
-                }`}
-              >
-                <Table className="h-4 w-4 mr-1" />
-                Table
-              </button>
-            </div>
             <button
-              onClick={() => createNewTab()}
-              className="inline-flex items-center px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600"
+              onClick={() => setViewMode(viewMode === 'chart' ? 'table' : 'chart')}
+              className="inline-flex items-center px-3 py-2 border border-themed-border-primary text-sm font-medium rounded-sm text-themed-text-primary bg-themed-bg-surface hover:bg-themed-interactive-secondary-hover transition-colors"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              New Query
+              {viewMode === 'chart' ? <Table className="h-4 w-4 mr-2" /> : <LineChart className="h-4 w-4 mr-2" />}
+              {viewMode === 'chart' ? 'Table View' : 'Chart View'}
             </button>
+            {activeTab?.results && (
+              <button
+                onClick={() => setShowExportModal(true)}
+                className="inline-flex items-center px-3 py-2 border border-themed-border-primary text-sm font-medium rounded-sm text-themed-text-primary bg-themed-bg-surface hover:bg-themed-interactive-secondary-hover transition-colors"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Query Tabs */}
-      {tabs.length > 0 && (
-        <div className="mb-4 border-b border-slate-200 dark:border-slate-700">
-          <div className="flex space-x-1 overflow-x-auto scrollbar-hide">
+      <div className="bg-themed-bg-tertiary rounded-lg border border-themed-border-primary">
+        <div className="border-b border-themed-border-primary">
+          <nav className="flex space-x-8 px-6" aria-label="Query tabs">
             {tabs.map((tab) => (
-              <div
+              <button
                 key={tab.id}
-                className={`flex items-center px-4 py-2 rounded-t-md cursor-pointer whitespace-nowrap min-w-0 flex-shrink-0 ${
-                  activeTabId === tab.id
-                    ? 'bg-white dark:bg-slate-800 border-t border-l border-r border-slate-200 dark:border-slate-700'
-                    : 'bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
                 onClick={() => setActiveTabId(tab.id)}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTabId === tab.id
+                    ? 'border-themed-interactive-primary text-themed-interactive-primary'
+                    : 'border-transparent text-themed-text-secondary hover:text-themed-text-primary hover:border-themed-border-secondary'
+                }`}
               >
-                <input
-                  type="text"
-                  value={tab.name}
-                  onChange={(e) => updateTabName(tab.id, e.target.value)}
-                  className="bg-transparent border-none outline-none text-sm font-medium text-slate-900 dark:text-white min-w-0 max-w-32"
-                  onClick={(e) => e.stopPropagation()}
-                />
-                {tab.isRunning && (
-                  <RefreshCw className="h-3 w-3 ml-2 animate-spin text-emerald-600 flex-shrink-0" />
-                )}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    closeTab(tab.id)
-                  }}
-                  className="ml-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 flex-shrink-0"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
+                <div className="flex items-center">
+                  <span>{tab.name}</span>
+                  {tab.isRunning && (
+                    <div className="ml-2 h-4 w-4 animate-spin rounded-full border-2 border-themed-interactive-primary border-r-transparent"></div>
+                  )}
+                  {tabs.length > 1 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        closeTab(tab.id)
+                      }}
+                      className="ml-2 text-themed-text-muted hover:text-themed-text-primary"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </button>
             ))}
-          </div>
+            <button
+              onClick={() => createNewTab()}
+              className="py-4 px-1 text-themed-text-secondary hover:text-themed-text-primary transition-colors"
+            >
+              <Plus className="h-5 w-5" />
+            </button>
+          </nav>
         </div>
-      )}
 
-      {/* Query Interface */}
-      {activeTab && (
-        <div className="flex-1 flex flex-col min-h-0">
-          <QueryBuilder
-            datasources={datasources}
-            selectedDatasourceId={activeTab.datasourceId}
-            query={activeTab.query}
-            queryMode={activeTab.queryMode}
-            availableMetrics={availableMetrics}
-            loadingMetrics={loadingMetrics}
-            timeRange={activeTab.timeRange}
-            onQueryChange={(query: string) => updateTabQuery(activeTab.id, query)}
-            onQueryModeChange={(mode: 'builder' | 'code') => updateTabQueryMode(activeTab.id, mode)}
-            onDatasourceChange={(datasourceId: string) => changeTabDatasource(activeTab.id, datasourceId)}
-            onTimeRangeChange={(timeRange: { startTime: string; endTime: string }) => updateTabTimeRange(activeTab.id, timeRange)}
-            onQuickTimeRange={(hours: number) => setQuickTimeRange(activeTab.id, hours)}
-            onExecute={() => executeQuery(activeTab.id)}
-            isRunning={activeTab.isRunning}
-          />
+        {/* Active Tab Content */}
+        {activeTab && (
+          <div className="p-6">
+            {/* Tab Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-4">
+                <div>
+                  <label htmlFor="tab-name" className="block text-sm font-medium text-themed-text-secondary">
+                    Query Name
+                  </label>
+                  <input
+                    id="tab-name"
+                    type="text"
+                    value={activeTab.name}
+                    onChange={(e) => updateTabName(activeTab.id, e.target.value)}
+                    className="mt-1 block w-32 px-3 py-2 border border-themed-border-primary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary bg-themed-bg-surface text-themed-text-primary sm:text-sm"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="datasource-select" className="block text-sm font-medium text-themed-text-secondary">
+                    Data Source
+                  </label>
+                  <select
+                    id="datasource-select"
+                    value={activeTab.datasourceId}
+                    onChange={(e) => changeTabDatasource(activeTab.id, e.target.value)}
+                    className="mt-1 block w-48 px-3 py-2 border border-themed-border-primary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary bg-themed-bg-surface text-themed-text-primary sm:text-sm"
+                  >
+                    {datasources.map(ds => (
+                      <option key={ds.id} value={ds.id}>
+                        {ds.name} ({ds.dataSourceType})
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          {/* Results */}
-          {activeTab.results && (
-            <div className="flex-1 mt-6 min-h-0">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-4">
-                  <h3 className="text-lg font-medium text-slate-900 dark:text-white">Results</h3>
-                  {activeTab.results.metadata && (
-                    <div className="flex items-center space-x-4 text-sm text-slate-500 dark:text-slate-400">
-                      <span>{activeTab.results.metadata.recordCount} records</span>
-                      <span>{activeTab.results.metadata.executionTime}ms</span>
-                      <span>{activeTab.results.timestamp.toLocaleTimeString()}</span>
+                <div className="relative">
+                  <label className="block text-sm font-medium text-themed-text-secondary">
+                    Time Range
+                  </label>
+                  <button
+                    onClick={() => setShowTimeRangeDropdown(!showTimeRangeDropdown)}
+                    className="mt-1 inline-flex items-center px-3 py-2 border border-themed-border-primary rounded-sm shadow-sm bg-themed-bg-surface text-themed-text-primary hover:bg-themed-interactive-secondary-hover focus:outline-none focus:ring-themed-interactive-primary text-sm"
+                  >
+                    <Clock className="h-4 w-4 mr-2" />
+                    {formatTimeRange(activeTab.timeRange)}
+                    <ChevronDown className="h-4 w-4 ml-2" />
+                  </button>
+                  
+                  {showTimeRangeDropdown && (
+                    <div className="absolute z-10 mt-1 w-64 bg-themed-bg-elevated shadow-lg border border-themed-border-primary rounded-sm py-1">
+                      <div className="px-4 py-2 text-sm font-medium text-themed-text-secondary border-b border-themed-border-primary">
+                        Quick Time Ranges
+                      </div>
+                      {[
+                        { label: 'Last 15 minutes', hours: 0.25 },
+                        { label: 'Last hour', hours: 1 },
+                        { label: 'Last 4 hours', hours: 4 },
+                        { label: 'Last 24 hours', hours: 24 },
+                        { label: 'Last 7 days', hours: 168 }
+                      ].map(range => (
+                        <button
+                          key={range.label}
+                          onClick={() => {
+                            setQuickTimeRange(activeTab.id, range.hours)
+                            setShowTimeRangeDropdown(false)
+                          }}
+                          className="block w-full text-left px-4 py-2 text-sm text-themed-text-primary hover:bg-themed-interactive-secondary-hover transition-colors"
+                        >
+                          {range.label}
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => executeQuery(activeTab.id)}
-                    disabled={activeTab.isRunning}
-                    className="inline-flex items-center px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50"
-                  >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${activeTab.isRunning ? 'animate-spin' : ''}`} />
-                    Refresh
-                  </button>
-                  <button
-                    onClick={() => setShowExportModal(true)}
-                    className="inline-flex items-center px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </button>
-                </div>
               </div>
 
-              {activeTab.results.error ? (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
-                  <div className="flex">
-                    <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
-                        Query Error
-                      </h3>
-                      <div className="mt-2 text-sm text-red-700 dark:text-red-300">
-                        <p>{activeTab.results.error}</p>
-                      </div>
-                      <div className="mt-3">
-                        <button
-                          onClick={() => setShowDebuggingInfo(!showDebuggingInfo)}
-                          className="text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 underline"
-                        >
-                          {showDebuggingInfo ? 'Hide' : 'Show'} Debug Information
-                        </button>
-                        {showDebuggingInfo && (
-                          <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/40 rounded text-xs">
-                            <div><strong>Query:</strong> {activeTab.query}</div>
-                            <div><strong>Data Source:</strong> {activeTab.results.datasourceName}</div>
-                            <div><strong>Timestamp:</strong> {activeTab.results.timestamp.toISOString()}</div>
-                            <div><strong>Time Range:</strong> {activeTab.results.timeRange.startTime} to {activeTab.results.timeRange.endTime}</div>
-                          </div>
-                        )}
+              <div className="flex items-center space-x-3">
+                <div className="flex rounded-sm border border-themed-border-primary">
+                  <button
+                    onClick={() => updateTabQueryMode(activeTab.id, 'builder')}
+                    className={`px-3 py-2 text-sm font-medium transition-colors ${
+                      activeTab.queryMode === 'builder'
+                        ? 'bg-themed-interactive-primary text-themed-text-inverse'
+                        : 'bg-themed-bg-surface text-themed-text-primary hover:bg-themed-interactive-secondary-hover'
+                    }`}
+                  >
+                    <Settings className="h-4 w-4 mr-1" />
+                    Builder
+                  </button>
+                  <button
+                    onClick={() => updateTabQueryMode(activeTab.id, 'code')}
+                    className={`px-3 py-2 text-sm font-medium transition-colors ${
+                      activeTab.queryMode === 'code'
+                        ? 'bg-themed-interactive-primary text-themed-text-inverse'
+                        : 'bg-themed-bg-surface text-themed-text-primary hover:bg-themed-interactive-secondary-hover'
+                    }`}
+                  >
+                    <Code className="h-4 w-4 mr-1" />
+                    Code
+                  </button>
+                </div>
+                
+                <button
+                  onClick={() => executeQuery(activeTab.id)}
+                  disabled={activeTab.isRunning || !activeTab.query.trim()}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-sm shadow-sm text-themed-text-inverse bg-themed-interactive-primary hover:bg-themed-interactive-primary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {activeTab.isRunning ? (
+                    <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-themed-text-inverse border-r-transparent"></div>
+                  ) : (
+                    <Play className="h-4 w-4 mr-2" />
+                  )}
+                  {activeTab.isRunning ? 'Running...' : 'Run Query'}
+                </button>
+              </div>
+            </div>
+
+            {/* Query Builder/Editor */}
+            {activeTab.queryMode === 'builder' ? (
+              <QueryBuilder
+                datasource={activeDatasource}
+                availableMetrics={availableMetrics}
+                loadingMetrics={loadingMetrics}
+                onLoadMetrics={() => loadAvailableMetrics(activeTab.datasourceId)}
+                onQueryChange={(query) => updateTabQuery(activeTab.id, query)}
+                timeRange={activeTab.timeRange}
+                onTimeRangeChange={(timeRange) => updateTabTimeRange(activeTab.id, timeRange)}
+              />
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="query-editor" className="block text-sm font-medium text-themed-text-secondary mb-2">
+                    Query
+                  </label>
+                  <textarea
+                    id="query-editor"
+                    rows={8}
+                    value={activeTab.query}
+                    onChange={(e) => updateTabQuery(activeTab.id, e.target.value)}
+                    placeholder={`Enter your ${activeDatasource?.dataSourceType} query...`}
+                    className="block w-full px-3 py-2 border border-themed-border-primary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary bg-themed-bg-surface text-themed-text-primary font-mono text-sm"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Query Results */}
+            {activeTab.results && (
+              <div className="mt-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-themed-text-primary">Query Results</h3>
+                  <div className="flex items-center space-x-4 text-sm text-themed-text-secondary">
+                    {activeTab.results.metadata && (
+                      <>
+                        <span>
+                          {activeTab.results.metadata.recordCount} records
+                        </span>
+                        <span>
+                          Execution time: {activeTab.results.metadata.executionTime}ms
+                        </span>
+                      </>
+                    )}
+                    <span>
+                      Last run: {new Date(activeTab.results.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+                </div>
+
+                {activeTab.results.error ? (
+                  <div className="bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-lg p-4">
+                    <div className="flex">
+                      <AlertCircle className="h-5 w-5 text-themed-status-error mr-2 mt-0.5" />
+                      <div>
+                        <h3 className="text-sm font-medium text-themed-status-error">Query Error</h3>
+                        <p className="mt-1 text-sm text-themed-text-secondary">{activeTab.results.error}</p>
                       </div>
                     </div>
                   </div>
+                ) : (
+                  <DataVisualization
+                    data={activeTab.results.results}
+                    datasourceType={activeDatasource?.dataSourceType || 'unknown'}
+                    viewMode={viewMode}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Help Text */}
+            {!activeTab.results && (
+              <div className="mt-8 bg-themed-status-info bg-opacity-10 border border-themed-status-info rounded-lg p-4">
+                <div className="flex">
+                  <Info className="h-5 w-5 text-themed-status-info mr-2 mt-0.5" />
+                  <div>
+                    <h3 className="text-sm font-medium text-themed-status-info">Query Tips</h3>
+                    <div className="mt-2 text-sm text-themed-text-secondary">
+                      {activeDatasource?.dataSourceType === 'prometheus' && (
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>Use metric names like <code className="bg-themed-bg-surface px-1 rounded">up</code> or <code className="bg-themed-bg-surface px-1 rounded">http_requests_total</code></li>
+                          <li>Add filters with <code className="bg-themed-bg-surface px-1 rounded">{'{'}label="value"{'}'}}</code></li>
+                          <li>Use functions like <code className="bg-themed-bg-surface px-1 rounded">rate()</code>, <code className="bg-themed-bg-surface px-1 rounded">sum()</code>, <code className="bg-themed-bg-surface px-1 rounded">avg()</code></li>
+                        </ul>
+                      )}
+                      {activeDatasource?.dataSourceType === 'sqlserver' && (
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>Use standard SQL syntax: <code className="bg-themed-bg-surface px-1 rounded">SELECT * FROM table</code></li>
+                          <li>Filter by time: <code className="bg-themed-bg-surface px-1 rounded">WHERE timestamp >= DATEADD(hour, -1, GETDATE())</code></li>
+                          <li>Limit results: <code className="bg-themed-bg-surface px-1 rounded">SELECT TOP 100 *</code></li>
+                        </ul>
+                      )}
+                      {activeDatasource?.dataSourceType === 'ingested' && (
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>Leave query empty to fetch all metrics in the time range</li>
+                          <li>Use the Query Builder for guided metric selection</li>
+                          <li>Adjust the time range to control the data scope</li>
+                        </ul>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <DataVisualization
-                  data={activeTab.results.results}
-                  datasourceType={datasources.find(ds => ds.id === activeTab.datasourceId)?.dataSourceType || 'unknown'}
-                  viewMode={viewMode}
-                />
-              )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Debugging Information */}
+      {showDebuggingInfo && (
+        <div className="bg-themed-bg-tertiary rounded-lg border border-themed-border-primary p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-themed-text-primary">Debugging Information</h3>
+            <button
+              onClick={() => setShowDebuggingInfo(false)}
+              className="text-themed-text-muted hover:text-themed-text-primary"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-sm font-medium text-themed-text-secondary">Available Data Sources</h4>
+              <pre className="mt-2 text-xs bg-themed-bg-surface p-3 rounded border overflow-x-auto text-themed-text-primary">
+                {JSON.stringify(datasources, null, 2)}
+              </pre>
             </div>
-          )}
+            <div>
+              <h4 className="text-sm font-medium text-themed-text-secondary">Active Query Tabs</h4>
+              <pre className="mt-2 text-xs bg-themed-bg-surface p-3 rounded border overflow-x-auto text-themed-text-primary">
+                {JSON.stringify(tabs, null, 2)}
+              </pre>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Export Modal */}
       {showExportModal && activeTab?.results && (
         <ExportModal
-          data={activeTab.results.results}
-          filename={`${activeTab.name}_${new Date().toISOString().split('T')[0]}`}
+          isOpen={showExportModal}
           onClose={() => setShowExportModal(false)}
+          data={activeTab.results.results}
+          filename={`${activeTab.name}-${new Date().toISOString().split('T')[0]}`}
         />
       )}
+
+      {/* Debug Toggle */}
+      <button
+        onClick={() => setShowDebuggingInfo(!showDebuggingInfo)}
+        className="fixed bottom-4 right-4 p-2 bg-themed-bg-tertiary border border-themed-border-primary rounded-full shadow-lg text-themed-text-secondary hover:text-themed-text-primary transition-colors"
+        title="Toggle debugging information"
+      >
+        <HelpCircle className="h-5 w-5" />
+      </button>
     </div>
   )
 }

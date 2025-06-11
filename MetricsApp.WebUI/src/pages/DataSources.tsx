@@ -198,8 +198,8 @@ export default function DataSources() {
 
   const getStatusColor = (isEnabled: boolean) => {
     return isEnabled 
-      ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
-      : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300'
+      ? 'text-themed-status-success'
+      : 'text-themed-text-muted'
   }
 
   const formatDate = (dateString: string) => {
@@ -210,330 +210,68 @@ export default function DataSources() {
     })
   }
 
-  // Add renderCardView function
-  const renderCardView = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredDataSources.map(dataSource => {
-        const testResult = testResults[dataSource.id]
-        const isTesting = testingDataSources.has(dataSource.id)
-        
-        return (
-          <div
-            key={dataSource.id}
-            className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 hover:shadow-md"
-          >
-            <div className="p-6">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center">
-                    <DataSourceIcon dataSourceType={dataSource.dataSourceType} />
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-lg font-medium text-slate-900 dark:text-white">
-                      {dataSource.name}
-                    </h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      {dataSource.dataSourceType}
-                    </p>
-                  </div>
-                </div>
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(dataSource.isEnabled)}`}>
-                  {dataSource.isEnabled ? 'Enabled' : 'Disabled'}
-                </span>
-              </div>
-
-              {/* Details */}
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-500 dark:text-slate-400">Category:</span>
-                  <span className="text-slate-900 dark:text-white">{getDataSourceCategory(dataSource.dataSourceType)}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-500 dark:text-slate-400">Created:</span>
-                  <span className="text-slate-900 dark:text-white">{formatDate(dataSource.createdAt)}</span>
-                </div>
-                <div className="text-sm">
-                  <span className="text-slate-500 dark:text-slate-400">URL:</span>
-                  <p className="text-slate-900 dark:text-white break-all mt-1">{dataSource.url}</p>
-                </div>
-              </div>
-
-              {/* Test Result */}
-              {testResult && (
-                <div className={`mb-4 p-3 rounded-sm text-sm ${
-                  testResult.isSuccess 
-                    ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300'
-                    : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
-                }`}>
-                  <div className="flex items-center">
-                    {testResult.isSuccess ? (
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                    ) : (
-                      <XCircle className="h-4 w-4 mr-2" />
-                    )}
-                    <span className="font-medium">
-                      {testResult.isSuccess ? 'Connection successful' : 'Connection failed'}
-                    </span>
-                    {testResult.responseTimeMs > 0 && (
-                      <span className="ml-auto">{testResult.responseTimeMs}ms</span>
-                    )}
-                  </div>
-                  {testResult.errorMessage && !testResult.isSuccess && (
-                    <p className="mt-1 text-xs">{testResult.errorMessage}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className="space-y-2">
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleBuildDashboard(dataSource)}
-                    className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
-                  >
-                    <BarChart3 className="h-4 w-4 mr-1" />
-                    Dashboard
-                  </button>
-                  <button
-                    onClick={() => handleExplore(dataSource)}
-                    className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-sm text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    Explore
-                  </button>
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleTest(dataSource)}
-                    disabled={isTesting}
-                    className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-sm text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isTesting ? (
-                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                    ) : (
-                      <TestTube className="h-4 w-4 mr-1" />
-                    )}
-                    {isTesting ? 'Testing...' : 'Test'}
-                  </button>
-                  <button
-                    onClick={() => handleEdit(dataSource)}
-                    className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-sm text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
-                  >
-                    <Settings className="h-4 w-4 mr-1" />
-                    Edit
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-
-  // Add renderRowView function
-  const renderRowView = () => (
-    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-900/50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Data Source
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Type & Category
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                URL
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Created
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
-            {filteredDataSources.map(dataSource => {
-              const testResult = testResults[dataSource.id]
-              const isTesting = testingDataSources.has(dataSource.id)
-              
-              return (
-                <tr key={dataSource.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center">
-                        <DataSourceIcon dataSourceType={dataSource.dataSourceType} />
-                      </div>
-                      <div className="ml-3">
-                        <div className="text-sm font-medium text-slate-900 dark:text-white">
-                          {dataSource.name}
-                        </div>
-                        {testResult && (
-                          <div className={`text-xs flex items-center mt-1 ${
-                            testResult.isSuccess ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                          }`}>
-                            {testResult.isSuccess ? (
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                            ) : (
-                              <XCircle className="h-3 w-3 mr-1" />
-                            )}
-                            {testResult.isSuccess ? 'Connected' : 'Failed'}
-                            {testResult.responseTimeMs > 0 && (
-                              <span className="ml-1">({testResult.responseTimeMs}ms)</span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-slate-900 dark:text-white">{dataSource.dataSourceType}</div>
-                    <div className="text-sm text-slate-500 dark:text-slate-400">{getDataSourceCategory(dataSource.dataSourceType)}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-slate-900 dark:text-white max-w-xs truncate" title={dataSource.url}>
-                      {dataSource.url}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(dataSource.isEnabled)}`}>
-                      {dataSource.isEnabled ? 'Enabled' : 'Disabled'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                    {formatDate(dataSource.createdAt)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center justify-end space-x-2">
-                      <button
-                        onClick={() => handleTest(dataSource)}
-                        disabled={isTesting}
-                        className="inline-flex items-center p-1 border border-transparent rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Test connection"
-                      >
-                        {isTesting ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <TestTube className="h-4 w-4" />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => handleExplore(dataSource)}
-                        className="inline-flex items-center p-1 border border-transparent rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
-                        title="Explore data"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleBuildDashboard(dataSource)}
-                        className="inline-flex items-center p-1 border border-transparent rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
-                        title="Build dashboard"
-                      >
-                        <BarChart3 className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleEdit(dataSource)}
-                        className="inline-flex items-center p-1 border border-transparent rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
-                        title="Edit data source"
-                      >
-                        <Settings className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Data Sources</h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            Manage your configured data source connections.
-          </p>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map(i => (
-            <div key={i} className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 animate-pulse">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
-                  <div className="ml-3">
-                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24 mb-2"></div>
-                    <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-16"></div>
-                  </div>
-                </div>
-                <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-16"></div>
-              </div>
-              <div className="space-y-2 mb-4">
-                <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
-              </div>
-              <div className="flex space-x-2">
-                <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded flex-1"></div>
-                <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded flex-1"></div>
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-themed-interactive-primary"></div>
+        <span className="ml-4 text-themed-text-secondary">Loading data sources...</span>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Data Sources</h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            Manage your configured data source connections.
-          </p>
+      <div className="border-b border-themed-border-primary pb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-themed-text-primary">Data Sources</h1>
+            <p className="mt-2 text-themed-text-secondary">
+              Manage your data connections and integrations
+            </p>
+          </div>
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center bg-themed-bg-surface rounded-sm border border-themed-border-primary">
+              <button
+                onClick={() => setViewMode('card')}
+                className={`p-2 ${
+                  viewMode === 'card'
+                    ? 'bg-themed-interactive-primary text-themed-text-inverse'
+                    : 'text-themed-text-secondary hover:text-themed-text-primary'
+                }`}
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('row')}
+                className={`p-2 ${
+                  viewMode === 'row'
+                    ? 'bg-themed-interactive-primary text-themed-text-inverse'
+                    : 'text-themed-text-secondary hover:text-themed-text-primary'
+                }`}
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
+            <button
+              onClick={() => navigate('/connections/add')}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-sm shadow-sm text-themed-text-inverse bg-themed-interactive-primary hover:bg-themed-interactive-primary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Data Source
+            </button>
+          </div>
         </div>
-        <button
-          onClick={() => navigate('/connections/add')}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-sm shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Data Source
-        </button>
       </div>
 
       {/* Success Message */}
       {successMessage && (
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-sm p-4">
+        <div className="bg-themed-status-success bg-opacity-10 border border-themed-status-success rounded-lg p-4">
           <div className="flex">
-            <div className="flex-shrink-0">
-              <CheckCircle className="h-5 w-5 text-green-400" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                {successMessage}
-              </p>
-            </div>
-            <div className="ml-auto pl-3">
-              <button
-                type="button"
-                onClick={() => setSuccessMessage(null)}
-                className="inline-flex text-green-400 hover:text-green-600 focus:outline-none"
-              >
-                <span className="sr-only">Dismiss</span>
-                <XCircle className="h-5 w-5" />
-              </button>
+            <CheckCircle className="h-5 w-5 text-themed-status-success mr-2 mt-0.5" />
+            <div>
+              <h3 className="text-sm font-medium text-themed-status-success">Success</h3>
+              <p className="mt-1 text-sm text-themed-text-secondary">{successMessage}</p>
             </div>
           </div>
         </div>
@@ -541,129 +279,91 @@ export default function DataSources() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-sm p-4">
+        <div className="bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-lg p-4">
           <div className="flex">
-            <AlertCircle className="h-5 w-5 text-red-400" />
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Error</h3>
-              <div className="mt-2 text-sm text-red-700 dark:text-red-300">
-                <p>{error}</p>
-              </div>
-              <div className="mt-4">
-                <button
-                  type="button"
-                  onClick={() => setError(null)}
-                  className="text-sm font-medium text-red-800 dark:text-red-200 hover:text-red-600 dark:hover:text-red-400"
-                >
-                  Dismiss
-                </button>
-              </div>
+            <AlertCircle className="h-5 w-5 text-themed-status-error mr-2 mt-0.5" />
+            <div>
+              <h3 className="text-sm font-medium text-themed-status-error">Error</h3>
+              <p className="mt-1 text-sm text-themed-text-secondary">{error}</p>
+              <button
+                onClick={loadDataSources}
+                className="mt-3 inline-flex items-center px-3 py-2 border border-themed-status-error text-sm font-medium rounded-sm text-themed-status-error bg-themed-bg-surface hover:bg-themed-status-error hover:text-themed-text-inverse transition-colors"
+              >
+                <Loader2 className="h-4 w-4 mr-2" />
+                Retry
+              </button>
             </div>
           </div>
         </div>
       )}
 
       {/* Filters and Search */}
-      <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="bg-themed-bg-tertiary rounded-lg border border-themed-border-primary p-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Search */}
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search data sources..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white"
-              />
-            </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-themed-text-muted" />
+            <input
+              type="text"
+              placeholder="Search data sources..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="block w-full pl-10 pr-3 py-2 border border-themed-border-primary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted sm:text-sm"
+            />
           </div>
 
           {/* Category Filter */}
-          <div className="sm:w-48">
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full pl-10 pr-8 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white appearance-none"
-              >
-                {categories.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-            </div>
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-themed-text-muted" />
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="block w-full pl-10 pr-8 py-2 border border-themed-border-primary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary bg-themed-bg-surface text-themed-text-primary sm:text-sm"
+            >
+              {categories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
           </div>
 
           {/* Sort */}
-          <div className="sm:w-48">
-            <div className="relative">
-              <ArrowUpDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <select
-                value={sortBy}
-                onChange={(e) => handleSort(e.target.value)}
-                className="w-full pl-10 pr-8 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white appearance-none"
-              >
-                {sortOptions.map(option => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
-            </div>
+          <div className="relative">
+            <ArrowUpDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-themed-text-muted" />
+            <select
+              value={sortBy}
+              onChange={(e) => handleSort(e.target.value)}
+              className="block w-full pl-10 pr-8 py-2 border border-themed-border-primary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary bg-themed-bg-surface text-themed-text-primary sm:text-sm"
+            >
+              {sortOptions.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
           </div>
 
-          {/* View Toggle */}
-          <div className="flex border border-slate-300 dark:border-slate-600 rounded-sm overflow-hidden">
-            <button
-              onClick={() => setViewMode('card')}
-              className={`px-3 py-2 text-sm font-medium transition-colors ${
-                viewMode === 'card'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600'
-              }`}
-              title="Card view"
-            >
-              <Grid3X3 className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('row')}
-              className={`px-3 py-2 text-sm font-medium transition-colors border-l border-slate-300 dark:border-slate-600 ${
-                viewMode === 'row'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600'
-              }`}
-              title="Row view"
-            >
-              <List className="h-4 w-4" />
-            </button>
+          {/* Results Count */}
+          <div className="flex items-center justify-end">
+            <span className="text-sm text-themed-text-secondary">
+              {filteredDataSources.length} of {dataSources.length} data sources
+            </span>
           </div>
-        </div>
-
-        {/* Results count */}
-        <div className="mt-4 text-sm text-slate-600 dark:text-slate-400">
-          Showing {filteredDataSources.length} of {dataSources.length} data sources
-          {selectedCategory !== 'All' && ` in ${selectedCategory}`}
         </div>
       </div>
 
-      {/* Data Sources Display */}
+      {/* Data Sources Grid/List */}
       {filteredDataSources.length === 0 ? (
         <div className="text-center py-12">
-          <Database className="mx-auto h-12 w-12 text-slate-400" />
-          <h3 className="mt-2 text-sm font-medium text-slate-900 dark:text-white">
-            {searchTerm || selectedCategory !== 'All' ? 'No matching data sources' : 'No data sources configured'}
-          </h3>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <Database className="mx-auto h-12 w-12 text-themed-text-muted" />
+          <h3 className="mt-2 text-sm font-medium text-themed-text-primary">No data sources found</h3>
+          <p className="mt-1 text-sm text-themed-text-secondary">
             {searchTerm || selectedCategory !== 'All' 
-              ? 'Try adjusting your search or filter criteria.'
-              : 'Get started by adding your first data source connection.'
-            }
+              ? 'Try adjusting your search or filters.' 
+              : 'Get started by adding your first data source.'}
           </p>
-          {!searchTerm && selectedCategory === 'All' && (
+          {(!searchTerm && selectedCategory === 'All') && (
             <div className="mt-6">
               <button
                 onClick={() => navigate('/connections/add')}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-sm shadow-sm text-themed-text-inverse bg-themed-interactive-primary hover:bg-themed-interactive-primary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Data Source
@@ -671,35 +371,229 @@ export default function DataSources() {
             </div>
           )}
         </div>
+      ) : viewMode === 'card' ? (
+        renderCardView()
       ) : (
-        viewMode === 'card' ? renderCardView() : renderRowView()
-      )}
-
-      {/* Info Panel */}
-      {filteredDataSources.length > 0 && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-sm p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                Data Source Management
-              </h3>
-              <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Test connections regularly to ensure data sources are accessible</li>
-                  <li>Use "Build Dashboard" to create visualizations from your data</li>
-                  <li>Use "Explore" to query and analyze your data interactively</li>
-                  <li>Disable unused data sources to improve performance</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
+        renderRowView()
       )}
     </div>
   )
+
+  function renderCardView() {
+    return (
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {filteredDataSources.map((dataSource) => (
+          <div
+            key={dataSource.id}
+            className="bg-themed-bg-tertiary overflow-hidden shadow-lg rounded-lg border border-themed-border-primary hover:shadow-xl transition-shadow"
+          >
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <DataSourceIcon type={dataSource.dataSourceType} className="h-8 w-8" />
+                </div>
+                <div className="ml-4 flex-1">
+                  <h3 className="text-lg font-medium text-themed-text-primary">
+                    {dataSource.name}
+                  </h3>
+                  <p className="text-sm text-themed-text-secondary">
+                    {dataSource.dataSourceType} • {getDataSourceCategory(dataSource.dataSourceType)}
+                  </p>
+                </div>
+                <div className="flex-shrink-0">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    dataSource.isEnabled 
+                      ? 'bg-themed-status-success bg-opacity-20 text-themed-status-success'
+                      : 'bg-themed-text-muted bg-opacity-20 text-themed-text-muted'
+                  }`}>
+                    {dataSource.isEnabled ? 'Enabled' : 'Disabled'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <p className="text-sm text-themed-text-secondary line-clamp-2">
+                  {dataSource.description || 'No description provided'}
+                </p>
+              </div>
+
+              <div className="mt-4 text-xs text-themed-text-muted">
+                <p>URL: <span className="font-mono">{dataSource.url}</span></p>
+                <p>Created: {formatDate(dataSource.createdAt)}</p>
+                {dataSource.lastSyncTime && (
+                  <p>Last sync: {formatDate(dataSource.lastSyncTime)}</p>
+                )}
+              </div>
+
+              {/* Test Result */}
+              {testResults[dataSource.id] && (
+                <div className="mt-4">
+                  {testResults[dataSource.id].isSuccess ? (
+                    <div className="bg-themed-status-success bg-opacity-10 border border-themed-status-success rounded-sm p-2">
+                      <div className="flex items-center">
+                        <CheckCircle className="h-4 w-4 text-themed-status-success mr-2" />
+                        <span className="text-xs text-themed-status-success">
+                          Connection successful ({testResults[dataSource.id].responseTimeMs}ms)
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-sm p-2">
+                      <div className="flex items-center">
+                        <XCircle className="h-4 w-4 text-themed-status-error mr-2" />
+                        <span className="text-xs text-themed-status-error">
+                          {testResults[dataSource.id].errorMessage}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-6 flex items-center justify-between">
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleEdit(dataSource)}
+                    className="inline-flex items-center px-3 py-2 border border-themed-border-primary text-sm font-medium rounded-sm text-themed-text-primary bg-themed-bg-surface hover:bg-themed-interactive-secondary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors"
+                  >
+                    <Settings className="h-4 w-4 mr-1" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleTest(dataSource)}
+                    disabled={testingDataSources.has(dataSource.id)}
+                    className="inline-flex items-center px-3 py-2 border border-themed-border-primary text-sm font-medium rounded-sm text-themed-text-primary bg-themed-bg-surface hover:bg-themed-interactive-secondary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary disabled:opacity-50 transition-colors"
+                  >
+                    {testingDataSources.has(dataSource.id) ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <TestTube className="h-4 w-4 mr-1" />
+                    )}
+                    Test
+                  </button>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleExplore(dataSource)}
+                    className="inline-flex items-center px-3 py-2 border border-themed-interactive-primary text-sm font-medium rounded-sm text-themed-interactive-primary bg-themed-bg-surface hover:bg-themed-interactive-primary hover:text-themed-text-inverse focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors"
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    Explore
+                  </button>
+                  <button
+                    onClick={() => handleBuildDashboard(dataSource)}
+                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-sm shadow-sm text-themed-text-inverse bg-themed-interactive-primary hover:bg-themed-interactive-primary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors"
+                  >
+                    <BarChart3 className="h-4 w-4 mr-1" />
+                    Dashboard
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  function renderRowView() {
+    return (
+      <div className="bg-themed-bg-tertiary shadow-lg rounded-lg border border-themed-border-primary overflow-hidden">
+        <table className="min-w-full divide-y divide-themed-border-primary">
+          <thead className="bg-themed-bg-surface">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-secondary uppercase tracking-wider">
+                Name
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-secondary uppercase tracking-wider">
+                Type
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-secondary uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-secondary uppercase tracking-wider">
+                Last Sync
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-themed-text-secondary uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-themed-bg-tertiary divide-y divide-themed-border-primary">
+            {filteredDataSources.map((dataSource) => (
+              <tr key={dataSource.id} className="hover:bg-themed-bg-elevated transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center">
+                    <DataSourceIcon type={dataSource.dataSourceType} className="h-6 w-6 mr-3" />
+                    <div>
+                      <div className="text-sm font-medium text-themed-text-primary">
+                        {dataSource.name}
+                      </div>
+                      <div className="text-sm text-themed-text-secondary">
+                        {dataSource.url}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-themed-text-primary">{dataSource.dataSourceType}</div>
+                  <div className="text-sm text-themed-text-secondary">{getDataSourceCategory(dataSource.dataSourceType)}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    dataSource.isEnabled 
+                      ? 'bg-themed-status-success bg-opacity-20 text-themed-status-success'
+                      : 'bg-themed-text-muted bg-opacity-20 text-themed-text-muted'
+                  }`}>
+                    {dataSource.isEnabled ? 'Enabled' : 'Disabled'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-themed-text-secondary">
+                  {dataSource.lastSyncTime ? formatDate(dataSource.lastSyncTime) : 'Never'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div className="flex items-center justify-end space-x-2">
+                    <button
+                      onClick={() => handleTest(dataSource)}
+                      disabled={testingDataSources.has(dataSource.id)}
+                      className="text-themed-text-secondary hover:text-themed-text-primary disabled:opacity-50"
+                      title="Test connection"
+                    >
+                      {testingDataSources.has(dataSource.id) ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <TestTube className="h-4 w-4" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleEdit(dataSource)}
+                      className="text-themed-text-secondary hover:text-themed-text-primary"
+                      title="Edit data source"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleExplore(dataSource)}
+                      className="text-themed-interactive-primary hover:text-themed-interactive-primary-hover"
+                      title="Explore data"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleBuildDashboard(dataSource)}
+                      className="text-themed-interactive-primary hover:text-themed-interactive-primary-hover"
+                      title="Build dashboard"
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
 } 

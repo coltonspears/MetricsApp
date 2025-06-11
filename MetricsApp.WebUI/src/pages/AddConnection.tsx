@@ -170,16 +170,16 @@ export default function AddConnection() {
 
   // Show mock data banner
   const MockDataBanner = () => (
-    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-6">
+    <div className="bg-themed-status-warning bg-opacity-10 border border-themed-status-warning rounded-md p-4 mb-6">
       <div className="flex">
         <div className="flex-shrink-0">
-          <AlertTriangle className="h-5 w-5 text-yellow-400" />
+          <AlertTriangle className="h-5 w-5 text-themed-status-warning" />
         </div>
         <div className="ml-3">
-          <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+          <h3 className="text-sm font-medium text-themed-text-primary">
             Using Mock Data
           </h3>
-          <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+          <div className="mt-2 text-sm text-themed-text-secondary">
             <p>
               The backend API is not available. You can still test the interface with mock data, 
               but actual connections won't be persisted. To use real data sources, ensure the 
@@ -201,7 +201,7 @@ export default function AddConnection() {
         {/* Header */}
         <button
             onClick={handleCancel}
-            className="mr-4 inline-flex items-center text-sm text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+            className="mr-4 inline-flex items-center text-sm text-themed-text-secondary hover:text-themed-text-primary transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to Add Connection
@@ -209,8 +209,8 @@ export default function AddConnection() {
         <div className="flex items-center">
 
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Add Connection</h1>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            <h1 className="text-2xl font-bold text-themed-text-primary">Add Connection</h1>
+            <p className="mt-1 text-sm text-themed-text-secondary">
               Create a new {selectedTypeInfo.displayName} connection
             </p>
           </div>
@@ -218,16 +218,16 @@ export default function AddConnection() {
 
         {/* Error Message */}
         {error && !usingMockData && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+          <div className="bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-md p-4">
             <div className="flex">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="h-5 w-5 text-themed-status-error" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Error</h3>
-                <div className="mt-2 text-sm text-red-700 dark:text-red-300">
+                <h3 className="text-sm font-medium text-themed-status-error">Error</h3>
+                <div className="mt-2 text-sm text-themed-status-error">
                   <p>{error}</p>
                 </div>
               </div>
@@ -236,21 +236,21 @@ export default function AddConnection() {
         )}
 
         {/* Data Source Form */}
-        <div className="bg-white dark:bg-slate-800 shadow rounded-lg">
+        <div className="bg-themed-bg-tertiary shadow rounded-lg border border-themed-border-primary">
           <div className="px-6 py-6">
             <div className="mb-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-medium text-slate-900 dark:text-white">
+                <h2 className="text-lg font-medium text-themed-text-primary">
                   Configure {selectedTypeInfo.displayName} Connection
                 </h2>
                 <button
                   onClick={() => setSelectedType(null)}
-                  className="text-sm text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+                  className="text-sm text-themed-text-secondary hover:text-themed-text-primary transition-colors"
                 >
                   Change Type
                 </button>
               </div>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+              <p className="text-sm text-themed-text-secondary mt-1">
                 {selectedTypeInfo.description}
               </p>
             </div>
@@ -267,18 +267,18 @@ export default function AddConnection() {
         </div>
 
         {/* Info Panel */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4">
+        <div className="bg-themed-status-info bg-opacity-10 border border-themed-status-info rounded-md p-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+              <svg className="h-5 w-5 text-themed-status-info" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+              <h3 className="text-sm font-medium text-themed-status-info">
                 Connection Tips
               </h3>
-              <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
+              <div className="mt-2 text-sm text-themed-text-secondary">
                 <ul className="list-disc pl-5 space-y-1">
                   <li>Ensure the data source is accessible from this application</li>
                   <li>Use descriptive names to easily identify connections</li>
@@ -297,25 +297,25 @@ export default function AddConnection() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Add New Connection</h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+          <h1 className="text-2xl font-bold text-themed-text-primary">Add New Connection</h1>
+          <p className="mt-1 text-sm text-themed-text-secondary">
             Choose a data source type to connect to your external systems.
           </p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map(i => (
-            <div key={i} className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 animate-pulse">
+            <div key={i} className="bg-themed-bg-tertiary rounded-lg border border-themed-border-primary p-6 animate-pulse">
               <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+                <div className="w-12 h-12 bg-themed-bg-surface rounded-lg"></div>
                 <div className="ml-4 flex-1">
-                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-2"></div>
-                  <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+                  <div className="h-4 bg-themed-bg-surface rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-themed-bg-surface rounded w-1/2"></div>
                 </div>
               </div>
               <div className="space-y-2">
-                <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-5/6"></div>
+                <div className="h-3 bg-themed-bg-surface rounded"></div>
+                <div className="h-3 bg-themed-bg-surface rounded w-5/6"></div>
               </div>
             </div>
           ))}
@@ -377,16 +377,16 @@ export default function AddConnection() {
 
       {/* Error Message - only show if not using mock data */}
       {error && !usingMockData && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+        <div className="bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-md p-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <svg className="h-5 w-5 text-themed-status-error" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Error</h3>
-              <div className="mt-2 text-sm text-red-700 dark:text-red-300">
+              <h3 className="text-sm font-medium text-themed-status-error">Error</h3>
+              <div className="mt-2 text-sm text-themed-status-error">
                 <p>{error}</p>
               </div>
             </div>
@@ -398,18 +398,18 @@ export default function AddConnection() {
       {!selectedType && (
         <>
           {/* Filters and Search */}
-          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+          <div className="bg-themed-bg-tertiary rounded-lg border border-themed-border-primary p-4">
             <div className="flex flex-col sm:flex-row gap-4">
               {/* Search */}
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-themed-text-muted" />
                   <input
                     type="text"
                     placeholder="Search data sources..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2 border border-themed-border-primary rounded-sm focus:ring-themed-interactive-primary focus:border-themed-interactive-primary bg-themed-bg-surface text-themed-text-primary"
                   />
                 </div>
               </div>
@@ -417,11 +417,11 @@ export default function AddConnection() {
               {/* Category Filter */}
               <div className="sm:w-48">
                 <div className="relative">
-                  <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-themed-text-muted" />
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full pl-10 pr-8 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white appearance-none"
+                    className="w-full pl-10 pr-8 py-2 border border-themed-border-primary rounded-sm focus:ring-themed-interactive-primary focus:border-themed-interactive-primary bg-themed-bg-surface text-themed-text-primary appearance-none"
                   >
                     {categories.map(category => (
                       <option key={category} value={category}>{category}</option>
@@ -433,11 +433,11 @@ export default function AddConnection() {
               {/* Sort */}
               <div className="sm:w-48">
                 <div className="relative">
-                  <ArrowUpDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <ArrowUpDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-themed-text-muted" />
                   <select
                     value={sortBy}
                     onChange={(e) => handleSort(e.target.value)}
-                    className="w-full pl-10 pr-8 py-2 border border-slate-300 dark:border-slate-600 rounded-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white appearance-none"
+                    className="w-full pl-10 pr-8 py-2 border border-themed-border-primary rounded-sm focus:ring-themed-interactive-primary focus:border-themed-interactive-primary bg-themed-bg-surface text-themed-text-primary appearance-none"
                   >
                     {sortOptions.map(option => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -448,7 +448,7 @@ export default function AddConnection() {
             </div>
 
             {/* Results count */}
-            <div className="mt-4 text-sm text-slate-600 dark:text-slate-400">
+            <div className="mt-4 text-sm text-themed-text-secondary">
               Showing {filteredTypes.length} of {dataSourceTypes.length} data sources
               {selectedCategory !== 'All' && ` in ${selectedCategory}`}
             </div>
@@ -457,11 +457,11 @@ export default function AddConnection() {
           {/* Data Source Types Grid */}
           {filteredTypes.length === 0 ? (
             <div className="text-center py-12">
-              <Database className="mx-auto h-12 w-12 text-slate-400" />
-              <h3 className="mt-2 text-sm font-medium text-slate-900 dark:text-white">
+              <Database className="mx-auto h-12 w-12 text-themed-text-muted" />
+              <h3 className="mt-2 text-sm font-medium text-themed-text-primary">
                 {searchTerm || selectedCategory !== 'All' ? 'No matching data sources' : 'No data sources available'}
               </h3>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              <p className="mt-1 text-sm text-themed-text-secondary">
                 {searchTerm || selectedCategory !== 'All' 
                   ? 'Try adjusting your search or filter criteria.'
                   : 'No data source plugins are currently registered.'
@@ -473,23 +473,23 @@ export default function AddConnection() {
               {filteredTypes.map(type => (
                 <div
                   key={type.dataSourceType}
-                  className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 group hover:shadow-md"
+                  className="bg-themed-bg-tertiary rounded-lg border border-themed-border-primary hover:border-themed-interactive-primary transition-all duration-200 group hover:shadow-md"
                 >
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center">
-                        <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center">
-                          <Database className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                        <div className="w-12 h-12 bg-themed-interactive-secondary rounded-lg flex items-center justify-center">
+                          <Database className="h-6 w-6 text-themed-interactive-primary" />
                         </div>
                         <div className="ml-4 flex-1">
-                          <h3 className="text-lg font-medium text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                          <h3 className="text-lg font-medium text-themed-text-primary group-hover:text-themed-interactive-primary transition-colors">
                             {type.displayName}
                           </h3>
                           <div className="flex items-center space-x-2 mt-1">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-themed-bg-surface text-themed-text-secondary">
                               {getDataSourceCategory(type.dataSourceType)}
                             </span>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-themed-interactive-secondary text-themed-interactive-primary">
                               v{type.version}
                             </span>
                           </div>
@@ -497,21 +497,21 @@ export default function AddConnection() {
                       </div>
                     </div>
                     
-                    <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-3 mb-4">
+                    <p className="text-sm text-themed-text-secondary line-clamp-3 mb-4">
                       {type.description}
                     </p>
 
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleSelectType(type.dataSourceType)}
-                        className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-s shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                        className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-sm shadow-sm text-sm font-medium text-themed-text-inverse bg-themed-interactive-primary hover:bg-themed-interactive-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-themed-interactive-primary transition-colors"
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         Add Connection
                       </button>
                       <button
                         onClick={() => handleDataSourceClick(type.dataSourceType)}
-                        className="inline-flex items-center px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-s text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                        className="inline-flex items-center px-3 py-2 border border-themed-border-primary rounded-sm text-sm font-medium text-themed-text-primary bg-themed-bg-surface hover:bg-themed-bg-elevated transition-colors"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </button>
@@ -524,18 +524,18 @@ export default function AddConnection() {
 
           {/* Info Panel */}
           {filteredTypes.length > 0 && (
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4">
+            <div className="bg-themed-status-info bg-opacity-10 border border-themed-status-info rounded-md p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="h-5 w-5 text-themed-status-info" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                  <h3 className="text-sm font-medium text-themed-status-info">
                     Getting Started
                   </h3>
-                  <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                  <div className="mt-2 text-sm text-themed-text-secondary">
                     <ul className="list-disc pl-5 space-y-1">
                       <li>Click "Add Connection" to configure a new data source instance</li>
                       <li>Click the info icon to learn more about each data source type</li>

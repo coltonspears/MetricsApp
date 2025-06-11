@@ -379,12 +379,12 @@ const Search = () => {
 
       {/* Error Display */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <div className="bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-lg p-4">
           <div className="flex">
-            <AlertCircle className="h-5 w-5 text-red-400 mr-2 mt-0.5" />
+            <AlertCircle className="h-5 w-5 text-themed-status-error mr-2 mt-0.5" />
             <div>
-              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Search Error</h3>
-              <p className="mt-1 text-sm text-red-700 dark:text-red-300">{error}</p>
+              <h3 className="text-sm font-medium text-themed-status-error">Search Error</h3>
+              <p className="mt-1 text-sm text-themed-text-secondary">{error}</p>
             </div>
           </div>
         </div>
@@ -458,10 +458,10 @@ const Search = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                           result.environment === 'Production' 
-                            ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'
+                            ? 'bg-themed-status-error bg-opacity-10 text-themed-status-error'
                             : result.environment === 'Staging'
-                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300'
-                            : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
+                            ? 'bg-themed-status-warning bg-opacity-10 text-themed-status-warning'
+                            : 'bg-themed-status-success bg-opacity-10 text-themed-status-success'
                         }`}>
                           {result.environment}
                         </span>

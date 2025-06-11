@@ -51,6 +51,8 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
+
+
 *_i.c
 *_p.c
 *_i.h
@@ -272,3 +274,8 @@ __pycache__/
 
 # Cake - Uncomment if you are using it
 # tools/
+
+
+.DS_Store
+node_modules
+dist/

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Search, Filter, ArrowUpDown, Database, Plus, Settings, TestTube, BarChart3, Eye, AlertCircle, Loader2, CheckCircle, XCircle } from 'lucide-react'
+import { Search, Filter, ArrowUpDown, Database, Plus, Settings, TestTube, BarChart3, Eye, AlertCircle, Loader2, CheckCircle, XCircle, Grid3X3, List } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { 
   DataSourceConfiguration, 
@@ -33,6 +33,9 @@ const sortOptions = [
   { value: 'created', label: 'Created' }
 ]
 
+// Add view type after the sortOptions
+type ViewMode = 'card' | 'row'
+
 export default function DataSources() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -47,6 +50,11 @@ export default function DataSources() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [testingDataSources, setTestingDataSources] = useState<Set<string>>(new Set())
   const [testResults, setTestResults] = useState<Record<string, DataSourceTestResult>>({})
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    // Persist view mode - default to card view
+    const saved = localStorage.getItem('dataSourcesViewMode')
+    return (saved as ViewMode) || 'card'
+  })
 
   useEffect(() => {
     loadDataSources()
@@ -64,6 +72,11 @@ export default function DataSources() {
   useEffect(() => {
     filterAndSortDataSources()
   }, [dataSources, searchTerm, selectedCategory, sortBy, sortOrder])
+
+  // Persist view mode
+  useEffect(() => {
+    localStorage.setItem('dataSourcesViewMode', viewMode)
+  }, [viewMode])
 
   const loadDataSources = async () => {
     setIsLoading(true)
@@ -196,6 +209,252 @@ export default function DataSources() {
       day: 'numeric'
     })
   }
+
+  // Add renderCardView function
+  const renderCardView = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {filteredDataSources.map(dataSource => {
+        const testResult = testResults[dataSource.id]
+        const isTesting = testingDataSources.has(dataSource.id)
+        
+        return (
+          <div
+            key={dataSource.id}
+            className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 hover:shadow-md"
+          >
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center">
+                    <DataSourceIcon dataSourceType={dataSource.dataSourceType} />
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-lg font-medium text-slate-900 dark:text-white">
+                      {dataSource.name}
+                    </h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      {dataSource.dataSourceType}
+                    </p>
+                  </div>
+                </div>
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(dataSource.isEnabled)}`}>
+                  {dataSource.isEnabled ? 'Enabled' : 'Disabled'}
+                </span>
+              </div>
+
+              {/* Details */}
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500 dark:text-slate-400">Category:</span>
+                  <span className="text-slate-900 dark:text-white">{getDataSourceCategory(dataSource.dataSourceType)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500 dark:text-slate-400">Created:</span>
+                  <span className="text-slate-900 dark:text-white">{formatDate(dataSource.createdAt)}</span>
+                </div>
+                <div className="text-sm">
+                  <span className="text-slate-500 dark:text-slate-400">URL:</span>
+                  <p className="text-slate-900 dark:text-white break-all mt-1">{dataSource.url}</p>
+                </div>
+              </div>
+
+              {/* Test Result */}
+              {testResult && (
+                <div className={`mb-4 p-3 rounded-sm text-sm ${
+                  testResult.isSuccess 
+                    ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300'
+                    : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
+                }`}>
+                  <div className="flex items-center">
+                    {testResult.isSuccess ? (
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                    ) : (
+                      <XCircle className="h-4 w-4 mr-2" />
+                    )}
+                    <span className="font-medium">
+                      {testResult.isSuccess ? 'Connection successful' : 'Connection failed'}
+                    </span>
+                    {testResult.responseTimeMs > 0 && (
+                      <span className="ml-auto">{testResult.responseTimeMs}ms</span>
+                    )}
+                  </div>
+                  {testResult.errorMessage && !testResult.isSuccess && (
+                    <p className="mt-1 text-xs">{testResult.errorMessage}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="space-y-2">
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleBuildDashboard(dataSource)}
+                    className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                  >
+                    <BarChart3 className="h-4 w-4 mr-1" />
+                    Dashboard
+                  </button>
+                  <button
+                    onClick={() => handleExplore(dataSource)}
+                    className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-sm text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    Explore
+                  </button>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleTest(dataSource)}
+                    disabled={isTesting}
+                    className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-sm text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isTesting ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <TestTube className="h-4 w-4 mr-1" />
+                    )}
+                    {isTesting ? 'Testing...' : 'Test'}
+                  </button>
+                  <button
+                    onClick={() => handleEdit(dataSource)}
+                    className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-sm text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                  >
+                    <Settings className="h-4 w-4 mr-1" />
+                    Edit
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+
+  // Add renderRowView function
+  const renderRowView = () => (
+    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+          <thead className="bg-slate-50 dark:bg-slate-900/50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Data Source
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Type & Category
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                URL
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Created
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+            {filteredDataSources.map(dataSource => {
+              const testResult = testResults[dataSource.id]
+              const isTesting = testingDataSources.has(dataSource.id)
+              
+              return (
+                <tr key={dataSource.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center">
+                        <DataSourceIcon dataSourceType={dataSource.dataSourceType} />
+                      </div>
+                      <div className="ml-3">
+                        <div className="text-sm font-medium text-slate-900 dark:text-white">
+                          {dataSource.name}
+                        </div>
+                        {testResult && (
+                          <div className={`text-xs flex items-center mt-1 ${
+                            testResult.isSuccess ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                          }`}>
+                            {testResult.isSuccess ? (
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                            ) : (
+                              <XCircle className="h-3 w-3 mr-1" />
+                            )}
+                            {testResult.isSuccess ? 'Connected' : 'Failed'}
+                            {testResult.responseTimeMs > 0 && (
+                              <span className="ml-1">({testResult.responseTimeMs}ms)</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-slate-900 dark:text-white">{dataSource.dataSourceType}</div>
+                    <div className="text-sm text-slate-500 dark:text-slate-400">{getDataSourceCategory(dataSource.dataSourceType)}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-slate-900 dark:text-white max-w-xs truncate" title={dataSource.url}>
+                      {dataSource.url}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(dataSource.isEnabled)}`}>
+                      {dataSource.isEnabled ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
+                    {formatDate(dataSource.createdAt)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex items-center justify-end space-x-2">
+                      <button
+                        onClick={() => handleTest(dataSource)}
+                        disabled={isTesting}
+                        className="inline-flex items-center p-1 border border-transparent rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Test connection"
+                      >
+                        {isTesting ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <TestTube className="h-4 w-4" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleExplore(dataSource)}
+                        className="inline-flex items-center p-1 border border-transparent rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                        title="Explore data"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleBuildDashboard(dataSource)}
+                        className="inline-flex items-center p-1 border border-transparent rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                        title="Build dashboard"
+                      >
+                        <BarChart3 className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleEdit(dataSource)}
+                        className="inline-flex items-center p-1 border border-transparent rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                        title="Edit data source"
+                      >
+                        <Settings className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
 
   if (isLoading) {
     return (
@@ -352,6 +611,32 @@ export default function DataSources() {
               </select>
             </div>
           </div>
+
+          {/* View Toggle */}
+          <div className="flex border border-slate-300 dark:border-slate-600 rounded-sm overflow-hidden">
+            <button
+              onClick={() => setViewMode('card')}
+              className={`px-3 py-2 text-sm font-medium transition-colors ${
+                viewMode === 'card'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600'
+              }`}
+              title="Card view"
+            >
+              <Grid3X3 className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('row')}
+              className={`px-3 py-2 text-sm font-medium transition-colors border-l border-slate-300 dark:border-slate-600 ${
+                viewMode === 'row'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600'
+              }`}
+              title="Row view"
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Results count */}
@@ -361,7 +646,7 @@ export default function DataSources() {
         </div>
       </div>
 
-      {/* Data Sources Grid */}
+      {/* Data Sources Display */}
       {filteredDataSources.length === 0 ? (
         <div className="text-center py-12">
           <Database className="mx-auto h-12 w-12 text-slate-400" />
@@ -387,124 +672,7 @@ export default function DataSources() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredDataSources.map(dataSource => {
-            const testResult = testResults[dataSource.id]
-            const isTesting = testingDataSources.has(dataSource.id)
-            
-            return (
-              <div
-                key={dataSource.id}
-                className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 hover:shadow-md"
-              >
-                <div className="p-6">
-                  {/* Header */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center">
-                        <DataSourceIcon dataSourceType={dataSource.dataSourceType} />
-                      </div>
-                      <div className="ml-3">
-                        <h3 className="text-lg font-medium text-slate-900 dark:text-white">
-                          {dataSource.name}
-                        </h3>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          {dataSource.dataSourceType}
-                        </p>
-                      </div>
-                    </div>
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(dataSource.isEnabled)}`}>
-                      {dataSource.isEnabled ? 'Enabled' : 'Disabled'}
-                    </span>
-                  </div>
-
-                  {/* Details */}
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-500 dark:text-slate-400">Category:</span>
-                      <span className="text-slate-900 dark:text-white">{getDataSourceCategory(dataSource.dataSourceType)}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-500 dark:text-slate-400">Created:</span>
-                      <span className="text-slate-900 dark:text-white">{formatDate(dataSource.createdAt)}</span>
-                    </div>
-                    <div className="text-sm">
-                      <span className="text-slate-500 dark:text-slate-400">URL:</span>
-                      <p className="text-slate-900 dark:text-white break-all mt-1">{dataSource.url}</p>
-                    </div>
-                  </div>
-
-                  {/* Test Result */}
-                  {testResult && (
-                    <div className={`mb-4 p-3 rounded-sm text-sm ${
-                      testResult.isSuccess 
-                        ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300'
-                        : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
-                    }`}>
-                      <div className="flex items-center">
-                        {testResult.isSuccess ? (
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                        ) : (
-                          <XCircle className="h-4 w-4 mr-2" />
-                        )}
-                        <span className="font-medium">
-                          {testResult.isSuccess ? 'Connection successful' : 'Connection failed'}
-                        </span>
-                        {testResult.responseTimeMs > 0 && (
-                          <span className="ml-auto">{testResult.responseTimeMs}ms</span>
-                        )}
-                      </div>
-                      {testResult.errorMessage && !testResult.isSuccess && (
-                        <p className="mt-1 text-xs">{testResult.errorMessage}</p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Actions */}
-                  <div className="space-y-2">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleBuildDashboard(dataSource)}
-                        className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
-                      >
-                        <BarChart3 className="h-4 w-4 mr-1" />
-                        Dashboard
-                      </button>
-                      <button
-                        onClick={() => handleExplore(dataSource)}
-                        className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-sm text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        Explore
-                      </button>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleTest(dataSource)}
-                        disabled={isTesting}
-                        className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-sm text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isTesting ? (
-                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                        ) : (
-                          <TestTube className="h-4 w-4 mr-1" />
-                        )}
-                        {isTesting ? 'Testing...' : 'Test'}
-                      </button>
-                      <button
-                        onClick={() => handleEdit(dataSource)}
-                        className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-sm text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
-                      >
-                        <Settings className="h-4 w-4 mr-1" />
-                        Edit
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+        viewMode === 'card' ? renderCardView() : renderRowView()
       )}
 
       {/* Info Panel */}

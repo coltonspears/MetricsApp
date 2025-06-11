@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Database, Search, Bell, Settings, Sun, Moon, Activity, Layers, ChevronDown, Plus, BarChart3, User, LogOut, History, Star, Home, HelpCircle, Sliders, Bookmark, Menu, Shield, Users, Building, GitBranch } from 'lucide-react'
 import { useTheme } from '../lib/theme'
+import ThemeSelector from './ThemeSelector'
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation()
-  const { theme, toggleTheme } = useTheme()
+  const { currentTheme, toggleTheme } = useTheme()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     // Persist sidebar collapsed state - default to collapsed
@@ -104,9 +105,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   }
 
   const breadcrumbs = generateBreadcrumbs()
-  const sidebarWidth = sidebarCollapsed ? 'w-16' : 'w-64'
-  const mainContentOffset = sidebarCollapsed ? 'md:pl-16' : 'md:pl-64'
-  const topNavOffset = sidebarCollapsed ? 'left-16' : 'left-64'
+  const sidebarWidth = sidebarCollapsed ? 'w-16' : 'w-75'
+  const mainContentOffset = sidebarCollapsed ? 'md:pl-16' : 'md:pl-75'
+  const topNavOffset = sidebarCollapsed ? 'left-16' : 'left-75'
 
   // WIP Badge Component
   const WipBadge = () => (
@@ -116,34 +117,79 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   )
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 app-scale-90">
+    <div 
+      className="min-h-screen app-scale-90"
+      style={{ 
+        backgroundColor: 'var(--bg-primary)',
+        fontFamily: 'var(--font-sans)',
+        fontSize: 'var(--text-base)'
+      }}
+    >
       {/* Sidebar - Full Height */}
       <div className={`hidden md:flex md:${sidebarWidth} md:flex-col md:fixed md:inset-y-0 transition-all duration-300`}>
-        <div className="flex-1 flex flex-col min-h-0 bg-slate-900 dark:bg-slate-800">
+        <div 
+          className="flex-1 flex flex-col min-h-0"
+          style={{ backgroundColor: 'var(--bg-secondary)' }}
+        >
           <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
             {!sidebarCollapsed ? (
               <div className="flex items-center flex-shrink-0 px-4 justify-between">
                 <div className="flex items-center">
-                  <Database className="h-8 w-8 text-emerald-400" />
-                  <span className="ml-2 text-xl font-bold text-white">MetricsApp</span>
+                  <Database 
+                    className="h-8 w-8" 
+                    style={{ color: 'var(--text-accent)' }}
+                  />
+                  <span 
+                    className="ml-2 text-xl font-bold"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    MetricsApp
+                  </span>
                 </div>
                 
                 {/* Hamburger Menu Button */}
                 <button
                   onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                  className="p-1 text-slate-400 hover:text-white hover:bg-slate-700 rounded-md transition-colors"
+                  className="p-1 transition-colors"
+                  style={{ 
+                    color: 'var(--text-secondary)',
+                    borderRadius: 'var(--radius-md)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'var(--text-primary)'
+                    e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'var(--text-secondary)'
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                  }}
                 >
                   <Menu className="h-4 w-4" />
                 </button>
               </div>
             ) : (
               <div className="flex flex-col items-center space-y-3 px-4">
-                <Database className="h-8 w-8 text-emerald-400" />
+                <Database 
+                  className="h-8 w-8" 
+                  style={{ color: 'var(--text-accent)' }}
+                />
                 
                 {/* Hamburger Menu Button */}
                 <button
                   onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                  className="p-1 text-slate-400 hover:text-white hover:bg-slate-700 rounded-md transition-colors"
+                  className="p-1 transition-colors"
+                  style={{ 
+                    color: 'var(--text-secondary)',
+                    borderRadius: 'var(--radius-md)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'var(--text-primary)'
+                    e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'var(--text-secondary)'
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                  }}
                 >
                   <Menu className="h-4 w-4" />
                 </button>
@@ -157,19 +203,34 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`${
-                      item.current
-                        ? 'bg-slate-700 dark:bg-slate-600 text-emerald-400 border-r-2 border-emerald-400'
-                        : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                    } group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                    className={`group flex items-center px-2 py-2 text-sm font-medium transition-colors duration-200 ${
                       sidebarCollapsed ? 'justify-center' : ''
                     }`}
+                    style={{
+                      backgroundColor: item.current ? 'var(--interactive-primary)' : 'transparent',
+                      color: item.current ? 'var(--text-inverse)' : 'var(--text-secondary)',
+                      borderRadius: 'var(--radius-md)',
+                      borderRight: item.current ? '2px solid var(--interactive-primary)' : 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!item.current) {
+                        e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                        e.currentTarget.style.color = 'var(--text-primary)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!item.current) {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                        e.currentTarget.style.color = 'var(--text-secondary)'
+                      }
+                    }}
                     title={sidebarCollapsed ? item.name : ''}
                   >
                     <Icon
-                      className={`${
-                        item.current ? 'text-emerald-400' : 'text-slate-400 group-hover:text-slate-300'
-                      } ${sidebarCollapsed ? '' : 'mr-3'} flex-shrink-0 h-5 w-5 transition-colors duration-200`}
+                      className={`${sidebarCollapsed ? '' : 'mr-3'} flex-shrink-0 h-5 w-5 transition-colors duration-200`}
+                      style={{ 
+                        color: item.current ? 'var(--text-inverse)' : 'var(--text-secondary)'
+                      }}
                     />
                     {!sidebarCollapsed && item.name}
                   </Link>
@@ -181,16 +242,31 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 <div className="relative">
                   <button
                     onClick={() => setConnectionsOpen(!connectionsOpen)}
-                    className={`${
-                      isConnectionsActive
-                        ? 'bg-slate-700 dark:bg-slate-600 text-emerald-400 border-r-2 border-emerald-400'
-                        : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                    } group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200`}
+                    className="group flex items-center w-full px-2 py-2 text-sm font-medium transition-colors duration-200"
+                    style={{
+                      backgroundColor: isConnectionsActive ? 'var(--interactive-primary)' : 'transparent',
+                      color: isConnectionsActive ? 'var(--text-inverse)' : 'var(--text-secondary)',
+                      borderRadius: 'var(--radius-md)',
+                      borderRight: isConnectionsActive ? '2px solid var(--interactive-primary)' : 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isConnectionsActive) {
+                        e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                        e.currentTarget.style.color = 'var(--text-primary)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isConnectionsActive) {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                        e.currentTarget.style.color = 'var(--text-secondary)'
+                      }
+                    }}
                   >
                     <Layers
-                      className={`${
-                        isConnectionsActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-slate-300'
-                      } mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200`}
+                      className="mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200"
+                      style={{
+                        color: isConnectionsActive ? 'var(--text-inverse)' : 'var(--text-secondary)'
+                      }}
                     />
                     Connections
                     <ChevronDown
@@ -211,16 +287,31 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                           <Link
                             key={item.name}
                             to={item.href}
-                            className={`${
-                              isActive
-                                ? 'bg-slate-600 dark:bg-slate-500 text-emerald-400 border-l-2 border-emerald-400'
-                                : 'text-slate-300 hover:bg-slate-600 hover:text-white'
-                            } group flex items-center pl-8 pr-2 py-2 text-sm font-medium rounded-md transition-colors duration-200`}
+                            className="group flex items-center pl-8 pr-2 py-2 text-sm font-medium transition-colors duration-200"
+                            style={{
+                              backgroundColor: isActive ? 'var(--interactive-secondary)' : 'transparent',
+                              color: isActive ? 'var(--text-accent)' : 'var(--text-secondary)',
+                              borderRadius: 'var(--radius-md)',
+                              borderLeft: isActive ? '2px solid var(--text-accent)' : 'none'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!isActive) {
+                                e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                                e.currentTarget.style.color = 'var(--text-primary)'
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isActive) {
+                                e.currentTarget.style.backgroundColor = 'transparent'
+                                e.currentTarget.style.color = 'var(--text-secondary)'
+                              }
+                            }}
                           >
                             <Icon
-                              className={`${
-                                isActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-slate-300'
-                              } mr-3 flex-shrink-0 h-4 w-4 transition-colors duration-200`}
+                              className="mr-3 flex-shrink-0 h-4 w-4 transition-colors duration-200"
+                              style={{
+                                color: isActive ? 'var(--text-accent)' : 'var(--text-secondary)'
+                              }}
                             />
                             {item.name}
                           </Link>
@@ -236,16 +327,31 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 <div className="relative">
                   <button
                     onClick={() => setAuthenticationOpen(!authenticationOpen)}
-                    className={`${
-                      isAuthenticationActive
-                        ? 'bg-slate-700 dark:bg-slate-600 text-emerald-400 border-r-2 border-emerald-400'
-                        : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                    } group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200`}
+                    className="group flex items-center w-full px-2 py-2 text-sm font-medium transition-colors duration-200"
+                    style={{
+                      backgroundColor: isAuthenticationActive ? 'var(--interactive-primary)' : 'transparent',
+                      color: isAuthenticationActive ? 'var(--text-inverse)' : 'var(--text-secondary)',
+                      borderRadius: 'var(--radius-md)',
+                      borderRight: isAuthenticationActive ? '2px solid var(--interactive-primary)' : 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isAuthenticationActive) {
+                        e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                        e.currentTarget.style.color = 'var(--text-primary)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isAuthenticationActive) {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                        e.currentTarget.style.color = 'var(--text-secondary)'
+                      }
+                    }}
                   >
                     <Shield
-                      className={`${
-                        isAuthenticationActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-slate-300'
-                      } mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200`}
+                      className="mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200"
+                      style={{
+                        color: isAuthenticationActive ? 'var(--text-inverse)' : 'var(--text-secondary)'
+                      }}
                     />
                     Authentication
                     <ChevronDown
@@ -265,16 +371,31 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                           <Link
                             key={item.name}
                             to={item.href}
-                            className={`${
-                              isActive
-                                ? 'bg-slate-600 dark:bg-slate-500 text-emerald-400 border-l-2 border-emerald-400'
-                                : 'text-slate-300 hover:bg-slate-600 hover:text-white'
-                            } group flex items-center pl-8 pr-2 py-2 text-sm font-medium rounded-md transition-colors duration-200`}
+                            className="group flex items-center pl-8 pr-2 py-2 text-sm font-medium transition-colors duration-200"
+                            style={{
+                              backgroundColor: isActive ? 'var(--interactive-secondary)' : 'transparent',
+                              color: isActive ? 'var(--text-accent)' : 'var(--text-secondary)',
+                              borderRadius: 'var(--radius-md)',
+                              borderLeft: isActive ? '2px solid var(--text-accent)' : 'none'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!isActive) {
+                                e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                                e.currentTarget.style.color = 'var(--text-primary)'
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isActive) {
+                                e.currentTarget.style.backgroundColor = 'transparent'
+                                e.currentTarget.style.color = 'var(--text-secondary)'
+                              }
+                            }}
                           >
                             <Icon
-                              className={`${
-                                isActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-slate-300'
-                              } mr-3 flex-shrink-0 h-4 w-4 transition-colors duration-200`}
+                              className="mr-3 flex-shrink-0 h-4 w-4 transition-colors duration-200"
+                              style={{
+                                color: isActive ? 'var(--text-accent)' : 'var(--text-secondary)'
+                              }}
                             />
                             {item.name}
                             {item.wip && <WipBadge />}
@@ -291,16 +412,31 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 <div className="relative">
                   <button
                     onClick={() => setAdministrationOpen(!administrationOpen)}
-                    className={`${
-                      isAdministrationActive
-                        ? 'bg-slate-700 dark:bg-slate-600 text-emerald-400 border-r-2 border-emerald-400'
-                        : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                    } group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200`}
+                    className="group flex items-center w-full px-2 py-2 text-sm font-medium transition-colors duration-200"
+                    style={{
+                      backgroundColor: isAdministrationActive ? 'var(--interactive-primary)' : 'transparent',
+                      color: isAdministrationActive ? 'var(--text-inverse)' : 'var(--text-secondary)',
+                      borderRadius: 'var(--radius-md)',
+                      borderRight: isAdministrationActive ? '2px solid var(--interactive-primary)' : 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isAdministrationActive) {
+                        e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                        e.currentTarget.style.color = 'var(--text-primary)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isAdministrationActive) {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                        e.currentTarget.style.color = 'var(--text-secondary)'
+                      }
+                    }}
                   >
                     <Users
-                      className={`${
-                        isAdministrationActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-slate-300'
-                      } mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200`}
+                      className="mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200"
+                      style={{
+                        color: isAdministrationActive ? 'var(--text-inverse)' : 'var(--text-secondary)'
+                      }}
                     />
                     Administration
                     <ChevronDown
@@ -320,16 +456,31 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                           <Link
                             key={item.name}
                             to={item.href}
-                            className={`${
-                              isActive
-                                ? 'bg-slate-600 dark:bg-slate-500 text-emerald-400 border-l-2 border-emerald-400'
-                                : 'text-slate-300 hover:bg-slate-600 hover:text-white'
-                            } group flex items-center pl-8 pr-2 py-2 text-sm font-medium rounded-md transition-colors duration-200`}
+                            className="group flex items-center pl-8 pr-2 py-2 text-sm font-medium transition-colors duration-200"
+                            style={{
+                              backgroundColor: isActive ? 'var(--interactive-secondary)' : 'transparent',
+                              color: isActive ? 'var(--text-accent)' : 'var(--text-secondary)',
+                              borderRadius: 'var(--radius-md)',
+                              borderLeft: isActive ? '2px solid var(--text-accent)' : 'none'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!isActive) {
+                                e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                                e.currentTarget.style.color = 'var(--text-primary)'
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isActive) {
+                                e.currentTarget.style.backgroundColor = 'transparent'
+                                e.currentTarget.style.color = 'var(--text-secondary)'
+                              }
+                            }}
                           >
                             <Icon
-                              className={`${
-                                isActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-slate-300'
-                              } mr-3 flex-shrink-0 h-4 w-4 transition-colors duration-200`}
+                              className="mr-3 flex-shrink-0 h-4 w-4 transition-colors duration-200"
+                              style={{
+                                color: isActive ? 'var(--text-accent)' : 'var(--text-secondary)'
+                              }}
                             />
                             {item.name}
                             {item.wip && <WipBadge />}
@@ -342,22 +493,18 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               )}
             </nav>
           </div>
-          <div className="flex-shrink-0 flex bg-slate-800 dark:bg-slate-700 p-4">
-            <div className="flex items-center">
+          <div 
+            className="flex-shrink-0 flex p-4"
+            style={{ backgroundColor: 'var(--bg-tertiary)' }}
+          >
+            <div className="flex items-center w-full">
               <div className={sidebarCollapsed ? '' : 'ml-3'}>
                 <div className="flex items-center space-x-3">
-                  <button
-                    onClick={toggleTheme}
-                    className="bg-slate-700 dark:bg-slate-600 p-1 rounded-full text-slate-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-white"
-                    title={sidebarCollapsed ? 'Toggle theme' : ''}
-                  >
-                    <span className="sr-only">Toggle theme</span>
-                    {theme === 'dark' ? (
-                      <Sun className="h-6 w-6" />
-                    ) : (
-                      <Moon className="h-6 w-6" />
-                    )}
-                  </button>
+                  {sidebarCollapsed ? (
+                    <ThemeSelector variant="compact" showLabel={false} />
+                  ) : (
+                    <ThemeSelector variant="dropdown" showLabel={false} />
+                  )}
                 </div>
               </div>
             </div>
@@ -366,18 +513,43 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       {/* Top Navigation Bar - To the right of sidebar */}
-      <div className={`hidden md:block fixed top-0 ${topNavOffset} right-0 h-[40px] bg-slate-800 dark:bg-slate-900 border-b border-slate-700 dark:border-slate-600 z-50 transition-all duration-300`}>
+      <div 
+        className={`hidden md:block fixed top-0 ${topNavOffset} right-0 h-[40px] z-50 transition-all duration-300`}
+        style={{ 
+          backgroundColor: 'var(--bg-secondary)',
+          borderBottom: `1px solid var(--border-primary)`
+        }}
+      >
         <div className="flex items-center h-full px-4">
           {/* Left: Breadcrumbs */}
-          <div className="flex items-center space-x-1 text-sm text-slate-300">
+          <div 
+            className="flex items-center space-x-1 text-sm"
+            style={{ color: 'var(--text-secondary)' }}
+          >
             {breadcrumbs.map((crumb, index) => (
               <div key={crumb.href} className="flex items-center">
-                {index > 0 && <span className="mx-1 text-slate-500">/</span>}
+                {index > 0 && (
+                  <span 
+                    className="mx-1"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    /
+                  </span>
+                )}
                 <Link
                   to={crumb.href}
-                  className={`hover:text-white transition-colors ${
-                    index === breadcrumbs.length - 1 ? 'text-white font-medium' : 'text-slate-400'
+                  className={`transition-colors ${
+                    index === breadcrumbs.length - 1 ? 'font-medium' : ''
                   }`}
+                  style={{ 
+                    color: index === breadcrumbs.length - 1 ? 'var(--text-primary)' : 'var(--text-secondary)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'var(--text-primary)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = index === breadcrumbs.length - 1 ? 'var(--text-primary)' : 'var(--text-secondary)'
+                  }}
                 >
                   {crumb.name}
                 </Link>
@@ -385,13 +557,27 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             ))}
           </div>
 
-          {/* Right: Search, Pinned Nav, Profile */}
+          {/* Right: Search, Theme, Pinned Nav, Profile */}
           <div className="flex items-center space-x-2 ml-auto">
             {/* Search Bar */}
             <div className="relative">
               <button
                 onClick={() => setSearchOpen(true)}
-                className="flex items-center px-3 py-1.5 w-64 text-sm text-slate-400 bg-slate-700 dark:bg-slate-800 border border-slate-600 rounded-sm hover:text-white hover:border-slate-500 transition-colors justify-between"
+                className="flex items-center px-3 py-1.5 w-64 text-sm border rounded-sm transition-colors justify-between"
+                style={{
+                  color: 'var(--text-secondary)',
+                  backgroundColor: 'var(--bg-tertiary)',
+                  borderColor: 'var(--border-primary)',
+                  borderRadius: 'var(--radius-sm)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'var(--text-primary)'
+                  e.currentTarget.style.borderColor = 'var(--border-secondary)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--text-secondary)'
+                  e.currentTarget.style.borderColor = 'var(--border-primary)'
+                }}
               >
                 <div className="flex items-center">
                   <Search className="h-4 w-4 mr-2" />
@@ -402,25 +588,65 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </div>
 
             {/* Divider */}
-            <div className="h-6 w-px bg-slate-700 dark:bg-slate-600"></div>
+            <div 
+              className="h-6 w-px"
+              style={{ backgroundColor: 'var(--border-primary)' }}
+            />
+
+            {/* Theme Selector */}
+            <ThemeSelector variant="compact" showLabel={false} />
+
+            {/* Divider */}
+            <div 
+              className="h-6 w-px"
+              style={{ backgroundColor: 'var(--border-primary)' }}
+            />
 
             {/* Pinned Nav Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setPinnedNavOpen(!pinnedNavOpen)}
-                className="p-1 text-slate-400 hover:text-white transition-colors"
+                className="p-1 transition-colors"
+                style={{ color: 'var(--text-secondary)' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'var(--text-primary)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--text-secondary)'
+                }}
               >
                 <Star className="h-4 w-4" />
               </button>
               {pinnedNavOpen && (
-                <div className="absolute right-0 mt-1 w-48 bg-slate-800 dark:bg-slate-700 rounded-md shadow-lg border border-slate-600 py-1 z-50">
+                <div 
+                  className="absolute right-0 mt-1 w-48 shadow-lg border py-1 z-50"
+                  style={{
+                    backgroundColor: 'var(--bg-elevated)',
+                    borderColor: 'var(--border-primary)',
+                    borderRadius: 'var(--radius-md)',
+                    boxShadow: 'var(--shadow-lg)',
+                    bottom: 'auto',
+                    top: '100%',
+                    maxHeight: '300px',
+                    overflowY: 'auto'
+                  }}
+                >
                   {pinnedNavItems.map((item) => {
                     const Icon = item.icon
                     return (
                       <Link
                         key={item.name}
                         to={item.href}
-                        className="flex items-center px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 hover:text-white"
+                        className="flex items-center px-3 py-2 text-sm transition-colors"
+                        style={{ color: 'var(--text-secondary)' }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                          e.currentTarget.style.color = 'var(--text-primary)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent'
+                          e.currentTarget.style.color = 'var(--text-secondary)'
+                        }}
                         onClick={() => setPinnedNavOpen(false)}
                       >
                         <Icon className="h-4 w-4 mr-2" />
@@ -433,65 +659,157 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </div>
 
             {/* Divider */}
-            <div className="h-6 w-px bg-slate-700 dark:bg-slate-600"></div>
+            <div 
+              className="h-6 w-px"
+              style={{ backgroundColor: 'var(--border-primary)' }}
+            />
 
             {/* Profile Menu */}
             <div className="relative">
               <button
                 onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                className="w-6 h-6 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-medium hover:bg-emerald-500 transition-colors"
+                className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium transition-colors"
+                style={{ 
+                  backgroundColor: 'var(--interactive-primary)',
+                  borderRadius: 'var(--radius-full)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--interactive-primary-hover)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--interactive-primary)'
+                }}
               >
                 U
               </button>
               {profileMenuOpen && (
-                <div className="absolute right-0 mt-1 w-48 bg-slate-800 dark:bg-slate-700 rounded-md shadow-lg border border-slate-600 py-1 z-50">
+                <div 
+                  className="absolute right-0 mt-1 w-48 shadow-lg border py-1 z-50"
+                  style={{
+                    backgroundColor: 'var(--bg-elevated)',
+                    borderColor: 'var(--border-primary)',
+                    borderRadius: 'var(--radius-md)',
+                    boxShadow: 'var(--shadow-lg)',
+                    bottom: 'auto',
+                    top: '100%',
+                    maxHeight: '400px',
+                    overflowY: 'auto'
+                  }}
+                >
                   <Link 
                     to="/profile"
-                    className="flex items-center w-full px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 hover:text-white"
+                    className="flex items-center w-full px-3 py-2 text-sm transition-colors"
+                    style={{ color: 'var(--text-secondary)' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                      e.currentTarget.style.color = 'var(--text-primary)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.color = 'var(--text-secondary)'
+                    }}
                     onClick={() => setProfileMenuOpen(false)}
                   >
                     <User className="h-4 w-4 mr-2" />
                     Profile
-                    <span className="ml-auto px-1.5 py-0.5 text-xs font-medium bg-yellow-600 text-yellow-100 rounded">WIP</span>
+                    <span 
+                      className="ml-auto px-1.5 py-0.5 text-xs font-medium rounded"
+                      style={{
+                        backgroundColor: 'var(--status-warning)',
+                        color: 'var(--text-inverse)'
+                      }}
+                    >
+                      WIP
+                    </span>
                   </Link>
                   <Link 
                     to="/profile/notifications"
-                    className="flex items-center w-full px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 hover:text-white"
+                    className="flex items-center w-full px-3 py-2 text-sm transition-colors"
+                    style={{ color: 'var(--text-secondary)' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                      e.currentTarget.style.color = 'var(--text-primary)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.color = 'var(--text-secondary)'
+                    }}
                     onClick={() => setProfileMenuOpen(false)}
                   >
                     <History className="h-4 w-4 mr-2" />
                     Notification History
-                    <span className="ml-auto px-1.5 py-0.5 text-xs font-medium bg-yellow-600 text-yellow-100 rounded">WIP</span>
+                    <span 
+                      className="ml-auto px-1.5 py-0.5 text-xs font-medium rounded"
+                      style={{
+                        backgroundColor: 'var(--status-warning)',
+                        color: 'var(--text-inverse)'
+                      }}
+                    >
+                      WIP
+                    </span>
                   </Link>
                   <Link 
                     to="/profile/settings"
-                    className="flex items-center w-full px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 hover:text-white"
+                    className="flex items-center w-full px-3 py-2 text-sm transition-colors"
+                    style={{ color: 'var(--text-secondary)' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                      e.currentTarget.style.color = 'var(--text-primary)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.color = 'var(--text-secondary)'
+                    }}
                     onClick={() => setProfileMenuOpen(false)}
                   >
                     <Settings className="h-4 w-4 mr-2" />
                     Settings
-                    <span className="ml-auto px-1.5 py-0.5 text-xs font-medium bg-yellow-600 text-yellow-100 rounded">WIP</span>
+                    <span 
+                      className="ml-auto px-1.5 py-0.5 text-xs font-medium rounded"
+                      style={{
+                        backgroundColor: 'var(--status-warning)',
+                        color: 'var(--text-inverse)'
+                      }}
+                    >
+                      WIP
+                    </span>
                   </Link>
-                  <hr className="my-1 border-slate-600" />
-                  <button 
-                    onClick={() => {
-                      toggleTheme()
-                      setProfileMenuOpen(false)
-                    }}
-                    className="flex items-center w-full px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 hover:text-white"
-                  >
-                    {theme === 'dark' ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
-                    {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-                  </button>
-                  <hr className="my-1 border-slate-600" />
+                  <hr 
+                    className="my-1"
+                    style={{ borderColor: 'var(--border-primary)' }}
+                  />
+                  <div className="px-3 py-1">
+                    <ThemeSelector variant="grid" showLabel={false} />
+                  </div>
+                  <hr 
+                    className="my-1"
+                    style={{ borderColor: 'var(--border-primary)' }}
+                  />
                   <Link 
                     to="/logout"
-                    className="flex items-center w-full px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 hover:text-white"
+                    className="flex items-center w-full px-3 py-2 text-sm transition-colors"
+                    style={{ color: 'var(--text-secondary)' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                      e.currentTarget.style.color = 'var(--text-primary)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.color = 'var(--text-secondary)'
+                    }}
                     onClick={() => setProfileMenuOpen(false)}
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Off
-                    <span className="ml-auto px-1.5 py-0.5 text-xs font-medium bg-yellow-600 text-yellow-100 rounded">WIP</span>
+                    <span 
+                      className="ml-auto px-1.5 py-0.5 text-xs font-medium rounded"
+                      style={{
+                        backgroundColor: 'var(--status-warning)',
+                        color: 'var(--text-inverse)'
+                      }}
+                    >
+                      WIP
+                    </span>
                   </Link>
                 </div>
               )}
@@ -501,27 +819,59 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       {/* Mobile Top Nav - Full width for mobile */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-[40px] bg-slate-800 dark:bg-slate-900 border-b border-slate-700 dark:border-slate-600 z-50">
+      <div 
+        className="md:hidden fixed top-0 left-0 right-0 h-[40px] z-50"
+        style={{ 
+          backgroundColor: 'var(--bg-secondary)',
+          borderBottom: `1px solid var(--border-primary)`
+        }}
+      >
         <div className="flex items-center h-full px-4">
           {/* Mobile menu button */}
           <button
             type="button"
-            className="mr-4 h-6 w-6 inline-flex items-center justify-center text-slate-400 hover:text-white"
+            className="mr-4 h-6 w-6 inline-flex items-center justify-center transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = 'var(--text-primary)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'var(--text-secondary)'
+            }}
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
             <Database className="h-5 w-5" />
           </button>
 
           {/* Breadcrumbs */}
-          <div className="flex items-center space-x-1 text-sm text-slate-300 flex-1">
+          <div 
+            className="flex items-center space-x-1 text-sm flex-1"
+            style={{ color: 'var(--text-secondary)' }}
+          >
             {breadcrumbs.map((crumb, index) => (
               <div key={crumb.href} className="flex items-center">
-                {index > 0 && <span className="mx-1 text-slate-500">/</span>}
+                {index > 0 && (
+                  <span 
+                    className="mx-1"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    /
+                  </span>
+                )}
                 <Link
                   to={crumb.href}
-                  className={`hover:text-white transition-colors ${
-                    index === breadcrumbs.length - 1 ? 'text-white font-medium' : 'text-slate-400'
+                  className={`transition-colors ${
+                    index === breadcrumbs.length - 1 ? 'font-medium' : ''
                   }`}
+                  style={{ 
+                    color: index === breadcrumbs.length - 1 ? 'var(--text-primary)' : 'var(--text-secondary)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'var(--text-primary)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = index === breadcrumbs.length - 1 ? 'var(--text-primary)' : 'var(--text-secondary)'
+                  }}
                 >
                   {crumb.name}
                 </Link>
@@ -533,15 +883,29 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setSearchOpen(true)}
-              className="p-1 text-slate-400 hover:text-white transition-colors"
+              className="p-1 transition-colors"
+              style={{ color: 'var(--text-secondary)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'var(--text-primary)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--text-secondary)'
+              }}
             >
               <Search className="h-4 w-4" />
             </button>
             <button
               onClick={toggleTheme}
-              className="p-1 text-slate-400 hover:text-white transition-colors"
+              className="p-1 transition-colors"
+              style={{ color: 'var(--text-secondary)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'var(--text-primary)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--text-secondary)'
+              }}
             >
-              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {currentTheme.type === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
           </div>
         </div>
@@ -557,15 +921,35 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             }
           }}
         >
-          <div className="bg-slate-800 dark:bg-slate-700 rounded-lg shadow-xl border border-slate-600 w-1/2 h-1/2 flex flex-col">
+          <div 
+            className="w-1/2 h-1/2 flex flex-col border"
+            style={{
+              backgroundColor: 'var(--bg-elevated)',
+              borderColor: 'var(--border-primary)',
+              borderRadius: 'var(--radius-md)',
+              boxShadow: 'var(--shadow-xl)'
+            }}
+          >
             {/* Search Header */}
-            <div className="p-4 border-b border-slate-600">
+            <div 
+              className="p-4"
+              style={{ borderBottom: `1px solid var(--border-primary)` }}
+            >
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Search 
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
+                  style={{ color: 'var(--text-secondary)' }}
+                />
                 <input
                   type="text"
                   placeholder="Search for actions, pages, and more..."
-                  className="w-full pl-10 pr-4 py-2 bg-slate-700 dark:bg-slate-800 border border-slate-600 rounded-md text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                  style={{
+                    backgroundColor: 'var(--bg-surface)',
+                    borderColor: 'var(--border-primary)',
+                    color: 'var(--text-primary)',
+                    borderRadius: 'var(--radius-md)'
+                  }}
                   autoFocus
                 />
               </div>
@@ -575,7 +959,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {/* Actions Section */}
               <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-2 flex items-center">
+                <h3 
+                  className="text-sm font-medium mb-2 flex items-center"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
                   <Bookmark className="h-4 w-4 mr-1" />
                   Actions
                 </h3>
@@ -586,7 +973,19 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                       <Link
                         key={item.name}
                         to={item.href}
-                        className="flex items-center p-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 rounded"
+                        className="flex items-center p-2 text-sm transition-colors"
+                        style={{
+                          color: 'var(--text-secondary)',
+                          borderRadius: 'var(--radius-sm)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                          e.currentTarget.style.color = 'var(--text-primary)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent'
+                          e.currentTarget.style.color = 'var(--text-secondary)'
+                        }}
                         onClick={() => setSearchOpen(false)}
                       >
                         <Icon className="h-4 w-4 mr-2" />
@@ -599,7 +998,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
               {/* Pages Section */}
               <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-2 flex items-center">
+                <h3 
+                  className="text-sm font-medium mb-2 flex items-center"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
                   <Database className="h-4 w-4 mr-1" />
                   Pages
                 </h3>
@@ -610,7 +1012,19 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                       <Link
                         key={item.name}
                         to={item.href}
-                        className="flex items-center p-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 rounded"
+                        className="flex items-center p-2 text-sm transition-colors"
+                        style={{
+                          color: 'var(--text-secondary)',
+                          borderRadius: 'var(--radius-sm)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                          e.currentTarget.style.color = 'var(--text-primary)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent'
+                          e.currentTarget.style.color = 'var(--text-secondary)'
+                        }}
                         onClick={() => setSearchOpen(false)}
                       >
                         <Icon className="h-4 w-4 mr-2" />
@@ -624,7 +1038,19 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                       <Link
                         key={item.name}
                         to={item.href}
-                        className="flex items-center p-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 rounded"
+                        className="flex items-center p-2 text-sm transition-colors"
+                        style={{
+                          color: 'var(--text-secondary)',
+                          borderRadius: 'var(--radius-sm)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                          e.currentTarget.style.color = 'var(--text-primary)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent'
+                          e.currentTarget.style.color = 'var(--text-secondary)'
+                        }}
                         onClick={() => setSearchOpen(false)}
                       >
                         <Icon className="h-4 w-4 mr-2" />
@@ -637,12 +1063,29 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
               {/* Preferences Section */}
               <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-2 flex items-center">
+                <h3 
+                  className="text-sm font-medium mb-2 flex items-center"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
                   <Sliders className="h-4 w-4 mr-1" />
                   Preferences
                 </h3>
                 <div className="space-y-1">
-                  <button className="flex items-center w-full p-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 rounded">
+                  <button 
+                    className="flex items-center w-full p-2 text-sm transition-colors"
+                    style={{
+                      color: 'var(--text-secondary)',
+                      borderRadius: 'var(--radius-sm)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                      e.currentTarget.style.color = 'var(--text-primary)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.color = 'var(--text-secondary)'
+                    }}
+                  >
                     <Settings className="h-4 w-4 mr-2" />
                     Settings
                   </button>
@@ -651,9 +1094,21 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                       toggleTheme()
                       setSearchOpen(false)
                     }}
-                    className="flex items-center w-full p-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 rounded"
+                    className="flex items-center w-full p-2 text-sm transition-colors"
+                    style={{
+                      color: 'var(--text-secondary)',
+                      borderRadius: 'var(--radius-sm)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                      e.currentTarget.style.color = 'var(--text-primary)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.color = 'var(--text-secondary)'
+                    }}
                   >
-                    {theme === 'dark' ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
+                    {currentTheme.type === 'dark' ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
                     Toggle Theme
                   </button>
                 </div>
@@ -661,16 +1116,47 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
               {/* Help Section */}
               <div>
-                <h3 className="text-sm font-medium text-slate-400 mb-2 flex items-center">
+                <h3 
+                  className="text-sm font-medium mb-2 flex items-center"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
                   <HelpCircle className="h-4 w-4 mr-1" />
                   Help
                 </h3>
                 <div className="space-y-1">
-                  <button className="flex items-center w-full p-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 rounded">
+                  <button 
+                    className="flex items-center w-full p-2 text-sm transition-colors"
+                    style={{
+                      color: 'var(--text-secondary)',
+                      borderRadius: 'var(--radius-sm)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                      e.currentTarget.style.color = 'var(--text-primary)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.color = 'var(--text-secondary)'
+                    }}
+                  >
                     <HelpCircle className="h-4 w-4 mr-2" />
                     Documentation
                   </button>
-                  <button className="flex items-center w-full p-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 rounded">
+                  <button 
+                    className="flex items-center w-full p-2 text-sm transition-colors"
+                    style={{
+                      color: 'var(--text-secondary)',
+                      borderRadius: 'var(--radius-sm)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                      e.currentTarget.style.color = 'var(--text-primary)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.color = 'var(--text-secondary)'
+                    }}
+                  >
                     <Bell className="h-4 w-4 mr-2" />
                     Support
                   </button>
@@ -679,10 +1165,23 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </div>
 
             {/* Close button */}
-            <div className="p-4 border-t border-slate-600">
+            <div 
+              className="p-4"
+              style={{ borderTop: `1px solid var(--border-primary)` }}
+            >
               <button
                 onClick={() => setSearchOpen(false)}
-                className="text-xs text-slate-400 hover:text-white"
+                className="transition-colors"
+                style={{
+                  color: 'var(--text-secondary)',
+                  fontSize: 'var(--text-xs)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'var(--text-primary)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--text-secondary)'
+                }}
               >
                 Press ESC to close
               </button>
@@ -704,24 +1203,47 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Mobile sidebar */}
       <div className={`${sidebarOpen ? 'block' : 'hidden'} fixed inset-0 flex z-40 md:hidden`}>
-        <div className="fixed inset-0 bg-slate-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-        <div className="relative flex-1 flex flex-col max-w-xs w-full bg-slate-900">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50" 
+          onClick={() => setSidebarOpen(false)} 
+        />
+        <div 
+          className="relative flex-1 flex flex-col max-w-xs w-full"
+          style={{ backgroundColor: 'var(--bg-secondary)' }}
+        >
           <div className="absolute top-0 right-0 -mr-12 pt-2">
             <button
               type="button"
-              className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+              className="ml-1 flex items-center justify-center h-10 w-10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+              style={{
+                borderRadius: 'var(--radius-full)'
+              }}
               onClick={() => setSidebarOpen(false)}
             >
               <span className="sr-only">Close sidebar</span>
-              <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg 
+                className="h-6 w-6"
+                style={{ color: 'var(--text-inverse)' }}
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
           <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
             <div className="flex-shrink-0 flex items-center px-4">
-              <Database className="h-8 w-8 text-emerald-400" />
-              <span className="ml-2 text-xl font-bold text-white">MetricsApp</span>
+              <Database 
+                className="h-8 w-8"
+                style={{ color: 'var(--text-accent)' }}
+              />
+              <span 
+                className="ml-2 text-xl font-bold"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                MetricsApp
+              </span>
             </div>
             <nav className="mt-5 px-2 space-y-1">
               {navigation.map((item) => {
@@ -730,11 +1252,24 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`${
-                      item.current
-                        ? 'bg-emerald-700 text-white'
-                        : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                    } group flex items-center px-2 py-2 text-base font-medium rounded-md`}
+                    className="group flex items-center px-2 py-2 text-base font-medium transition-colors"
+                    style={{
+                      backgroundColor: item.current ? 'var(--interactive-primary)' : 'transparent',
+                      color: item.current ? 'var(--text-inverse)' : 'var(--text-secondary)',
+                      borderRadius: 'var(--radius-md)'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!item.current) {
+                        e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                        e.currentTarget.style.color = 'var(--text-primary)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!item.current) {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                        e.currentTarget.style.color = 'var(--text-secondary)'
+                      }
+                    }}
                     onClick={() => setSidebarOpen(false)}
                   >
                     <Icon className="mr-4 flex-shrink-0 h-6 w-6" />
@@ -745,7 +1280,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               
               {/* Mobile Connections */}
               <div className="space-y-1">
-                <div className="text-slate-400 px-2 py-2 text-xs font-semibold uppercase tracking-wider">
+                <div 
+                  className="px-2 py-2 text-xs font-semibold uppercase tracking-wider"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
                   Connections
                 </div>
                 {connectionsItems.map((item) => {
@@ -757,11 +1295,24 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     <Link
                       key={item.name}
                       to={item.href}
-                      className={`${
-                        isActive
-                          ? 'bg-emerald-700 text-white'
-                          : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                      } group flex items-center px-2 py-2 text-base font-medium rounded-md`}
+                      className="group flex items-center px-2 py-2 text-base font-medium transition-colors"
+                      style={{
+                        backgroundColor: isActive ? 'var(--interactive-primary)' : 'transparent',
+                        color: isActive ? 'var(--text-inverse)' : 'var(--text-secondary)',
+                        borderRadius: 'var(--radius-md)'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                          e.currentTarget.style.color = 'var(--text-primary)'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = 'transparent'
+                          e.currentTarget.style.color = 'var(--text-secondary)'
+                        }
+                      }}
                       onClick={() => setSidebarOpen(false)}
                     >
                       <Icon className="mr-4 flex-shrink-0 h-6 w-6" />
@@ -773,7 +1324,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
               {/* Mobile Authentication */}
               <div className="space-y-1">
-                <div className="text-slate-400 px-2 py-2 text-xs font-semibold uppercase tracking-wider">
+                <div 
+                  className="px-2 py-2 text-xs font-semibold uppercase tracking-wider"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
                   Authentication
                 </div>
                 {authenticationItems.map((item) => {
@@ -784,17 +1338,36 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     <Link
                       key={item.name}
                       to={item.href}
-                      className={`${
-                        isActive
-                          ? 'bg-emerald-700 text-white'
-                          : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                      } group flex items-center px-2 py-2 text-base font-medium rounded-md`}
+                      className="group flex items-center px-2 py-2 text-base font-medium transition-colors"
+                      style={{
+                        backgroundColor: isActive ? 'var(--interactive-primary)' : 'transparent',
+                        color: isActive ? 'var(--text-inverse)' : 'var(--text-secondary)',
+                        borderRadius: 'var(--radius-md)'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                          e.currentTarget.style.color = 'var(--text-primary)'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = 'transparent'
+                          e.currentTarget.style.color = 'var(--text-secondary)'
+                        }
+                      }}
                       onClick={() => setSidebarOpen(false)}
                     >
                       <Icon className="mr-4 flex-shrink-0 h-6 w-6" />
                       {item.name}
                       {item.wip && (
-                        <span className="ml-auto px-1.5 py-0.5 text-xs font-medium bg-yellow-600 text-yellow-100 rounded">
+                        <span 
+                          className="ml-auto px-1.5 py-0.5 text-xs font-medium rounded"
+                          style={{
+                            backgroundColor: 'var(--status-warning)',
+                            color: 'var(--text-inverse)'
+                          }}
+                        >
                           WIP
                         </span>
                       )}
@@ -805,7 +1378,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
               {/* Mobile Administration */}
               <div className="space-y-1">
-                <div className="text-slate-400 px-2 py-2 text-xs font-semibold uppercase tracking-wider">
+                <div 
+                  className="px-2 py-2 text-xs font-semibold uppercase tracking-wider"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
                   Administration
                 </div>
                 {administrationItems.map((item) => {
@@ -816,17 +1392,36 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     <Link
                       key={item.name}
                       to={item.href}
-                      className={`${
-                        isActive
-                          ? 'bg-emerald-700 text-white'
-                          : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                      } group flex items-center px-2 py-2 text-base font-medium rounded-md`}
+                      className="group flex items-center px-2 py-2 text-base font-medium transition-colors"
+                      style={{
+                        backgroundColor: isActive ? 'var(--interactive-primary)' : 'transparent',
+                        color: isActive ? 'var(--text-inverse)' : 'var(--text-secondary)',
+                        borderRadius: 'var(--radius-md)'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                          e.currentTarget.style.color = 'var(--text-primary)'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = 'transparent'
+                          e.currentTarget.style.color = 'var(--text-secondary)'
+                        }
+                      }}
                       onClick={() => setSidebarOpen(false)}
                     >
                       <Icon className="mr-4 flex-shrink-0 h-6 w-6" />
                       {item.name}
                       {item.wip && (
-                        <span className="ml-auto px-1.5 py-0.5 text-xs font-medium bg-yellow-600 text-yellow-100 rounded">
+                        <span 
+                          className="ml-auto px-1.5 py-0.5 text-xs font-medium rounded"
+                          style={{
+                            backgroundColor: 'var(--status-warning)',
+                            color: 'var(--text-inverse)'
+                          }}
+                        >
                           WIP
                         </span>
                       )}
@@ -840,7 +1435,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       {/* Main content */}
-      <div className={`${mainContentOffset} flex flex-col flex-1 pt-[40px] transition-all duration-300`}>
+      <div className={`${mainContentOffset} flex flex-col flex-1 transition-all duration-300`}>
+        {/* Spacer for top nav */}
+        <div className="h-[40px] hidden md:block" />
         <main className="flex-1">
           <div className="py-6">
             <div className="px-4 sm:px-6 md:px-8">

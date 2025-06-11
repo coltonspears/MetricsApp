@@ -1,3 +1,6 @@
+/* Import theme system CSS */
+@import './styles/themes.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -29,18 +32,18 @@ button, .tab-item {
 }
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.5;
   font-weight: 400;
 
-  /* Light mode colors */
-  --color-background: #ffffff;
-  --color-foreground: #0f172a;
-  --color-muted: #f8fafc;
-  --color-muted-foreground: #64748b;
-  --color-border: #e2e8f0;
-  --color-primary: #0f172a;
-  --color-primary-foreground: #f8fafc;
+  /* Legacy color variables for backward compatibility */
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --color-muted: var(--bg-tertiary);
+  --color-muted-foreground: var(--text-secondary);
+  --color-border: var(--border-primary);
+  --color-primary: var(--interactive-primary);
+  --color-primary-foreground: var(--text-inverse);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -49,33 +52,70 @@ button, .tab-item {
   -webkit-text-size-adjust: 100%;
 }
 
+/* Dark mode compatibility layer */
 .dark {
-  /* Dark mode colors */
-  --color-background: #0f172a;
-  --color-foreground: #f8fafc;
-  --color-muted: #1e293b;
-  --color-muted-foreground: #94a3b8;
-  --color-border: #334155;
-  --color-primary: #f8fafc;
-  --color-primary-foreground: #0f172a;
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --color-muted: var(--bg-tertiary);
+  --color-muted-foreground: var(--text-secondary);
+  --color-border: var(--border-primary);
+  --color-primary: var(--interactive-primary);
+  --color-primary-foreground: var(--text-inverse);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: var(--color-background);
-  color: var(--color-foreground);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #root {
   width: 100%;
   min-height: 100vh;
+  background-color: var(--bg-primary);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-} 
+/* Enhanced base element styling using theme variables */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+p {
+  color: var(--text-secondary);
+}
+
+a {
+  color: var(--interactive-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--interactive-primary-hover);
+}
+
+code {
+  font-family: var(--font-mono);
+  background-color: var(--bg-elevated);
+  color: var(--text-accent);
+  padding: 0.125rem 0.25rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875em;
+}
+
+pre {
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  border: 1px solid var(--border-primary);
+}
+
+/* Remove prefers-color-scheme media query since we handle themes explicitly */ 

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts'
 import { format } from 'date-fns'
+import { TrendingUp, Activity, BarChart3, Database } from 'lucide-react'
 
 interface DataVisualizationProps {
   data: any[]
@@ -181,7 +182,7 @@ const DataVisualization = ({ data, datasourceType, viewMode }: DataVisualization
   const renderChart = () => {
     if (chartData.length === 0) {
       return (
-        <div className="flex items-center justify-center h-64 text-slate-500 dark:text-slate-400">
+        <div className="flex items-center justify-center h-64 text-themed-text-secondary">
           No data to display
         </div>
       )
@@ -199,14 +200,14 @@ const DataVisualization = ({ data, datasourceType, viewMode }: DataVisualization
         return (
           <ResponsiveContainer {...commonProps}>
             <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200 dark:stroke-slate-700" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-themed-border-primary" />
               <XAxis 
                 dataKey="time" 
-                className="text-slate-600 dark:text-slate-400"
+                className="text-themed-text-secondary"
                 tick={{ fontSize: 12 }}
               />
               <YAxis 
-                className="text-slate-600 dark:text-slate-400"
+                className="text-themed-text-secondary"
                 tick={{ fontSize: 12 }}
               />
               <Tooltip 
@@ -239,14 +240,14 @@ const DataVisualization = ({ data, datasourceType, viewMode }: DataVisualization
         return (
           <ResponsiveContainer {...commonProps}>
             <AreaChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200 dark:stroke-slate-700" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-themed-border-primary" />
               <XAxis 
                 dataKey="time" 
-                className="text-slate-600 dark:text-slate-400"
+                className="text-themed-text-secondary"
                 tick={{ fontSize: 12 }}
               />
               <YAxis 
-                className="text-slate-600 dark:text-slate-400"
+                className="text-themed-text-secondary"
                 tick={{ fontSize: 12 }}
               />
               <Tooltip 
@@ -277,14 +278,14 @@ const DataVisualization = ({ data, datasourceType, viewMode }: DataVisualization
         return (
           <ResponsiveContainer {...commonProps}>
             <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200 dark:stroke-slate-700" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-themed-border-primary" />
               <XAxis 
                 dataKey="time" 
-                className="text-slate-600 dark:text-slate-400"
+                className="text-themed-text-secondary"
                 tick={{ fontSize: 12 }}
               />
               <YAxis 
-                className="text-slate-600 dark:text-slate-400"
+                className="text-themed-text-secondary"
                 tick={{ fontSize: 12 }}
               />
               <Tooltip 
@@ -341,7 +342,7 @@ const DataVisualization = ({ data, datasourceType, viewMode }: DataVisualization
   const renderTable = () => {
     if (data.length === 0) {
       return (
-        <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+        <div className="text-center py-8 text-themed-text-secondary">
           No data to display
         </div>
       )
@@ -353,26 +354,26 @@ const DataVisualization = ({ data, datasourceType, viewMode }: DataVisualization
 
     return (
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-900">
+        <table className="min-w-full divide-y divide-themed-border-primary">
+          <thead className="bg-themed-bg-tertiary">
             <tr>
               {columns.map((column) => (
                 <th
                   key={column}
-                  className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium text-themed-text-secondary uppercase tracking-wider"
                 >
                   {column}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+          <tbody className="bg-themed-bg-secondary divide-y divide-themed-border-primary">
             {tableData.map((row, index) => (
-              <tr key={index} className="hover:bg-slate-50 dark:hover:bg-slate-700">
+              <tr key={index} className="hover:bg-themed-bg-tertiary">
                 {columns.map((column) => (
                   <td
                     key={column}
-                    className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100"
+                    className="px-6 py-4 whitespace-nowrap text-sm text-themed-text-primary"
                   >
                     {formatCellValue(row[column])}
                   </td>
@@ -383,8 +384,8 @@ const DataVisualization = ({ data, datasourceType, viewMode }: DataVisualization
         </table>
         
         {data.length > 1000 && (
-          <div className="px-6 py-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700">
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+          <div className="px-6 py-3 bg-themed-bg-tertiary border-t border-themed-border-primary">
+            <p className="text-sm text-themed-text-secondary">
               Showing first 1,000 of {data.length} rows. Use filters to narrow results.
             </p>
           </div>
@@ -416,40 +417,117 @@ const DataVisualization = ({ data, datasourceType, viewMode }: DataVisualization
 
   if (viewMode === 'table') {
     return (
-      <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+      <div className="bg-themed-bg-secondary rounded-lg border border-themed-border-primary">
         {renderTable()}
       </div>
     )
   }
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-medium text-slate-900 dark:text-white">
-          {chartType === 'line' ? 'Time Series' : chartType === 'bar' ? 'Distribution' : 'Chart'}
-        </h3>
-        {seriesConfig.length > 1 && (
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-slate-500 dark:text-slate-400">Series:</span>
-            {seriesConfig.map((series) => (
-              <div key={series.key} className="flex items-center space-x-2">
-                <div 
-                  className="w-3 h-3 rounded-full" 
-                  style={{ backgroundColor: series.color }}
-                />
-                <span className="text-sm text-slate-600 dark:text-slate-400">{series.name}</span>
-              </div>
-            ))}
+    <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-themed-bg-tertiary p-6 rounded-lg border border-themed-border-primary">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <TrendingUp className="h-8 w-8 text-themed-text-accent" />
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-themed-text-secondary truncate">
+                  Total Metrics
+                </dt>
+                <dd className="text-2xl font-semibold text-themed-text-primary">
+                  {data.totalMetrics || '0'}
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-themed-bg-tertiary p-6 rounded-lg border border-themed-border-primary">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <Activity className="h-8 w-8 text-themed-text-accent" />
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-themed-text-secondary truncate">
+                  Avg Response Time
+                </dt>
+                <dd className="text-2xl font-semibold text-themed-text-primary">
+                  {data.avgResponseTime || '0ms'}
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-themed-bg-tertiary p-6 rounded-lg border border-themed-border-primary">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <BarChart3 className="h-8 w-8 text-themed-text-accent" />
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-themed-text-secondary truncate">
+                  Error Rate
+                </dt>
+                <dd className="text-2xl font-semibold text-themed-text-primary">
+                  {data.errorRate || '0%'}
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-themed-bg-tertiary p-6 rounded-lg border border-themed-border-primary">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <Database className="h-8 w-8 text-themed-text-accent" />
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-themed-text-secondary truncate">
+                  Data Points
+                </dt>
+                <dd className="text-2xl font-semibold text-themed-text-primary">
+                  {data.totalDataPoints || '0'}
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-themed-bg-secondary rounded-lg border border-themed-border-primary p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium text-themed-text-primary">
+            {chartType === 'line' ? 'Time Series' : chartType === 'bar' ? 'Distribution' : 'Chart'}
+          </h3>
+          {seriesConfig.length > 1 && (
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-themed-text-secondary">Series:</span>
+              {seriesConfig.map((series) => (
+                <div key={series.key} className="flex items-center space-x-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: series.color }}
+                  />
+                  <span className="text-sm text-themed-text-primary">{series.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {renderChart()}
+        {chartData.length > 0 && (
+          <div className="mt-4 text-xs text-themed-text-secondary">
+            Showing {chartData.length} data points
+            {seriesConfig.length > 1 && ` across ${seriesConfig.length} series`}
           </div>
         )}
       </div>
-      {renderChart()}
-      {chartData.length > 0 && (
-        <div className="mt-4 text-xs text-slate-500 dark:text-slate-400">
-          Showing {chartData.length} data points
-          {seriesConfig.length > 1 && ` across ${seriesConfig.length} series`}
-        </div>
-      )}
     </div>
   )
 }

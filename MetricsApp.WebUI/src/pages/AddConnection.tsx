@@ -330,11 +330,49 @@ export default function AddConnection() {
       {usingMockData && <MockDataBanner />}
 
       {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-slate-900 dark:text-white">Add New Connection</h1>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-          Choose a data source type to connect to your external systems.
+      <div className="border-b border-themed-border-primary pb-4">
+        <h1 className="text-3xl font-bold text-themed-text-primary">Add Data Source Connection</h1>
+        <p className="mt-2 text-themed-text-secondary">
+          Connect to external data sources to start collecting and analyzing metrics.
         </p>
+      </div>
+
+      {/* Connection Type Selection */}
+      <div className="bg-themed-bg-tertiary shadow rounded-lg border border-themed-border-primary">
+        <div className="px-6 py-4 border-b border-themed-border-primary">
+          <h3 className="text-lg leading-6 font-medium text-themed-text-primary">Choose Connection Type</h3>
+          <p className="mt-1 text-sm text-themed-text-secondary">
+            Select the type of data source you want to connect to.
+          </p>
+        </div>
+
+        <div className="p-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {dataSourceTypes.map((type) => (
+              <button
+                key={type.dataSourceType}
+                onClick={() => setSelectedType(type.dataSourceType)}
+                className={`relative border rounded-lg p-4 flex flex-col items-center space-y-2 transition-colors ${
+                  selectedType === type.dataSourceType
+                    ? 'border-themed-interactive-primary bg-themed-interactive-secondary'
+                    : 'border-themed-border-primary bg-themed-bg-surface hover:bg-themed-bg-elevated'
+                }`}
+              >
+                <Database className={`h-8 w-8 ${
+                  selectedType === type.dataSourceType ? 'text-themed-interactive-primary' : 'text-themed-text-secondary'
+                }`} />
+                <div className="text-center">
+                  <h4 className="text-sm font-medium text-themed-text-primary">
+                    {type.displayName}
+                  </h4>
+                  <p className="text-xs text-themed-text-secondary mt-1">
+                    {type.description}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Error Message - only show if not using mock data */}

@@ -13,6 +13,7 @@ import DataSourceMetadata from './pages/DataSourceMetadata'
 import RUM from './pages/RUM'
 import Alerts from './pages/Alerts'
 import Settings from './pages/Settings'
+import ThemeShowcase from './pages/ThemeShowcase'
 
 // Authentication pages
 import GoogleAuth from './pages/admin/authentication/GoogleAuth'
@@ -74,6 +75,7 @@ function App() {
           <Route path="/rum" element={<RUM />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/themes" element={<ThemeShowcase />} />
           
           {/* Authentication Routes */}
           <Route path="/admin/authentication/google" element={<GoogleAuth />} />

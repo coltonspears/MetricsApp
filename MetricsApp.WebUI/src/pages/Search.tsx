@@ -205,135 +205,142 @@ const Search = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="border-b border-slate-200 dark:border-slate-700 pb-4">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Search & Reporting</h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-400">Query and analyze your metrics data in real-time</p>
+      <div className="border-b border-themed-border-primary pb-4">
+        <h1 className="text-3xl font-bold text-themed-text-primary">Search & Reporting</h1>
+        <p className="mt-2 text-themed-text-secondary">Query and analyze your metrics data in real-time</p>
       </div>
 
       {/* Search Form */}
-      <div className="bg-white dark:bg-slate-800 shadow-lg rounded-lg border border-slate-200 dark:border-slate-700">
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Search Criteria</h2>
+      <div className="bg-themed-bg-tertiary shadow-lg rounded-lg border border-themed-border-primary">
+        <div className="px-6 py-4 border-b border-themed-border-primary">
+          <h2 className="text-lg font-semibold text-themed-text-primary">Search Criteria</h2>
         </div>
-        
-        <div className="p-6 space-y-6">
-          {/* Query Input */}
+        <form onSubmit={handleSearch} className="p-6 space-y-6">
           <div>
-            <label htmlFor="query" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Search Query
+            <label htmlFor="query" className="block text-sm font-medium text-themed-text-primary mb-2">
+              Query
             </label>
             <div className="relative">
               <input
                 type="text"
                 id="query"
-                className="block w-full pl-10 pr-3 py-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono text-sm"
-                placeholder="e.g., metricName=cpu.usage OR source=PROD-WEB-01"
                 value={filters.query}
                 onChange={(e) => setFilters({ ...filters, query: e.target.value })}
+                className="block w-full pl-10 pr-3 py-3 border border-themed-border-primary rounded-lg bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary font-mono text-sm"
+                placeholder="Enter your search query..."
               />
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <SearchIcon className="h-5 w-5 text-slate-400" />
+                <SearchIcon className="h-5 w-5 text-themed-text-muted" />
               </div>
             </div>
           </div>
 
-          {/* Time Range */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="startTime" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label htmlFor="startTime" className="block text-sm font-medium text-themed-text-primary mb-2">
                 Start Time
               </label>
               <div className="relative">
                 <input
                   type="datetime-local"
                   id="startTime"
-                  className="block w-full pl-10 pr-3 py-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   value={filters.startTime}
                   onChange={(e) => setFilters({ ...filters, startTime: e.target.value })}
+                  className="block w-full pl-10 pr-3 py-3 border border-themed-border-primary rounded-lg bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Calendar className="h-5 w-5 text-slate-400" />
+                  <Calendar className="h-5 w-5 text-themed-text-muted" />
                 </div>
               </div>
             </div>
 
             <div>
-              <label htmlFor="endTime" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                End Time
+              <label htmlFor="endTime" className="block text-sm font-medium text-themed-text-primary mb-2">
+                End Time  
               </label>
               <div className="relative">
                 <input
                   type="datetime-local"
                   id="endTime"
-                  className="block w-full pl-10 pr-3 py-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   value={filters.endTime}
                   onChange={(e) => setFilters({ ...filters, endTime: e.target.value })}
+                  className="block w-full pl-10 pr-3 py-3 border border-themed-border-primary rounded-lg bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Calendar className="h-5 w-5 text-slate-400" />
+                  <Calendar className="h-5 w-5 text-themed-text-muted" />
                 </div>
               </div>
             </div>
-
-            <div>
-              <label htmlFor="limit" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Result Limit
-              </label>
-              <select
-                id="limit"
-                className="block w-full px-3 py-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                value={filters.limit}
-                onChange={(e) => setFilters({ ...filters, limit: parseInt(e.target.value) })}
-              >
-                <option value={100}>100</option>
-                <option value={500}>500</option>
-                <option value={1000}>1,000</option>
-                <option value={5000}>5,000</option>
-              </select>
-            </div>
           </div>
 
-          {/* Quick Time Range Buttons */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Quick Time Ranges
+            <label htmlFor="limit" className="block text-sm font-medium text-themed-text-primary mb-2">
+              Result Limit
             </label>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { label: 'Last 1h', hours: 1 },
-                { label: 'Last 4h', hours: 4 },
-                { label: 'Last 24h', hours: 24 },
-                { label: 'Last 7d', hours: 168 },
-                { label: 'Last 30d', hours: 720 }
-              ].map((range) => (
-                <button
-                  key={range.hours}
-                  onClick={() => setQuickTimeRange(range.hours)}
-                  className="inline-flex items-center px-3 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-lg text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors"
-                >
-                  <Clock className="h-4 w-4 mr-1" />
-                  {range.label}
-                </button>
+            <select
+              id="limit"
+              value={filters.limit}
+              onChange={(e) => setFilters({ ...filters, limit: parseInt(e.target.value) })}
+              className="block w-full px-3 py-3 border border-themed-border-primary rounded-lg bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
+            >
+              <option value={10}>10 results</option>
+              <option value={25}>25 results</option>
+              <option value={50}>50 results</option>
+              <option value={100}>100 results</option>
+              <option value={500}>500 results</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-themed-text-primary mb-2">
+              Export Options
+            </label>
+            <div className="flex flex-wrap gap-3">
+              {['JSON', 'CSV', 'Excel'].map((format) => (
+                <label key={format} className="inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={true}
+                    onChange={() => {}}
+                    className="rounded border-themed-border-primary text-themed-interactive-primary focus:ring-themed-interactive-primary"
+                  />
+                  <span className="ml-2 text-sm text-themed-text-secondary">{format}</span>
+                </label>
               ))}
             </div>
           </div>
 
-          {/* Search Button */}
-          <div className="flex justify-end">
+          <div className="flex justify-end space-x-3">
             <button
-              onClick={handleSearch}
-              disabled={loading}
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              type="button"
+              onClick={() => {
+                setFilters({
+                  query: '',
+                  startTime: defaultTimeRange.startTime,
+                  endTime: defaultTimeRange.endTime,
+                  limit: 100
+                })
+                setResults([])
+                setError(null)
+              }}
+              className="inline-flex items-center px-3 py-2 border border-themed-border-primary text-sm font-medium rounded-lg text-themed-text-primary bg-themed-bg-surface hover:bg-themed-interactive-secondary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors"
+            >
+              Clear
+            </button>
+            <button
+              type="submit"
+              disabled={loading || !filters.query}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-themed-text-inverse bg-themed-interactive-primary hover:bg-themed-interactive-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-themed-interactive-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
               ) : (
-                <Play className="h-5 w-5 mr-2" />
+                <SearchIcon className="h-4 w-4 mr-2" />
               )}
-              {loading ? 'Searching...' : 'Run Search'}
+              Search
             </button>
           </div>
-        </div>
+        </form>
       </div>
 
       {/* Debug Section - Remove this in production */}
@@ -385,19 +392,19 @@ const Search = () => {
 
       {/* Results */}
       {searched && (
-        <div className="bg-white dark:bg-slate-800 shadow-lg rounded-lg border border-slate-200 dark:border-slate-700">
-          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+        <div className="bg-themed-bg-tertiary shadow-lg rounded-lg border border-themed-border-primary">
+          <div className="px-6 py-4 border-b border-themed-border-primary">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-themed-text-primary">
                 Search Results 
-                <span className="ml-2 text-sm font-normal text-slate-500 dark:text-slate-400">
+                <span className="ml-2 text-sm font-normal text-themed-text-secondary">
                   ({results.length} events)
                 </span>
               </h3>
               {results.length > 0 && (
                 <button
                   onClick={handleExport}
-                  className="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-slate-600 shadow-sm text-sm font-medium rounded-lg text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
+                  className="inline-flex items-center px-4 py-2 border border-themed-border-primary text-sm font-medium rounded-lg text-themed-text-primary bg-themed-bg-surface hover:bg-themed-interactive-secondary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors"
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Export CSV
@@ -408,44 +415,44 @@ const Search = () => {
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-              <span className="ml-3 text-slate-600 dark:text-slate-400">Searching metrics...</span>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-themed-interactive-primary"></div>
+              <span className="ml-3 text-themed-text-secondary">Searching metrics...</span>
             </div>
           ) : results.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                <thead className="bg-slate-50 dark:bg-slate-900">
+              <table className="min-w-full divide-y divide-themed-border-primary">
+                <thead className="bg-themed-bg-surface">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-primary uppercase tracking-wider">
                       Timestamp
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-primary uppercase tracking-wider">
                       Metric Name
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-primary uppercase tracking-wider">
                       Value
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-primary uppercase tracking-wider">
                       Source
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-primary uppercase tracking-wider">
                       Environment
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+                <tbody className="bg-themed-bg-surface divide-y divide-themed-border-primary">
                   {results.map((result) => (
-                    <tr key={result.id} className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100 font-mono">
+                    <tr key={result.id} className="hover:bg-themed-interactive-secondary-hover transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-themed-text-primary font-mono">
                         {new Date(result.timestamp).toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100 font-mono">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-themed-text-primary font-mono">
                         {result.metricName}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100 font-mono">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-themed-text-primary font-mono">
                         {result.value}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-themed-text-primary">
                         {result.source}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -466,9 +473,9 @@ const Search = () => {
             </div>
           ) : (
             <div className="text-center py-12">
-              <SearchIcon className="mx-auto h-12 w-12 text-slate-400" />
-              <h3 className="mt-2 text-sm font-medium text-slate-900 dark:text-white">No results found</h3>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              <SearchIcon className="mx-auto h-12 w-12 text-themed-text-muted" />
+              <h3 className="mt-2 text-sm font-medium text-themed-text-primary">No results found</h3>
+              <p className="mt-1 text-sm text-themed-text-secondary">
                 Try adjusting your search criteria or time range.
               </p>
             </div>

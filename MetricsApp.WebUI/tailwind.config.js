@@ -8,6 +8,38 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Theme-aware colors using CSS variables
+        themed: {
+          'bg-primary': 'var(--bg-primary)',
+          'bg-secondary': 'var(--bg-secondary)',
+          'bg-tertiary': 'var(--bg-tertiary)',
+          'bg-elevated': 'var(--bg-elevated)',
+          'bg-surface': 'var(--bg-surface)',
+          
+          'text-primary': 'var(--text-primary)',
+          'text-secondary': 'var(--text-secondary)',
+          'text-tertiary': 'var(--text-tertiary)',
+          'text-inverse': 'var(--text-inverse)',
+          'text-muted': 'var(--text-muted)',
+          'text-accent': 'var(--text-accent)',
+          
+          'border-primary': 'var(--border-primary)',
+          'border-secondary': 'var(--border-secondary)',
+          'border-accent': 'var(--border-accent)',
+          'border-muted': 'var(--border-muted)',
+          
+          'interactive-primary': 'var(--interactive-primary)',
+          'interactive-primary-hover': 'var(--interactive-primary-hover)',
+          'interactive-secondary': 'var(--interactive-secondary)',
+          'interactive-secondary-hover': 'var(--interactive-secondary-hover)',
+          
+          'status-success': 'var(--status-success)',
+          'status-error': 'var(--status-error)',
+          'status-warning': 'var(--status-warning)',
+          'status-info': 'var(--status-info)',
+        },
+        
+        // Legacy Tailwind colors for compatibility
         primary: {
           50: '#eff6ff',
           100: '#dbeafe',

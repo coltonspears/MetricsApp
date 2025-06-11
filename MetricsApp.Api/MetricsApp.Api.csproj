@@ -14,6 +14,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\MetricsApp.Abstractions\MetricsApp.Abstractions.csproj" />
+      <ProjectReference Include="..\MetricsApp.Agent.Collectors.WindowsPerfCounters\MetricsApp.Agent.Collectors.WindowsPerfCounters.csproj" />
+      <ProjectReference Include="..\MetricsApp.Agent.Core\MetricsApp.Agent.Core.csproj" />
       <ProjectReference Include="..\MetricsApp.Cache.InMemory\MetricsApp.Cache.InMemory.csproj" />
       <ProjectReference Include="..\MetricsApp.DataSources.Core\MetricsApp.DataSources.Core.csproj" />
       <ProjectReference Include="..\MetricsApp.DataSources.Prometheus\MetricsApp.DataSources.Prometheus.csproj" />

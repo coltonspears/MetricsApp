@@ -2,6 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  /* Hide scrollbar but still allow scrolling */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+  
+  /* App scaling for better UI density */
+  .app-scale-90 {
+    zoom: 0.9;
+  }
+}
+
+/* Dark mode fixes */
+.dark {
+  color-scheme: dark;
+}
+
+/* Prevent text selection on UI elements */
+button, .tab-item {
+  user-select: none;
+}
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

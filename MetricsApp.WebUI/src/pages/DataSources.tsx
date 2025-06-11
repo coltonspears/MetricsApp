@@ -7,6 +7,7 @@ import {
   DataSourceApi, 
   ApiError 
 } from '../lib/datasource-api'
+import DataSourceIcon from '../components/DataSourceIcon'
 
 // TODO: Update this to use the actual categories from the backend
 const getDataSourceCategory = (dataSourceType: string): string => {
@@ -173,7 +174,7 @@ export default function DataSources() {
   const handleBuildDashboard = (dataSource: DataSourceConfiguration) => {
     // TODO: Navigate to dashboard builder with this data source
     console.log('Build dashboard for:', dataSource.name)
-    // navigate(`/dashboards/new?datasource=${dataSource.id}`)
+    navigate(`/dashboards/new?datasource=${dataSource.id}`)
   }
 
   const handleExplore = (dataSource: DataSourceConfiguration) => {
@@ -401,7 +402,7 @@ export default function DataSources() {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center">
                       <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center">
-                        <Database className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                        <DataSourceIcon dataSourceType={dataSource.dataSourceType} />
                       </div>
                       <div className="ml-3">
                         <h3 className="text-lg font-medium text-slate-900 dark:text-white">

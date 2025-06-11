@@ -1,5 +1,11 @@
 using MetricsApp.DataSources.Prometheus;
 using MetricsApp.Worker.Workers;
+using MetricsApp.Repository.InMemory.Extensions;
+using MetricsApp.Abstractions.Data;
+using MetricsApp.Agent.Collectors.WindowsPerfCounters;
+using MetricsApp.Agent.Core.Services;
+using MetricsApp.Agent.Core.Abstractions;
+using MetricsApp.Api.Services;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,6 +36,16 @@ builder.Services.AddInMemoryCaching();
 builder.Services.AddInMemoryRepository();
 builder.Services.AddWindowsPerfCounterParser();
 
+// Configure Agent Core services
+builder.Services.Configure<AgentOptions>(builder.Configuration.GetSection("MetricsAgent"));
+
+// Register Windows Performance Counter Collector
+if (OperatingSystem.IsWindows())
+{
+    builder.Services.AddWindowsPerfCounterCollector(builder.Configuration);
+    builder.Services.AddHostedService<CollectorBackgroundService>();
+}
+
 // Register data sources
 builder.Services.AddDataSources();
 builder.Services.AddSqlServerDataSource();
@@ -42,6 +58,22 @@ builder.Services.AddPrometheusDataSource(httpClient =>
 builder.Services.AddHostedService<IngestionWorker>();
 
 var app = builder.Build();
+
+// // Seed the repository with sample data sources on startup
+// using (var scope = app.Services.CreateScope())
+// {
+//     var repository = scope.ServiceProvider.GetRequiredService<IConfigurationRepository>();
+//     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+//     
+//     try
+//     {
+//         await repository.SeedSampleDataSourcesAsync(logger);
+//     }
+//     catch (Exception ex)
+//     {
+//         logger.LogError(ex, "Failed to seed sample data sources");
+//     }
+// }
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

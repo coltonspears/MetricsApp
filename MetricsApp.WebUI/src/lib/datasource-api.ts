@@ -96,6 +96,25 @@ export interface DataSourceTag {
   description?: string
 }
 
+export interface DataSourceExtendedInfo {
+  category: string
+  repository?: string
+  documentation?: string
+  license: string
+  maintainer: string
+  capabilities: string[]
+  tags: string[]
+  screenshots: string[]
+  changelog: ChangelogEntry[]
+}
+
+export interface ChangelogEntry {
+  version: string
+  releaseDate: string
+  changes: string[]
+  releaseType: string
+}
+
 export interface LogQueryCriteria {
   query?: string
   startTime: string
@@ -185,6 +204,10 @@ export class DataSourceApi {
       throw new ApiError(response.status, `Failed to fetch datasource type: ${response.statusText}`)
     }
     return response.json()
+  }
+
+  static async getDataSourceExtendedInfo(dataSourceType: string): Promise<DataSourceExtendedInfo> {
+    return this.request<DataSourceExtendedInfo>(`/datasources/types/${encodeURIComponent(dataSourceType)}/extended`)
   }
 
   // DataSource Configuration Management

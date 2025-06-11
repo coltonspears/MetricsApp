@@ -14,35 +14,7 @@ import {
   AlertCircle,
   Loader2
 } from 'lucide-react'
-import { DataSourceTypeInfo, DataSourceApi, ApiError } from '../lib/datasource-api'
-
-// TODO: Update this to use the actual extended info from the backend
-const getDataSourceExtendedInfo = (dataSourceType: string) => {
-  const extendedInfo: Record<string, any> = {
-    'prometheus': {
-      category: 'Monitoring',
-      repository: 'https://github.com/prometheus/prometheus',
-      documentation: 'https://prometheus.io/docs/',
-      license: 'Apache 2.0',
-      maintainer: 'Prometheus Team',
-      capabilities: ['Metrics', 'Alerting', 'Time Series'],
-      tags: ['monitoring', 'metrics', 'time-series', 'alerting'],
-      screenshots: [],
-      changelog: []
-    }
-  }
-  return extendedInfo[dataSourceType.toLowerCase()] || {
-    category: 'Other',
-    repository: null,
-    documentation: null,
-    license: 'Unknown',
-    maintainer: 'Unknown',
-    capabilities: [],
-    tags: [],
-    screenshots: [],
-    changelog: []
-  }
-}
+import { DataSourceTypeInfo, DataSourceExtendedInfo, DataSourceApi, ApiError } from '../lib/datasource-api'
 
 const tabs = [
   { id: 'overview', name: 'Overview', icon: FileText },
@@ -54,6 +26,7 @@ export default function DataSourceDetails() {
   const { dataSourceType } = useParams<{ dataSourceType: string }>()
   const navigate = useNavigate()
   const [dataSourceInfo, setDataSourceInfo] = useState<DataSourceTypeInfo | null>(null)
+  const [extendedInfo, setExtendedInfo] = useState<DataSourceExtendedInfo | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('overview')
@@ -71,8 +44,13 @@ export default function DataSourceDetails() {
     setError(null)
     
     try {
-      const info = await DataSourceApi.getDataSourceType(dataSourceType)
+      const [info, extended] = await Promise.all([
+        DataSourceApi.getDataSourceType(dataSourceType),
+        DataSourceApi.getDataSourceExtendedInfo(dataSourceType)
+      ])
+      
       setDataSourceInfo(info)
+      setExtendedInfo(extended)
     } catch (error) {
       console.error('Failed to load data source info:', error)
       setError(error instanceof ApiError ? error.message : 'Failed to load data source information')
@@ -84,8 +62,6 @@ export default function DataSourceDetails() {
   const handleAddConnection = () => {
     navigate(`/connections/add?type=${dataSourceType}`)
   }
-
-  const extendedInfo = dataSourceType ? getDataSourceExtendedInfo(dataSourceType) : null
 
   if (isLoading) {
     return (
@@ -124,7 +100,11 @@ export default function DataSourceDetails() {
     )
   }
 
-  const visibleTabs = tabs.filter(tab => !tab.hidden || (tab.id === 'screenshots' && extendedInfo?.screenshots?.length > 0) || (tab.id === 'changelog' && extendedInfo?.changelog?.length > 0))
+  const visibleTabs = tabs.filter(tab => 
+    !tab.hidden || 
+    (tab.id === 'screenshots' && (extendedInfo?.screenshots?.length ?? 0) > 0) || 
+    (tab.id === 'changelog' && (extendedInfo?.changelog?.length ?? 0) > 0)
+  )
 
   return (
     <div className="space-y-6">
@@ -360,7 +340,41 @@ export default function DataSourceDetails() {
         {activeTab === 'changelog' && (
           <div className="p-6">
             <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">Changelog</h3>
-            <p className="text-slate-600 dark:text-slate-400">Version history and changelog will be displayed here when available.</p>
+            {extendedInfo?.changelog && extendedInfo.changelog.length > 0 ? (
+              <div className="space-y-6">
+                {extendedInfo.changelog.map((entry, index) => (
+                  <div key={index} className="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <h4 className="text-lg font-semibold text-slate-900 dark:text-white">
+                          v{entry.version}
+                        </h4>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          entry.releaseType === 'Major' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300' :
+                          entry.releaseType === 'Minor' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300' :
+                          'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300'
+                        }`}>
+                          {entry.releaseType}
+                        </span>
+                      </div>
+                      <span className="text-sm text-slate-500 dark:text-slate-400">
+                        {new Date(entry.releaseDate).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <ul className="space-y-2">
+                      {entry.changes.map((change, changeIndex) => (
+                        <li key={changeIndex} className="flex items-start">
+                          <span className="inline-block w-2 h-2 bg-emerald-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                          <span className="text-sm text-slate-700 dark:text-slate-300">{change}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-slate-600 dark:text-slate-400">No changelog entries available.</p>
+            )}
           </div>
         )}
       </div>

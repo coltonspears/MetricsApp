@@ -293,28 +293,86 @@ public class PrometheusDataSource : IDataSource
                 {
                     var metricSeries = new MetricTimeSeries();
                     
-                    // Parse metric labels
+                    // Parse metric labels and determine metric name
+                    string metricName = "unknown_metric";
+                    var attributes = new Dictionary<string, object>();
+                    
                     if (series.TryGetProperty("metric", out var metric))
                     {
-                        var labels = new Dictionary<string, string>();
                         foreach (var label in metric.EnumerateObject())
                         {
-                            labels[label.Name] = label.Value.GetString() ?? "";
+                            var labelValue = label.Value.GetString() ?? "";
+                            if (label.Name == "__name__")
+                            {
+                                metricName = labelValue;
+                            }
+                            else
+                            {
+                                attributes[label.Name] = labelValue;
+                            }
                         }
-                        // Set metric name and labels (would need to map to MetricTimeSeries properties)
                     }
 
-                    // Parse values - simplified for now
-                    if (series.TryGetProperty("values", out var values))
+                    // Parse time series values
+                    var values = new List<Tuple<long, string>>();
+                    if (series.TryGetProperty("values", out var valuesArray))
                     {
-                        // For now, just create the time series without detailed data points
-                        // In a full implementation, you'd map these to the actual MetricTimeSeries structure
+                        foreach (var valuePoint in valuesArray.EnumerateArray())
+                        {
+                            if (valuePoint.ValueKind == JsonValueKind.Array)
+                            {
+                                var valueArray = valuePoint.EnumerateArray().ToArray();
+                                if (valueArray.Length >= 2)
+                                {
+                                    // First element is timestamp (Unix timestamp as number)
+                                    var timestamp = valueArray[0].ValueKind == JsonValueKind.Number 
+                                        ? (long)valueArray[0].GetDouble() 
+                                        : 0;
+                                    
+                                    // Second element is the value (as string to preserve precision)
+                                    var value = valueArray[1].ValueKind == JsonValueKind.String 
+                                        ? valueArray[1].GetString() ?? "0"
+                                        : valueArray[1].GetRawText().Trim('"');
+
+                                    values.Add(new Tuple<long, string>(timestamp, value));
+                                }
+                            }
+                        }
                     }
+
+                    // Populate the MetricTimeSeries object
+                    metricSeries.MetricInfo = new MetricDefinition
+                    {
+                        Name = metricName,
+                        Attributes = attributes,
+                        Resource = new Dictionary<string, object>
+                        {
+                            { "datasource.type", "prometheus" },
+                            { "datasource.url", _configuration?.Url ?? "unknown" }
+                        }
+                    };
+                    metricSeries.Values = values;
 
                     timeSeries.Add(metricSeries);
                 }
 
                 result.Result = timeSeries;
+            }
+            else
+            {
+                // Check if there's an error in the response
+                if (jsonDoc.RootElement.TryGetProperty("status", out var status) && 
+                    status.GetString() == "error")
+                {
+                    var errorMessage = "Unknown Prometheus error";
+                    if (jsonDoc.RootElement.TryGetProperty("error", out var error))
+                    {
+                        errorMessage = error.GetString() ?? errorMessage;
+                    }
+                    
+                    result.ResultType = "error";
+                    result.ErrorMessage = errorMessage;
+                }
             }
 
             return result;
@@ -322,7 +380,11 @@ public class PrometheusDataSource : IDataSource
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error parsing Prometheus response");
-            return new MetricQueryResult { ResultType = "error" };
+            return new MetricQueryResult 
+            { 
+                ResultType = "error",
+                ErrorMessage = $"Failed to parse Prometheus response: {ex.Message}"
+            };
         }
     }
 } 

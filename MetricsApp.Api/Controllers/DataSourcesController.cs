@@ -48,6 +48,137 @@ public class DataSourcesController : ControllerBase
     }
 
     /// <summary>
+    /// Get extended information about a specific datasource type
+    /// </summary>
+    [HttpGet("types/{dataSourceType}/extended")]
+    public ActionResult<DataSourceExtendedInfo> GetDataSourceExtendedInfo(string dataSourceType)
+    {
+        _logger.LogInformation("Getting extended info for data source type: {DataSourceType}", dataSourceType);
+
+        var extendedInfo = GetDataSourceExtendedInfoInternal(dataSourceType);
+        return Ok(extendedInfo);
+    }
+
+    private DataSourceExtendedInfo GetDataSourceExtendedInfoInternal(string dataSourceType)
+    {
+        return dataSourceType.ToLower() switch
+        {
+            "prometheus" => new DataSourceExtendedInfo
+            {
+                Category = "Monitoring",
+                Repository = "https://github.com/prometheus/prometheus",
+                Documentation = "https://prometheus.io/docs/",
+                License = "Apache 2.0",
+                Maintainer = "Prometheus Team",
+                Capabilities = new List<string> { "Metrics", "Alerting", "Time Series", "Query Language (PromQL)" },
+                Tags = new List<string> { "monitoring", "metrics", "time-series", "alerting", "observability" },
+                Screenshots = new List<string>(),
+                Changelog = new List<ChangelogEntry>
+                {
+                    new ChangelogEntry
+                    {
+                        Version = "2.45.0",
+                        ReleaseDate = DateTime.UtcNow.AddDays(-30),
+                        ReleaseType = "Minor",
+                        Changes = new List<string>
+                        {
+                            "Added support for native histograms",
+                            "Improved query performance for large time ranges",
+                            "Enhanced TSDB block handling",
+                            "Bug fixes and stability improvements"
+                        }
+                    },
+                    new ChangelogEntry
+                    {
+                        Version = "2.44.0", 
+                        ReleaseDate = DateTime.UtcNow.AddDays(-60),
+                        ReleaseType = "Minor",
+                        Changes = new List<string>
+                        {
+                            "Added new metric metadata APIs",
+                            "Improved memory usage in TSDB",
+                            "Enhanced service discovery for Kubernetes",
+                            "Various bug fixes"
+                        }
+                    }
+                }
+            },
+            "sqlserver" => new DataSourceExtendedInfo
+            {
+                Category = "Database", 
+                Repository = "https://github.com/microsoft/mssql-docker",
+                Documentation = "https://docs.microsoft.com/en-us/sql/",
+                License = "Proprietary",
+                Maintainer = "Microsoft",
+                Capabilities = new List<string> { "SQL Queries", "Stored Procedures", "Views", "Full-Text Search", "Analytics" },
+                Tags = new List<string> { "database", "sql", "microsoft", "relational", "enterprise" },
+                Screenshots = new List<string>(),
+                Changelog = new List<ChangelogEntry>()
+            },
+            "mysql" => new DataSourceExtendedInfo
+            {
+                Category = "Database",
+                Repository = "https://github.com/mysql/mysql-server", 
+                Documentation = "https://dev.mysql.com/doc/",
+                License = "GPL v2",
+                Maintainer = "Oracle Corporation",
+                Capabilities = new List<string> { "SQL Queries", "Stored Procedures", "Views", "Replication", "JSON Support" },
+                Tags = new List<string> { "database", "sql", "mysql", "opensource", "relational" },
+                Screenshots = new List<string>(),
+                Changelog = new List<ChangelogEntry>()
+            },
+            "postgresql" => new DataSourceExtendedInfo
+            {
+                Category = "Database",
+                Repository = "https://github.com/postgres/postgres",
+                Documentation = "https://www.postgresql.org/docs/",
+                License = "PostgreSQL License",
+                Maintainer = "PostgreSQL Global Development Group",
+                Capabilities = new List<string> { "SQL Queries", "JSON/JSONB", "Arrays", "Custom Types", "Extensions", "Full-Text Search" },
+                Tags = new List<string> { "database", "sql", "postgresql", "opensource", "advanced" },
+                Screenshots = new List<string>(),
+                Changelog = new List<ChangelogEntry>()
+            },
+            "elasticsearch" => new DataSourceExtendedInfo
+            {
+                Category = "Search & Analytics",
+                Repository = "https://github.com/elastic/elasticsearch",
+                Documentation = "https://www.elastic.co/guide/",
+                License = "Elastic License 2.0",
+                Maintainer = "Elastic",
+                Capabilities = new List<string> { "Full-Text Search", "Aggregations", "Analytics", "Logging", "Real-time Search" },
+                Tags = new List<string> { "search", "analytics", "logging", "elasticsearch", "nosql" },
+                Screenshots = new List<string>(),
+                Changelog = new List<ChangelogEntry>()
+            },
+            "influxdb" => new DataSourceExtendedInfo
+            {
+                Category = "Time Series Database",
+                Repository = "https://github.com/influxdata/influxdb",
+                Documentation = "https://docs.influxdata.com/",
+                License = "MIT",
+                Maintainer = "InfluxData",
+                Capabilities = new List<string> { "Time Series", "High Write Performance", "SQL-like Query Language", "Retention Policies", "Continuous Queries" },
+                Tags = new List<string> { "timeseries", "metrics", "iot", "monitoring", "influxdb" },
+                Screenshots = new List<string>(),
+                Changelog = new List<ChangelogEntry>()
+            },
+            _ => new DataSourceExtendedInfo
+            {
+                Category = "Other",
+                Repository = null,
+                Documentation = null,
+                License = "Unknown",
+                Maintainer = "Unknown",
+                Capabilities = new List<string>(),
+                Tags = new List<string>(),
+                Screenshots = new List<string>(),
+                Changelog = new List<ChangelogEntry>()
+            }
+        };
+    }
+
+    /// <summary>
     /// Get all configured datasources
     /// </summary>
     [HttpGet]

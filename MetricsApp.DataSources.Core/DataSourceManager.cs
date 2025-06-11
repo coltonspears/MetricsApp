@@ -127,7 +127,7 @@ public class DataSourceManager : IDataSourceManager
 
         // Get configuration
         var configuration = await GetDataSourceAsync(id, cancellationToken);
-        if (configuration == null || !configuration.IsEnabled)
+        if (configuration is not { IsEnabled: true })
         {
             return null;
         }

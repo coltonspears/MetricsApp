@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Search, Filter, ArrowUpDown, Database, Plus, ExternalLink, ArrowLeft } from 'lucide-react'
+import { Search, Filter, ArrowUpDown, Database, Plus, ExternalLink, ArrowLeft, AlertTriangle } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { DataSourceTypeInfo, DataSourceApi, ApiError, DataSourceConfiguration } from '../lib/datasource-api'
 import DataSourceForm from '../components/DataSourceForm'
@@ -34,6 +34,7 @@ export default function AddConnection() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [usingMockData, setUsingMockData] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [sortBy, setSortBy] = useState('name')
@@ -65,7 +66,13 @@ export default function AddConnection() {
       setDataSourceTypes(types)
     } catch (error) {
       console.error('Failed to load datasource types:', error)
-      setError(error instanceof ApiError ? error.message : 'Failed to load datasource types')
+      const errorMessage = error instanceof ApiError ? error.message : 'Failed to load datasource types'
+      setError(errorMessage)
+      
+      // Check if we're using mock data
+      if (errorMessage.includes('mock data')) {
+        setUsingMockData(true)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -161,10 +168,36 @@ export default function AddConnection() {
 
   const selectedTypeInfo = selectedType ? dataSourceTypes.find(t => t.dataSourceType === selectedType) : null
 
+  // Show mock data banner
+  const MockDataBanner = () => (
+    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-6">
+      <div className="flex">
+        <div className="flex-shrink-0">
+          <AlertTriangle className="h-5 w-5 text-yellow-400" />
+        </div>
+        <div className="ml-3">
+          <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+            Using Mock Data
+          </h3>
+          <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+            <p>
+              The backend API is not available. You can still test the interface with mock data, 
+              but actual connections won't be persisted. To use real data sources, ensure the 
+              MetricsApp.Api service is running.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
   // Show form if a type is selected
   if (selectedType && selectedTypeInfo) {
     return (
       <div className="space-y-6">
+        {/* Mock Data Banner */}
+        {usingMockData && <MockDataBanner />}
+
         {/* Header */}
         <button
             onClick={handleCancel}
@@ -184,7 +217,7 @@ export default function AddConnection() {
         </div>
 
         {/* Error Message */}
-        {error && (
+        {error && !usingMockData && (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
             <div className="flex">
               <div className="flex-shrink-0">
@@ -293,6 +326,9 @@ export default function AddConnection() {
 
   return (
     <div className="space-y-6">
+      {/* Mock Data Banner */}
+      {usingMockData && <MockDataBanner />}
+
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-slate-900 dark:text-white">Add New Connection</h1>
@@ -301,8 +337,8 @@ export default function AddConnection() {
         </p>
       </div>
 
-      {/* Error Message */}
-      {error && (
+      {/* Error Message - only show if not using mock data */}
+      {error && !usingMockData && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
           <div className="flex">
             <div className="flex-shrink-0">

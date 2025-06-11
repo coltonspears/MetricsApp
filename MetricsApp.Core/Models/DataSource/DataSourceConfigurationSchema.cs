@@ -78,7 +78,8 @@ public enum ConfigurationFieldType
     Boolean,
     Select,
     Textarea,
-    Url
+    Url,
+    TextArea
 }
 
 /// <summary>

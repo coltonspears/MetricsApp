@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="StackExchange.Redis" Version="2.8.41" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\MetricsApp.Abstractions\MetricsApp.Abstractions.csproj" />
+      <ProjectReference Include="..\MetricsApp.Core\MetricsApp.Core.csproj" />
+      <ProjectReference Include="..\MetricsApp.DataSources.Core\MetricsApp.DataSources.Core.csproj" />
+    </ItemGroup>
+
+</Project>

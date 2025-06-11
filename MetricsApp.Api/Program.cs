@@ -49,6 +49,10 @@ if (OperatingSystem.IsWindows())
 // Register data sources
 builder.Services.AddDataSources();
 builder.Services.AddSqlServerDataSource();
+builder.Services.AddSqliteDataSource();
+builder.Services.AddMySqlDataSource();
+builder.Services.AddPostgreSQLDataSource();
+builder.Services.AddWindowsPerfDataSource();
 builder.Services.AddPrometheusDataSource(httpClient =>
 {
     httpClient.Timeout = TimeSpan.FromSeconds(60);

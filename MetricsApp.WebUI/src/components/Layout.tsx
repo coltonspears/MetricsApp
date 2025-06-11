@@ -618,10 +618,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       <div className={`${mainContentOffset} flex flex-col flex-1 pt-[40px] transition-all duration-300`}>
         <main className="flex-1">
           <div className="py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+            <div className="px-4 sm:px-6 md:px-8">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex-1">
-                  {/* Page content will go here */}
+                  {
+                    
+                  }
                 </div>
               </div>
               {children}

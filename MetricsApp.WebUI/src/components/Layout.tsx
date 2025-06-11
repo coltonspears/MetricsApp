@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Database, Search, Bell, Settings, Sun, Moon, Activity, Layers, ChevronDown, Plus, BarChart3, User, LogOut, History, Star, Home, HelpCircle, Sliders, Bookmark, Menu } from 'lucide-react'
+import { Database, Search, Bell, Settings, Sun, Moon, Activity, Layers, ChevronDown, Plus, BarChart3, User, LogOut, History, Star, Home, HelpCircle, Sliders, Bookmark, Menu, Shield, Users, Building, GitBranch } from 'lucide-react'
 import { useTheme } from '../lib/theme'
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -13,6 +13,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     return saved ? JSON.parse(saved) : true
   })
   const [connectionsOpen, setConnectionsOpen] = useState(false)
+  const [authenticationOpen, setAuthenticationOpen] = useState(false)
+  const [administrationOpen, setAdministrationOpen] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [pinnedNavOpen, setPinnedNavOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -59,6 +61,22 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { name: 'Data Sources', href: '/connections/datasources', icon: Database },
   ]
 
+  const authenticationItems = [
+    { name: 'Google OAuth', href: '/admin/authentication/google', icon: Shield, wip: true },
+    { name: 'GitHub OAuth', href: '/admin/authentication/github', icon: GitBranch, wip: true },
+    { name: 'Azure PAT', href: '/admin/authentication/azure', icon: Shield, wip: true },
+    { name: 'Standalone Auth', href: '/admin/authentication/default', icon: Shield, wip: true },
+  ]
+
+  const administrationItems = [
+    { name: 'Organizations', href: '/admin/orgs', icon: Building, wip: true },
+    { name: 'Create Organization', href: '/admin/orgs/create', icon: Plus, wip: true },
+    { name: 'Admin Users', href: '/admin/users', icon: Users, wip: true },
+    { name: 'Invite Users', href: '/org/users/invite', icon: Plus, wip: true },
+    { name: 'Teams', href: '/org/teams', icon: Users, wip: true },
+    { name: 'Create Team', href: '/orgs/teams/create', icon: Plus, wip: true },
+  ]
+
   const pinnedNavItems = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'Dashboards', href: '/dashboards', icon: BarChart3 },
@@ -67,6 +85,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   ]
 
   const isConnectionsActive = location.pathname.startsWith('/connections') || location.pathname.startsWith('/datasources')
+  const isAuthenticationActive = location.pathname.startsWith('/admin/authentication')
+  const isAdministrationActive = location.pathname.startsWith('/admin/orgs') || location.pathname.startsWith('/admin/users') || location.pathname.startsWith('/org/users') || location.pathname.startsWith('/org/teams') || location.pathname.startsWith('/orgs/teams')
 
   // Generate breadcrumb from current path
   const generateBreadcrumbs = () => {
@@ -87,6 +107,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const sidebarWidth = sidebarCollapsed ? 'w-16' : 'w-64'
   const mainContentOffset = sidebarCollapsed ? 'md:pl-16' : 'md:pl-64'
   const topNavOffset = sidebarCollapsed ? 'left-16' : 'left-64'
+
+  // WIP Badge Component
+  const WipBadge = () => (
+    <span className="ml-auto px-1.5 py-0.5 text-xs font-medium bg-yellow-600 text-yellow-100 rounded">
+      WIP
+    </span>
+  )
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 app-scale-90">
@@ -203,6 +230,116 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   )}
                 </div>
               )}
+
+              {/* Authentication Dropdown */}
+              {!sidebarCollapsed && (
+                <div className="relative">
+                  <button
+                    onClick={() => setAuthenticationOpen(!authenticationOpen)}
+                    className={`${
+                      isAuthenticationActive
+                        ? 'bg-slate-700 dark:bg-slate-600 text-emerald-400 border-r-2 border-emerald-400'
+                        : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                    } group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200`}
+                  >
+                    <Shield
+                      className={`${
+                        isAuthenticationActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-slate-300'
+                      } mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200`}
+                    />
+                    Authentication
+                    <ChevronDown
+                      className={`${
+                        authenticationOpen ? 'rotate-180' : ''
+                      } ml-auto h-4 w-4 transition-transform duration-200`}
+                    />
+                  </button>
+                  
+                  {authenticationOpen && (
+                    <div className="mt-1 space-y-1">
+                      {authenticationItems.map((item) => {
+                        const Icon = item.icon
+                        const isActive = location.pathname === item.href
+                        
+                        return (
+                          <Link
+                            key={item.name}
+                            to={item.href}
+                            className={`${
+                              isActive
+                                ? 'bg-slate-600 dark:bg-slate-500 text-emerald-400 border-l-2 border-emerald-400'
+                                : 'text-slate-300 hover:bg-slate-600 hover:text-white'
+                            } group flex items-center pl-8 pr-2 py-2 text-sm font-medium rounded-md transition-colors duration-200`}
+                          >
+                            <Icon
+                              className={`${
+                                isActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-slate-300'
+                              } mr-3 flex-shrink-0 h-4 w-4 transition-colors duration-200`}
+                            />
+                            {item.name}
+                            {item.wip && <WipBadge />}
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Administration Dropdown */}
+              {!sidebarCollapsed && (
+                <div className="relative">
+                  <button
+                    onClick={() => setAdministrationOpen(!administrationOpen)}
+                    className={`${
+                      isAdministrationActive
+                        ? 'bg-slate-700 dark:bg-slate-600 text-emerald-400 border-r-2 border-emerald-400'
+                        : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                    } group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200`}
+                  >
+                    <Users
+                      className={`${
+                        isAdministrationActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-slate-300'
+                      } mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200`}
+                    />
+                    Administration
+                    <ChevronDown
+                      className={`${
+                        administrationOpen ? 'rotate-180' : ''
+                      } ml-auto h-4 w-4 transition-transform duration-200`}
+                    />
+                  </button>
+                  
+                  {administrationOpen && (
+                    <div className="mt-1 space-y-1">
+                      {administrationItems.map((item) => {
+                        const Icon = item.icon
+                        const isActive = location.pathname === item.href
+                        
+                        return (
+                          <Link
+                            key={item.name}
+                            to={item.href}
+                            className={`${
+                              isActive
+                                ? 'bg-slate-600 dark:bg-slate-500 text-emerald-400 border-l-2 border-emerald-400'
+                                : 'text-slate-300 hover:bg-slate-600 hover:text-white'
+                            } group flex items-center pl-8 pr-2 py-2 text-sm font-medium rounded-md transition-colors duration-200`}
+                          >
+                            <Icon
+                              className={`${
+                                isActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-slate-300'
+                              } mr-3 flex-shrink-0 h-4 w-4 transition-colors duration-200`}
+                            />
+                            {item.name}
+                            {item.wip && <WipBadge />}
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </nav>
           </div>
           <div className="flex-shrink-0 flex bg-slate-800 dark:bg-slate-700 p-4">
@@ -308,14 +445,33 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               </button>
               {profileMenuOpen && (
                 <div className="absolute right-0 mt-1 w-48 bg-slate-800 dark:bg-slate-700 rounded-md shadow-lg border border-slate-600 py-1 z-50">
-                  <button className="flex items-center w-full px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 hover:text-white">
+                  <Link 
+                    to="/profile"
+                    className="flex items-center w-full px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 hover:text-white"
+                    onClick={() => setProfileMenuOpen(false)}
+                  >
                     <User className="h-4 w-4 mr-2" />
                     Profile
-                  </button>
-                  <button className="flex items-center w-full px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 hover:text-white">
+                    <span className="ml-auto px-1.5 py-0.5 text-xs font-medium bg-yellow-600 text-yellow-100 rounded">WIP</span>
+                  </Link>
+                  <Link 
+                    to="/profile/notifications"
+                    className="flex items-center w-full px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 hover:text-white"
+                    onClick={() => setProfileMenuOpen(false)}
+                  >
                     <History className="h-4 w-4 mr-2" />
                     Notification History
-                  </button>
+                    <span className="ml-auto px-1.5 py-0.5 text-xs font-medium bg-yellow-600 text-yellow-100 rounded">WIP</span>
+                  </Link>
+                  <Link 
+                    to="/profile/settings"
+                    className="flex items-center w-full px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 hover:text-white"
+                    onClick={() => setProfileMenuOpen(false)}
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Settings
+                    <span className="ml-auto px-1.5 py-0.5 text-xs font-medium bg-yellow-600 text-yellow-100 rounded">WIP</span>
+                  </Link>
                   <hr className="my-1 border-slate-600" />
                   <button 
                     onClick={() => {
@@ -328,10 +484,15 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
                   </button>
                   <hr className="my-1 border-slate-600" />
-                  <button className="flex items-center w-full px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 hover:text-white">
+                  <Link 
+                    to="/logout"
+                    className="flex items-center w-full px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 dark:hover:bg-slate-600 hover:text-white"
+                    onClick={() => setProfileMenuOpen(false)}
+                  >
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Off
-                  </button>
+                    <span className="ml-auto px-1.5 py-0.5 text-xs font-medium bg-yellow-600 text-yellow-100 rounded">WIP</span>
+                  </Link>
                 </div>
               )}
             </div>
@@ -605,6 +766,70 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     >
                       <Icon className="mr-4 flex-shrink-0 h-6 w-6" />
                       {item.name}
+                    </Link>
+                  )
+                })}
+              </div>
+
+              {/* Mobile Authentication */}
+              <div className="space-y-1">
+                <div className="text-slate-400 px-2 py-2 text-xs font-semibold uppercase tracking-wider">
+                  Authentication
+                </div>
+                {authenticationItems.map((item) => {
+                  const Icon = item.icon
+                  const isActive = location.pathname === item.href
+                  
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className={`${
+                        isActive
+                          ? 'bg-emerald-700 text-white'
+                          : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                      } group flex items-center px-2 py-2 text-base font-medium rounded-md`}
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      <Icon className="mr-4 flex-shrink-0 h-6 w-6" />
+                      {item.name}
+                      {item.wip && (
+                        <span className="ml-auto px-1.5 py-0.5 text-xs font-medium bg-yellow-600 text-yellow-100 rounded">
+                          WIP
+                        </span>
+                      )}
+                    </Link>
+                  )
+                })}
+              </div>
+
+              {/* Mobile Administration */}
+              <div className="space-y-1">
+                <div className="text-slate-400 px-2 py-2 text-xs font-semibold uppercase tracking-wider">
+                  Administration
+                </div>
+                {administrationItems.map((item) => {
+                  const Icon = item.icon
+                  const isActive = location.pathname === item.href
+                  
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className={`${
+                        isActive
+                          ? 'bg-emerald-700 text-white'
+                          : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                      } group flex items-center px-2 py-2 text-base font-medium rounded-md`}
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      <Icon className="mr-4 flex-shrink-0 h-6 w-6" />
+                      {item.name}
+                      {item.wip && (
+                        <span className="ml-auto px-1.5 py-0.5 text-xs font-medium bg-yellow-600 text-yellow-100 rounded">
+                          WIP
+                        </span>
+                      )}
                     </Link>
                   )
                 })}

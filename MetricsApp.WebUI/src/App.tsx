@@ -14,6 +14,25 @@ import RUM from './pages/RUM'
 import Alerts from './pages/Alerts'
 import Settings from './pages/Settings'
 
+// Authentication pages
+import GoogleAuth from './pages/admin/authentication/GoogleAuth'
+import GitHubAuth from './pages/admin/authentication/GitHubAuth'
+import AzureAuth from './pages/admin/authentication/AzureAuth'
+import DefaultAuth from './pages/admin/authentication/DefaultAuth'
+
+// Administration pages
+import Organizations from './pages/admin/Organizations'
+import CreateOrganization from './pages/admin/CreateOrganization'
+import AdminUsers from './pages/admin/Users'
+import InviteUsers from './pages/org/InviteUsers'
+import Teams from './pages/org/Teams'
+
+// Profile pages
+import Profile from './pages/Profile'
+import NotificationHistory from './pages/profile/Notifications'
+import ProfileSettings from './pages/profile/ProfileSettings'
+import Logout from './pages/Logout'
+
 function App() {
   useEffect(() => {
     // Initialize RUM tracking
@@ -55,6 +74,30 @@ function App() {
           <Route path="/rum" element={<RUM />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/settings" element={<Settings />} />
+          
+          {/* Authentication Routes */}
+          <Route path="/admin/authentication/google" element={<GoogleAuth />} />
+          <Route path="/admin/authentication/github" element={<GitHubAuth />} />
+          <Route path="/admin/authentication/azure" element={<AzureAuth />} />
+          <Route path="/admin/authentication/default" element={<DefaultAuth />} />
+          
+          {/* Administration Routes */}
+          <Route path="/admin/orgs" element={<Organizations />} />
+          <Route path="/admin/orgs/create" element={<CreateOrganization />} />
+          <Route path="/admin/orgs/edit/:id" element={<CreateOrganization />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/org/users/invite" element={<InviteUsers />} />
+          <Route path="/org/teams" element={<Teams />} />
+          <Route path="/orgs/teams/create" element={<Teams />} />
+          <Route path="/orgs/teams/edit/:id" element={<Teams />} />
+          <Route path="/orgs/teams/edit/:id/members" element={<Teams />} />
+          <Route path="/orgs/teams/edit/:id/settings" element={<Teams />} />
+          
+          {/* Profile Routes */}
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/notifications" element={<NotificationHistory />} />
+          <Route path="/profile/settings" element={<ProfileSettings />} />
+          <Route path="/logout" element={<Logout />} />
         </Routes>
       </Layout>
     </ThemeProvider>

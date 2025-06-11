@@ -480,7 +480,6 @@ const Explore = () => {
     )
   }
 
-  const activeTab = tabs.find(tab => tab.id === activeTabId)
   const activeDatasource = activeTab ? datasources.find(ds => ds.id === activeTab.datasourceId) : null
 
   return (
@@ -677,13 +676,20 @@ const Explore = () => {
             {/* Query Builder/Editor */}
             {activeTab.queryMode === 'builder' ? (
               <QueryBuilder
-                datasource={activeDatasource}
+                datasources={datasources}
+                selectedDatasourceId={activeTab.datasourceId}
+                query={activeTab.query}
+                queryMode={activeTab.queryMode}
                 availableMetrics={availableMetrics}
                 loadingMetrics={loadingMetrics}
-                onLoadMetrics={() => loadAvailableMetrics(activeTab.datasourceId)}
-                onQueryChange={(query) => updateTabQuery(activeTab.id, query)}
                 timeRange={activeTab.timeRange}
+                onQueryChange={(query) => updateTabQuery(activeTab.id, query)}
+                onQueryModeChange={(mode) => updateTabQueryMode(activeTab.id, mode)}
+                onDatasourceChange={(datasourceId) => changeTabDatasource(activeTab.id, datasourceId)}
                 onTimeRangeChange={(timeRange) => updateTabTimeRange(activeTab.id, timeRange)}
+                onQuickTimeRange={(hours) => setQuickTimeRange(activeTab.id, hours)}
+                onExecute={() => executeQuery(activeTab.id)}
+                isRunning={activeTab.isRunning}
               />
             ) : (
               <div className="space-y-4">
@@ -756,14 +762,14 @@ const Explore = () => {
                       {activeDatasource?.dataSourceType === 'prometheus' && (
                         <ul className="list-disc pl-5 space-y-1">
                           <li>Use metric names like <code className="bg-themed-bg-surface px-1 rounded">up</code> or <code className="bg-themed-bg-surface px-1 rounded">http_requests_total</code></li>
-                          <li>Add filters with <code className="bg-themed-bg-surface px-1 rounded">{'{'}label="value"{'}'}}</code></li>
+                          <li>Add filters with <code className="bg-themed-bg-surface px-1 rounded">&#123;label="value"&#125;</code></li>
                           <li>Use functions like <code className="bg-themed-bg-surface px-1 rounded">rate()</code>, <code className="bg-themed-bg-surface px-1 rounded">sum()</code>, <code className="bg-themed-bg-surface px-1 rounded">avg()</code></li>
                         </ul>
                       )}
                       {activeDatasource?.dataSourceType === 'sqlserver' && (
                         <ul className="list-disc pl-5 space-y-1">
                           <li>Use standard SQL syntax: <code className="bg-themed-bg-surface px-1 rounded">SELECT * FROM table</code></li>
-                          <li>Filter by time: <code className="bg-themed-bg-surface px-1 rounded">WHERE timestamp >= DATEADD(hour, -1, GETDATE())</code></li>
+                          <li>Filter by time: <code className="bg-themed-bg-surface px-1 rounded">WHERE timestamp &gt;= DATEADD(hour, -1, GETDATE())</code></li>
                           <li>Limit results: <code className="bg-themed-bg-surface px-1 rounded">SELECT TOP 100 *</code></li>
                         </ul>
                       )}
@@ -815,10 +821,9 @@ const Explore = () => {
       {/* Export Modal */}
       {showExportModal && activeTab?.results && (
         <ExportModal
-          isOpen={showExportModal}
-          onClose={() => setShowExportModal(false)}
           data={activeTab.results.results}
           filename={`${activeTab.name}-${new Date().toISOString().split('T')[0]}`}
+          onClose={() => setShowExportModal(false)}
         />
       )}
 

@@ -196,12 +196,6 @@ export default function DataSources() {
     navigate(`/explore?datasource=${dataSource.id}`)
   }
 
-  const getStatusColor = (isEnabled: boolean) => {
-    return isEnabled 
-      ? 'text-themed-status-success'
-      : 'text-themed-text-muted'
-  }
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -390,7 +384,7 @@ export default function DataSources() {
             <div className="p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <DataSourceIcon type={dataSource.dataSourceType} className="h-8 w-8" />
+                  <DataSourceIcon dataSourceType={dataSource.dataSourceType} className="h-8 w-8" />
                 </div>
                 <div className="ml-4 flex-1">
                   <h3 className="text-lg font-medium text-themed-text-primary">
@@ -413,16 +407,13 @@ export default function DataSources() {
 
               <div className="mt-4">
                 <p className="text-sm text-themed-text-secondary line-clamp-2">
-                  {dataSource.description || 'No description provided'}
+                  {dataSource.url}
                 </p>
               </div>
 
               <div className="mt-4 text-xs text-themed-text-muted">
                 <p>URL: <span className="font-mono">{dataSource.url}</span></p>
                 <p>Created: {formatDate(dataSource.createdAt)}</p>
-                {dataSource.lastSyncTime && (
-                  <p>Last sync: {formatDate(dataSource.lastSyncTime)}</p>
-                )}
               </div>
 
               {/* Test Result */}
@@ -513,7 +504,7 @@ export default function DataSources() {
                 Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-secondary uppercase tracking-wider">
-                Last Sync
+                Created
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-themed-text-secondary uppercase tracking-wider">
                 Actions
@@ -525,7 +516,7 @@ export default function DataSources() {
               <tr key={dataSource.id} className="hover:bg-themed-bg-elevated transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <DataSourceIcon type={dataSource.dataSourceType} className="h-6 w-6 mr-3" />
+                    <DataSourceIcon dataSourceType={dataSource.dataSourceType} className="h-6 w-6 mr-3" />
                     <div>
                       <div className="text-sm font-medium text-themed-text-primary">
                         {dataSource.name}
@@ -550,7 +541,7 @@ export default function DataSources() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-themed-text-secondary">
-                  {dataSource.lastSyncTime ? formatDate(dataSource.lastSyncTime) : 'Never'}
+                  {formatDate(dataSource.createdAt)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end space-x-2">

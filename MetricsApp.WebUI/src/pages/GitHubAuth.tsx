@@ -1,4 +1,3 @@
-import PlaceholderPage from '../components/PlaceholderPage'
 import { GitBranch } from 'lucide-react'
 
 const GitHubAuth = () => {

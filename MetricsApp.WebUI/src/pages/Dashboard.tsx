@@ -200,7 +200,7 @@ const Dashboard = () => {
               Real-time monitoring and analytics for your infrastructure metrics
             </p>
             {config.tenant.theme !== 'default' && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-themed-status-info bg-opacity-20 text-themed-status-info mt-2">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-themed-alert-info bg-opacity-20 text-themed-status-info mt-2">
                 {config.tenant.theme} theme
               </span>
             )}
@@ -230,7 +230,7 @@ const Dashboard = () => {
 
       {/* Error Display */}
       {error && (
-        <div className="bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-lg p-4">
+        <div className="bg-themed-alert-error bg-opacity-10 border border-themed-alert-error rounded-lg p-4">
           <div className="flex">
             <AlertCircle className="h-5 w-5 text-themed-status-error mr-2 mt-0.5" />
             <div>
@@ -251,7 +251,7 @@ const Dashboard = () => {
             <div className="p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="p-3 bg-themed-status-success bg-opacity-20 rounded-lg">
+                  <div className="p-3 border-themed-alert-success bg-opacity-20 rounded-lg">
                     <Activity className="h-6 w-6 text-themed-status-success" />
                   </div>
                 </div>
@@ -269,7 +269,7 @@ const Dashboard = () => {
             <div className="p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="p-3 bg-themed-status-info bg-opacity-20 rounded-lg">
+                  <div className="p-3 bg-themed-alert-info bg-opacity-20 rounded-lg">
                     <Server className="h-6 w-6 text-themed-status-info" />
                   </div>
                 </div>
@@ -287,7 +287,7 @@ const Dashboard = () => {
             <div className="p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="p-3 bg-themed-status-warning bg-opacity-20 rounded-lg">
+                  <div className="p-3 border-themed-alert-error bg-opacity-20 rounded-lg">
                     <Database className="h-6 w-6 text-themed-status-warning" />
                   </div>
                 </div>

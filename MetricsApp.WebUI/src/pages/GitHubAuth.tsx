@@ -74,7 +74,7 @@ const GitHubAuth = () => {
       </div>
 
       {/* Instructions */}
-      <div className="bg-themed-status-info bg-opacity-10 border border-themed-status-info rounded-md p-4">
+      <div className="bg-themed-alert-info bg-opacity-10 border border-themed-alert-info rounded-md p-4">
         <div className="flex">
           <div className="flex-shrink-0">
             <GitBranch className="h-5 w-5 text-themed-status-info" />

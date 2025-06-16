@@ -86,11 +86,11 @@ export default function Connections() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+        <div className="bg-red-50 bg-themed-alert-info border  border-themed-alert-info rounded-md p-4">
           <div className="flex">
             <AlertCircle className="h-5 w-5 text-red-400" />
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+              <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
                 Error
               </h3>
               <div className="mt-2 text-sm text-red-700 dark:text-red-300">
@@ -100,7 +100,7 @@ export default function Connections() {
                 <button
                   type="button"
                   onClick={() => setError(null)}
-                  className="text-sm font-medium text-red-800 dark:text-red-200 hover:text-red-600 dark:hover:text-red-400"
+                  className="text-sm font-medium text-blue-800 dark:text-blue-200 hover:text-blue-600 dark:hover:text-blue-400"
                 >
                   Dismiss
                 </button>

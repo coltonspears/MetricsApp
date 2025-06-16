@@ -170,7 +170,7 @@ export default function AddConnection() {
 
   // Show mock data banner
   const MockDataBanner = () => (
-    <div className="bg-themed-status-warning bg-opacity-10 border border-themed-status-warning rounded-md p-4 mb-6">
+    <div className="border-themed-alert-error bg-opacity-10 border border-themed-status-warning rounded-md p-4 mb-6">
       <div className="flex">
         <div className="flex-shrink-0">
           <AlertTriangle className="h-5 w-5 text-themed-status-warning" />
@@ -218,7 +218,7 @@ export default function AddConnection() {
 
         {/* Error Message */}
         {error && !usingMockData && (
-          <div className="bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-md p-4">
+          <div className="bg-themed-alert-error bg-opacity-10 border border-themed-alert-error rounded-md p-4">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-themed-status-error" viewBox="0 0 20 20" fill="currentColor">
@@ -267,7 +267,7 @@ export default function AddConnection() {
         </div>
 
         {/* Info Panel */}
-        <div className="bg-themed-status-info bg-opacity-10 border border-themed-status-info rounded-md p-4">
+        <div className="bg-themed-alert-info bg-opacity-10 border border-themed-alert-info rounded-md p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-themed-status-info" viewBox="0 0 20 20" fill="currentColor">
@@ -377,7 +377,7 @@ export default function AddConnection() {
 
       {/* Error Message - only show if not using mock data */}
       {error && !usingMockData && (
-        <div className="bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-md p-4">
+        <div className="bg-themed-alert-error bg-opacity-10 border border-themed-alert-error rounded-md p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-themed-status-error" viewBox="0 0 20 20" fill="currentColor">
@@ -524,7 +524,7 @@ export default function AddConnection() {
 
           {/* Info Panel */}
           {filteredTypes.length > 0 && (
-            <div className="bg-themed-status-info bg-opacity-10 border border-themed-status-info rounded-md p-4">
+            <div className="bg-themed-alert-info bg-opacity-10 border border-themed-alert-info rounded-md p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
                   <svg className="h-5 w-5 text-themed-status-info" viewBox="0 0 20 20" fill="currentColor">

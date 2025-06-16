@@ -432,7 +432,7 @@ const Explore = () => {
           <p className="mt-2 text-themed-text-secondary">Query and visualize your data sources</p>
         </div>
         
-        <div className="bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-lg p-4">
+        <div className="bg-themed-alert-error bg-opacity-10 border border-themed-alert-error rounded-lg p-4">
           <div className="flex">
             <AlertCircle className="h-5 w-5 text-themed-status-error mr-2 mt-0.5" />
             <div>
@@ -440,7 +440,7 @@ const Explore = () => {
               <p className="mt-1 text-sm text-themed-text-secondary">{apiConnectionError}</p>
               <button
                 onClick={loadDatasources}
-                className="mt-3 inline-flex items-center px-3 py-2 border border-themed-status-error text-sm font-medium rounded-sm text-themed-status-error bg-themed-bg-surface hover:bg-themed-status-error hover:text-themed-text-inverse transition-colors"
+                className="mt-3 inline-flex items-center px-3 py-2 border border-themed-alert-error text-sm font-medium rounded-sm text-themed-status-error bg-themed-bg-surface hover:bg-themed-alert-error hover:text-themed-text-inverse transition-colors"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Retry
@@ -732,7 +732,7 @@ const Explore = () => {
                 </div>
 
                 {activeTab.results.error ? (
-                  <div className="bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-lg p-4">
+                  <div className="bg-themed-alert-error bg-opacity-10 border border-themed-alert-error rounded-lg p-4">
                     <div className="flex">
                       <AlertCircle className="h-5 w-5 text-themed-status-error mr-2 mt-0.5" />
                       <div>
@@ -753,7 +753,7 @@ const Explore = () => {
 
             {/* Help Text */}
             {!activeTab.results && (
-              <div className="mt-8 bg-themed-status-info bg-opacity-10 border border-themed-status-info rounded-lg p-4">
+              <div className="mt-8 bg-themed-alert-info bg-opacity-10 border border-themed-alert-info rounded-lg p-4">
                 <div className="flex">
                   <Info className="h-5 w-5 text-themed-status-info mr-2 mt-0.5" />
                   <div>

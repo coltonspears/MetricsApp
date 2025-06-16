@@ -260,7 +260,7 @@ export default function DataSources() {
 
       {/* Success Message */}
       {successMessage && (
-        <div className="bg-themed-status-success bg-opacity-10 border border-themed-status-success rounded-lg p-4">
+        <div className="border-themed-alert-success bg-opacity-10 border border-themed-status-success rounded-lg p-4">
           <div className="flex">
             <CheckCircle className="h-5 w-5 text-themed-status-success mr-2 mt-0.5" />
             <div>
@@ -273,7 +273,7 @@ export default function DataSources() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-lg p-4">
+        <div className="bg-themed-alert-error bg-opacity-10 border border-themed-alert-error rounded-lg p-4">
           <div className="flex">
             <AlertCircle className="h-5 w-5 text-themed-status-error mr-2 mt-0.5" />
             <div>
@@ -281,7 +281,7 @@ export default function DataSources() {
               <p className="mt-1 text-sm text-themed-text-secondary">{error}</p>
               <button
                 onClick={loadDataSources}
-                className="mt-3 inline-flex items-center px-3 py-2 border border-themed-status-error text-sm font-medium rounded-sm text-themed-status-error bg-themed-bg-surface hover:bg-themed-status-error hover:text-themed-text-inverse transition-colors"
+                className="mt-3 inline-flex items-center px-3 py-2 border border-themed-alert-error text-sm font-medium rounded-sm text-themed-status-error bg-themed-bg-surface hover:bg-themed-alert-error hover:text-themed-text-inverse transition-colors"
               >
                 <Loader2 className="h-4 w-4 mr-2" />
                 Retry
@@ -397,7 +397,7 @@ export default function DataSources() {
                 <div className="flex-shrink-0">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     dataSource.isEnabled 
-                      ? 'bg-themed-status-success bg-opacity-20 text-themed-status-success'
+                      ? 'border-themed-alert-success bg-opacity-20 text-themed-status-success'
                       : 'bg-themed-text-muted bg-opacity-20 text-themed-text-muted'
                   }`}>
                     {dataSource.isEnabled ? 'Enabled' : 'Disabled'}
@@ -420,7 +420,7 @@ export default function DataSources() {
               {testResults[dataSource.id] && (
                 <div className="mt-4">
                   {testResults[dataSource.id].isSuccess ? (
-                    <div className="bg-themed-status-success bg-opacity-10 border border-themed-status-success rounded-sm p-2">
+                    <div className="border-themed-alert-success bg-opacity-10 border border-themed-status-success rounded-sm p-2">
                       <div className="flex items-center">
                         <CheckCircle className="h-4 w-4 text-themed-status-success mr-2" />
                         <span className="text-xs text-themed-status-success">
@@ -429,7 +429,7 @@ export default function DataSources() {
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-sm p-2">
+                    <div className="bg-themed-alert-error bg-opacity-10 border border-themed-alert-error rounded-sm p-2">
                       <div className="flex items-center">
                         <XCircle className="h-4 w-4 text-themed-status-error mr-2" />
                         <span className="text-xs text-themed-status-error">
@@ -534,7 +534,7 @@ export default function DataSources() {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     dataSource.isEnabled 
-                      ? 'bg-themed-status-success bg-opacity-20 text-themed-status-success'
+                      ? 'border-themed-alert-success bg-opacity-20 text-themed-status-success'
                       : 'bg-themed-text-muted bg-opacity-20 text-themed-text-muted'
                   }`}>
                     {dataSource.isEnabled ? 'Enabled' : 'Disabled'}

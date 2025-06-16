@@ -684,7 +684,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               </button>
               {profileMenuOpen && (
                 <div 
-                  className="absolute right-0 mt-1 w-48 shadow-lg border py-1 z-50"
+                  className="absolute right-0 mt-1 w-96 shadow-lg border py-1 z-50"
                   style={{
                     backgroundColor: 'var(--bg-elevated)',
                     borderColor: 'var(--border-primary)',

@@ -34,7 +34,7 @@ const GitHubAuth = () => {
         <div className="flex items-center space-x-4">
           <GitBranch className="h-8 w-8 text-themed-interactive-primary" />
           <h1 className="text-3xl font-bold text-themed-text-primary">GitHub OAuth Configuration</h1>
-          <span className="px-3 py-1 text-sm font-medium bg-themed-status-warning bg-opacity-20 text-themed-status-warning rounded-full">
+          <span className="px-3 py-1 text-sm font-medium border-themed-alert-error bg-opacity-20 text-themed-status-warning rounded-full">
             Work in Progress
           </span>
         </div>
@@ -161,7 +161,7 @@ const GitHubAuth = () => {
       </div>
 
       {/* Setup Instructions */}
-      <div className="bg-themed-status-info bg-opacity-10 border border-themed-status-info rounded-lg p-6">
+      <div className="bg-themed-alert-info bg-opacity-10 border border-themed-alert-info rounded-lg p-6">
         <h3 className="text-sm font-medium text-themed-status-info mb-3">Setup Instructions</h3>
         <ol className="text-sm text-themed-text-secondary space-y-2 list-decimal list-inside">
           <li>

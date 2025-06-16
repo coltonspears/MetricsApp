@@ -43,7 +43,8 @@ const Search = () => {
   const [searched, setSearched] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleSearch = async () => {
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setLoading(true)
     setSearched(true)
     setError(null)
@@ -215,7 +216,7 @@ const Search = () => {
         <div className="px-6 py-4 border-b border-themed-border-primary">
           <h2 className="text-lg font-semibold text-themed-text-primary">Search Criteria</h2>
         </div>
-        <form onSubmit={handleSearch} className="p-6 space-y-6">
+        <form onSubmit={(e) => { e.preventDefault(); handleSearch(e); }} className="p-6 space-y-6">
           <div>
             <label htmlFor="query" className="block text-sm font-medium text-themed-text-primary mb-2">
               Query
@@ -379,7 +380,7 @@ const Search = () => {
 
       {/* Error Display */}
       {error && (
-        <div className="bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-lg p-4">
+        <div className="bg-themed-alert-error bg-opacity-10 border border-themed-alert-error rounded-lg p-4">
           <div className="flex">
             <AlertCircle className="h-5 w-5 text-themed-status-error mr-2 mt-0.5" />
             <div>
@@ -458,10 +459,10 @@ const Search = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                           result.environment === 'Production' 
-                            ? 'bg-themed-status-error bg-opacity-10 text-themed-status-error'
+                            ? 'bg-themed-alert-error bg-opacity-10 text-themed-status-error'
                             : result.environment === 'Staging'
-                            ? 'bg-themed-status-warning bg-opacity-10 text-themed-status-warning'
-                            : 'bg-themed-status-success bg-opacity-10 text-themed-status-success'
+                            ? 'border-themed-alert-error bg-opacity-10 text-themed-status-warning'
+                            : 'border-themed-alert-success bg-opacity-10 text-themed-status-success'
                         }`}>
                           {result.environment}
                         </span>

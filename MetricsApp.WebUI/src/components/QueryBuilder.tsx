@@ -186,7 +186,7 @@ const QueryBuilder = ({
             onChange={(e) => {
               setBuilderState(prev => ({ ...prev, selectedMetric: e.target.value }))
             }}
-            className="block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white text-sm"
+            className="block w-full px-3 py-2 border border-themed-border-tertiary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-tertiary focus:border-themed-interactive-tertiary bg-themed-bg-surface text-themed-text-primary text-sm"
             disabled={loadingMetrics}
           >
             <option value="">
@@ -204,12 +204,12 @@ const QueryBuilder = ({
         {selectedDatasource.category === 'ingested' && (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label className="block text-sm font-medium text-themed-text-primary">
                 Filters
               </label>
               <button
                 onClick={addFilter}
-                className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-200"
+                className="text-sm text-themed-text-primary hover:text-themed-text-primary"
               >
                 + Add Filter
               </button>
@@ -220,7 +220,7 @@ const QueryBuilder = ({
                 <select
                   value={filter.field}
                   onChange={(e) => updateFilter(index, e.target.value, filter.operator, filter.value)}
-                  className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white text-sm"
+                  className="flex-1 px-3 py-2 border border-themed-border-tertiary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-tertiary focus:border-themed-interactive-tertiary bg-themed-bg-surface text-themed-text-primary text-sm"
                 >
                   <option value="">Field</option>
                   <option value="source">Source</option>
@@ -231,7 +231,7 @@ const QueryBuilder = ({
                 <select
                   value={filter.operator}
                   onChange={(e) => updateFilter(index, filter.field, e.target.value, filter.value)}
-                  className="w-20 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white text-sm"
+                  className="w-20 px-3 py-2 border border-themed-border-tertiary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-tertiary focus:border-themed-interactive-tertiary bg-themed-bg-surface text-themed-text-primary text-sm"
                 >
                   <option value="=">=</option>
                   <option value="!=">!=</option>
@@ -243,12 +243,12 @@ const QueryBuilder = ({
                   value={filter.value}
                   onChange={(e) => updateFilter(index, filter.field, filter.operator, e.target.value)}
                   placeholder="Value"
-                  className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white text-sm"
+                  className="flex-1 px-3 py-2 border border-themed-border-tertiary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-tertiary focus:border-themed-interactive-tertiary bg-themed-bg-surface text-themed-text-primary text-sm"
                 />
                 
                 <button
                   onClick={() => removeFilter(index)}
-                  className="text-red-500 hover:text-red-700 text-sm"
+                  className="text-themed-text-primary hover:text-themed-text-primary text-sm"
                 >
                   Remove
                 </button>
@@ -261,7 +261,7 @@ const QueryBuilder = ({
         <div className="flex justify-end">
           <button
             onClick={applyBuilderQuery}
-            className="inline-flex items-center px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600"
+              className="inline-flex items-center px-3 py-2 border border-themed-border-tertiary rounded-sm shadow-sm text-sm font-medium text-themed-text-primary bg-themed-bg-surface hover:bg-themed-bg-surface-hover dark:hover:bg-themed-bg-surface-hover"
           >
             Apply to Query
           </button>
@@ -271,17 +271,17 @@ const QueryBuilder = ({
   }
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
+    <div className="rounded-lg border bg-themed-bg-surface border-themed-border-primary  p-6">
       {/* Header with datasource selector and controls */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-4">
           {/* Data Source Selector */}
           <div className="flex items-center space-x-2">
-            <Database className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+            <Database className="h-4 w-4 text-themed-text-tertiary" />
             <select
               value={selectedDatasourceId}
               onChange={(e) => onDatasourceChange(e.target.value)}
-              className="block w-64 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white text-sm"
+              className="block w-64 px-3 py-2 border border-themed-border-tertiary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-tertiary focus:border-themed-interactive-tertiary bg-themed-bg-surface text-themed-text-primary sm:text-sm"
             >
               <optgroup label="Configured Data Sources">
                 {datasources.filter(ds => ds.category === 'datasource').map((ds) => (
@@ -306,7 +306,7 @@ const QueryBuilder = ({
           <div className="relative">
             <button
               onClick={() => setShowTimeRangeDropdown(!showTimeRangeDropdown)}
-              className="inline-flex items-center px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600"
+              className="inline-flex items-center px-3 py-2 border border-themed-border-tertiary rounded-sm shadow-sm text-sm font-medium text-themed-text-primary bg-themed-bg-surface hover:bg-themed-bg-surface-hover dark:hover:bg-themed-bg-surface-hover"
             >
               <Clock className="h-4 w-4 mr-2" />
               Time Range
@@ -314,11 +314,11 @@ const QueryBuilder = ({
             </button>
             
             {showTimeRangeDropdown && (
-              <div className="absolute right-0 mt-1 w-96 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md shadow-lg z-10">
+              <div className="absolute right-0 mt-1 w-96 bg-themed-bg-surface border border-themed-border-tertiary rounded-md shadow-lg z-10">
                 <div className="p-4 space-y-4">
                   {/* Manual Time Range */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-themed-text-primary mb-2">
                       Custom Time Range
                     </label>
                     <div className="grid grid-cols-2 gap-2">
@@ -331,7 +331,7 @@ const QueryBuilder = ({
                             ...timeRange, 
                             startTime: new Date(e.target.value).toISOString() 
                           })}
-                          className="block w-full pl-10 pr-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white text-sm"
+                          className="block w-full pl-10 pr-3 py-2 border border-themed-border-tertiary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-tertiary focus:border-themed-interactive-tertiary bg-themed-bg-surface text-themed-text-primary sm:text-sm"
                         />
                       </div>
                       <div className="relative">
@@ -343,7 +343,7 @@ const QueryBuilder = ({
                             ...timeRange, 
                             endTime: new Date(e.target.value).toISOString() 
                           })}
-                          className="block w-full pl-10 pr-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white text-sm"
+                          className="block w-full pl-10 pr-3 py-2 border border-themed-border-tertiary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-tertiary focus:border-themed-interactive-tertiary bg-themed-bg-surface text-themed-text-primary sm:text-sm"
                         />
                       </div>
                     </div>
@@ -351,7 +351,7 @@ const QueryBuilder = ({
 
                   {/* Quick Ranges */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-themed-text-primary mb-2">
                       Quick Ranges
                     </label>
                     <div className="grid grid-cols-2 gap-2">
@@ -367,7 +367,7 @@ const QueryBuilder = ({
                             onQuickTimeRange(range.hours)
                             setShowTimeRangeDropdown(false)
                           }}
-                          className="inline-flex items-center justify-center px-3 py-2 border border-slate-300 dark:border-slate-600 text-xs font-medium rounded-md text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600"
+                          className="inline-flex items-center justify-center px-3 py-2 border border-themed-border-tertiary text-xs font-medium rounded-sm text-themed-text-primary bg-themed-bg-surface hover:bg-themed-bg-surface-hover dark:hover:bg-themed-bg-surface-hover"
                         >
                           <Clock className="h-3 w-3 mr-1" />
                           {range.label}
@@ -384,7 +384,7 @@ const QueryBuilder = ({
           <button
             onClick={onExecute}
             disabled={isRunning}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-4 py-2 border border-themed-border-tertiary text-sm font-medium text-themed-text-primary bg-themed-bg-surface hover:bg-themed-bg-surface-hover dark:hover:bg-themed-bg-surface-hover"
           >
             <Play className={`h-4 w-4 mr-2 ${isRunning ? 'animate-pulse' : ''}`} />
             {isRunning ? 'Running...' : 'Run Query'}
@@ -397,14 +397,14 @@ const QueryBuilder = ({
         {/* Mode Toggle */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <h2 className="text-lg font-medium text-slate-900 dark:text-white">Query</h2>
+            <h2 className="text-lg font-medium text-themed-text-primary">Query</h2>
             {selectedDatasource && (
-              <div className="flex items-center space-x-2 px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-md">
-                <DataSourceIcon dataSourceType={selectedDatasource.dataSourceType} className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-                <span className="text-sm text-slate-600 dark:text-slate-400">
+              <div className="flex items-center space-x-2 px-3 py-1 bg-themed-bg-surface">
+                <DataSourceIcon dataSourceType={selectedDatasource.dataSourceType} className="h-4 w-4 text-themed-text-primary" />
+                <span className="text-sm text-themed-text-primary">
                   {selectedDatasource.name}
                   {selectedDatasource.category === 'ingested' && (
-                    <span className="ml-1 text-xs bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 px-1 rounded">
+                    <span className="ml-1 text-xs bg-themed-bg-surface text-themed-text-primary px-1 rounded">
                       Ingested
                     </span>
                   )}
@@ -419,8 +419,8 @@ const QueryBuilder = ({
               onClick={() => onQueryModeChange('builder')}
               className={`flex items-center px-3 py-2 rounded-md text-sm font-medium ${
                 queryMode === 'builder'
-                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                  : 'text-slate-500 dark:text-slate-400'
+                  ? 'bg-themed-bg-surface text-themed-text-primary shadow-sm'
+                  : 'text-themed-text-tertiary'
               }`}
             >
               <Settings className="h-4 w-4 mr-1" />
@@ -430,8 +430,8 @@ const QueryBuilder = ({
               onClick={() => onQueryModeChange('code')}
               className={`flex items-center px-3 py-2 rounded-md text-sm font-medium ${
                 queryMode === 'code'
-                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                  : 'text-slate-500 dark:text-slate-400'
+                  ? 'bg-themed-bg-surface text-themed-text-primary shadow-sm'
+                  : 'text-themed-text-tertiary'
               }`}
             >
               <Code className="h-4 w-4 mr-1" />
@@ -449,7 +449,7 @@ const QueryBuilder = ({
                 onChange={(e) => onQueryChange(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={selectedDatasource ? getQueryHelp(selectedDatasource.dataSourceType) : 'Select a datasource to start querying'}
-                className="block w-full h-32 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white font-mono text-sm resize-none"
+                className="block w-full h-32 px-3 py-2 border border-themed-border-tertiary rounded-sm shadow-sm placeholder-themed-text-tertiary focus:outline-none focus:ring-themed-interactive-tertiary focus:border-themed-interactive-tertiary bg-themed-bg-surface text-themed-text-primary font-mono text-sm resize-none"
                 disabled={!selectedDatasource}
               />
               
@@ -457,7 +457,7 @@ const QueryBuilder = ({
               {selectedDatasource && (
                 <button
                   onClick={() => setShowSuggestions(!showSuggestions)}
-                  className="absolute top-2 right-2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  className="absolute top-2 right-2 p-1 text-themed-text-tertiary hover:text-themed-text-primary"
                   title="Show query examples"
                 >
                   <HelpCircle className="h-4 w-4" />
@@ -467,8 +467,8 @@ const QueryBuilder = ({
 
             {/* Query Suggestions */}
             {showSuggestions && selectedDatasource && (
-              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md p-4">
-                <h4 className="text-sm font-medium text-slate-900 dark:text-white mb-3">
+              <div className="bg-themed-bg-surface border border-themed-border-tertiary rounded-md p-4">
+                <h4 className="text-sm font-medium text-themed-text-primary mb-3">
                   Example queries for {selectedDatasource.dataSourceType}
                   {selectedDatasource.category === 'ingested' && ' (ingested data)'}:
                 </h4>
@@ -477,7 +477,7 @@ const QueryBuilder = ({
                     <button
                       key={index}
                       onClick={() => insertSuggestion(suggestion)}
-                      className="block w-full text-left px-3 py-2 text-sm font-mono text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded hover:bg-slate-50 dark:hover:bg-slate-700"
+                      className="block w-full text-left px-3 py-2 text-sm font-mono text-themed-text-primary bg-themed-bg-surface border border-themed-border-tertiary rounded hover:bg-themed-bg-surface-hover dark:hover:bg-themed-bg-surface-hover"
                     >
                       {suggestion}
                     </button>
@@ -485,8 +485,8 @@ const QueryBuilder = ({
                 </div>
                 
                 {selectedDatasource.dataSourceType === 'ingested' && (
-                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
-                    <p className="text-xs text-blue-700 dark:text-blue-300">
+                  <div className="mt-3 p-3 bg-themed-bg-surface">
+                    <p className="text-xs text-themed-text-primary">
                       <strong>Note:</strong> For ingested data, the time range is controlled above. 
                       Leave query empty to get all metrics, or use filters like metricName, source, or environment.
                     </p>
@@ -496,7 +496,7 @@ const QueryBuilder = ({
             )}
 
             {/* Help Text */}
-            <div className="flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400">
+            <div className="flex items-center space-x-2 text-sm text-themed-text-tertiary">
               <Clock className="h-4 w-4" />
               <span>Press Ctrl+Enter (Cmd+Enter on Mac) to execute query</span>
             </div>

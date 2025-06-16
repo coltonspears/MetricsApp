@@ -174,7 +174,7 @@ const RUM = () => {
 
   if (error) {
     return (
-      <div className="bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-lg p-4">
+      <div className="bg-themed-alert-error bg-opacity-10 border border-themed-alert-error rounded-lg p-4">
         <div className="flex">
           <AlertTriangle className="h-5 w-5 text-themed-status-error mr-2 mt-0.5" />
           <div>
@@ -260,7 +260,7 @@ const RUM = () => {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="p-3 bg-themed-status-info bg-opacity-20 rounded-lg">
+                <div className="p-3 bg-themed-alert-info bg-opacity-20 rounded-lg">
                   <Eye className="h-6 w-6 text-themed-status-info" />
                 </div>
               </div>
@@ -278,7 +278,7 @@ const RUM = () => {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="p-3 bg-themed-status-error bg-opacity-20 rounded-lg">
+                <div className="p-3 bg-themed-alert-error bg-opacity-20 rounded-lg">
                   <AlertTriangle className="h-6 w-6 text-themed-status-error" />
                 </div>
               </div>
@@ -296,7 +296,7 @@ const RUM = () => {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="p-3 bg-themed-status-success bg-opacity-20 rounded-lg">
+                <div className="p-3 border-themed-alert-success bg-opacity-20 rounded-lg">
                   <Zap className="h-6 w-6 text-themed-status-success" />
                 </div>
               </div>
@@ -476,7 +476,7 @@ const RUM = () => {
           </div>
           <div className="space-y-4">
             {recentErrors.map((error) => (
-              <div key={error.id} className="p-3 bg-themed-status-error bg-opacity-10 border border-themed-status-error rounded-lg">
+              <div key={error.id} className="p-3 bg-themed-alert-error bg-opacity-10 border border-themed-alert-error rounded-lg">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="font-medium text-themed-status-error truncate">{error.message}</div>
@@ -486,8 +486,8 @@ const RUM = () => {
                   </div>
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                     error.severity === 'high' 
-                      ? 'bg-themed-status-error bg-opacity-20 text-themed-status-error'
-                      : 'bg-themed-status-warning bg-opacity-20 text-themed-status-warning'
+                      ? 'bg-themed-alert-error bg-opacity-20 text-themed-status-error'
+                      : 'border-themed-alert-error bg-opacity-20 text-themed-status-warning'
                   }`}>
                     {error.severity}
                   </span>

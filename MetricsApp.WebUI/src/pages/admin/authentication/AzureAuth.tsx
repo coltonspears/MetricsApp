@@ -28,22 +28,22 @@ const AzureAuth = () => {
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
         <div className="flex items-center space-x-3 mb-4">
-          <Shield className="h-8 w-8 text-emerald-600" />
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Azure PAT Configuration</h1>
-          <span className="px-3 py-1 text-sm font-medium bg-yellow-100 text-yellow-800 rounded-full">
+          <Shield className="h-8 w-8 themed-interactive-primary" />
+          <h1 className="text-3xl font-bold text-themed-text-primary">Azure PAT Configuration</h1>
+          <span className="px-3 py-1 text-sm font-medium bg-themed-alert-warning bg-opacity-20 text-themed-status-warning rounded-full">
             Work in Progress
           </span>
         </div>
-        <p className="text-slate-600 dark:text-slate-400">
+        <p className="text-themed-text-secondary">
           Configure Azure Personal Access Token integration for user authentication. This page is currently under development.
         </p>
       </div>
 
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow border dark:border-slate-700">
+      <div className="bg-themed-bg-tertiary rounded-lg shadow border border-themed-border-primary">
         <div className="p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="displayName" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label htmlFor="displayName" className="block text-sm font-medium text-themed-text-primary mb-2">
                 Display Name
               </label>
               <input
@@ -53,12 +53,12 @@ const AzureAuth = () => {
                 value={formData.displayName}
                 onChange={handleChange}
                 placeholder="e.g., Azure DevOps Login"
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full px-3 py-2 border border-themed-border-primary rounded-md shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
               />
             </div>
 
             <div>
-              <label htmlFor="tenantId" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label htmlFor="tenantId" className="block text-sm font-medium text-themed-text-primary mb-2">
                 Tenant ID
               </label>
               <input
@@ -68,12 +68,12 @@ const AzureAuth = () => {
                 value={formData.tenantId}
                 onChange={handleChange}
                 placeholder="Your Azure AD Tenant ID"
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full px-3 py-2 border border-themed-border-primary rounded-md shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
               />
             </div>
 
             <div>
-              <label htmlFor="clientId" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label htmlFor="clientId" className="block text-sm font-medium text-themed-text-primary mb-2">
                 Client ID
               </label>
               <input
@@ -83,12 +83,12 @@ const AzureAuth = () => {
                 value={formData.clientId}
                 onChange={handleChange}
                 placeholder="Your Azure App Registration Client ID"
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full px-3 py-2 border border-themed-border-primary rounded-md shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
               />
             </div>
 
             <div>
-              <label htmlFor="personalAccessToken" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label htmlFor="personalAccessToken" className="block text-sm font-medium text-themed-text-primary mb-2">
                 Personal Access Token
               </label>
               <div className="relative">
@@ -99,12 +99,12 @@ const AzureAuth = () => {
                   value={formData.personalAccessToken}
                   onChange={handleChange}
                   placeholder="Your Azure DevOps Personal Access Token"
-                  className="w-full px-3 py-2 pr-10 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-3 py-2 pr-10 border border-themed-border-primary rounded-md shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
                 />
                 <button
                   type="button"
                   onClick={() => setShowToken(!showToken)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-themed-text-muted hover:text-themed-text-primary"
                 >
                   {showToken ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -112,7 +112,7 @@ const AzureAuth = () => {
             </div>
 
             <div>
-              <label htmlFor="organization" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label htmlFor="organization" className="block text-sm font-medium text-themed-text-primary mb-2">
                 Organization
               </label>
               <input
@@ -122,12 +122,12 @@ const AzureAuth = () => {
                 value={formData.organization}
                 onChange={handleChange}
                 placeholder="Your Azure DevOps Organization"
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full px-3 py-2 border border-themed-border-primary rounded-md shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
               />
             </div>
 
             <div>
-              <label htmlFor="scopes" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label htmlFor="scopes" className="block text-sm font-medium text-themed-text-primary mb-2">
                 Scopes
               </label>
               <input
@@ -137,23 +137,23 @@ const AzureAuth = () => {
                 value={formData.scopes}
                 onChange={handleChange}
                 placeholder="https://graph.microsoft.com/.default"
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full px-3 py-2 border border-themed-border-primary rounded-md shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
               />
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              <p className="mt-1 text-sm text-themed-text-secondary">
                 Space-separated list of Azure AD scopes
               </p>
             </div>
 
-            <div className="flex justify-end space-x-3 pt-6 border-t border-slate-200 dark:border-slate-700">
+            <div className="flex justify-end space-x-3 pt-6 border-t border-themed-border-primary">
               <button
                 type="button"
-                className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="btn-themed-secondary"
               >
                 Test Connection
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 border border-transparent rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 flex items-center space-x-2"
+                className="btn-themed-primary flex items-center space-x-2"
               >
                 <Save className="h-4 w-4" />
                 <span>Save Configuration</span>
@@ -163,9 +163,9 @@ const AzureAuth = () => {
         </div>
       </div>
 
-      <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-        <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">Setup Instructions</h3>
-        <ol className="text-sm text-blue-700 dark:text-blue-300 space-y-1 list-decimal list-inside">
+      <div className="mt-8 bg-themed-alert-info bg-opacity-10 border border-themed-alert-info rounded-lg p-4">
+        <h3 className="text-sm font-medium text-themed-status-info mb-2">Setup Instructions</h3>
+        <ol className="text-sm text-themed-text-secondary space-y-1 list-decimal list-inside">
           <li>Create an App Registration in Azure Active Directory</li>
           <li>Generate a Personal Access Token in Azure DevOps</li>
           <li>Configure the appropriate permissions and scopes</li>

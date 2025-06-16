@@ -31,22 +31,22 @@ const DefaultAuth = () => {
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
         <div className="flex items-center space-x-3 mb-4">
-          <Shield className="h-8 w-8 text-emerald-600" />
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Standalone Authentication Configuration</h1>
-          <span className="px-3 py-1 text-sm font-medium bg-yellow-100 text-yellow-800 rounded-full">
+          <Shield className="h-8 w-8 themed-interactive-primary" />
+          <h1 className="text-3xl font-bold text-themed-text-primary">Standalone Authentication Configuration</h1>
+          <span className="px-3 py-1 text-sm font-medium bg-themed-alert-warning bg-opacity-20 text-themed-status-warning rounded-full">
             Work in Progress
           </span>
         </div>
-        <p className="text-slate-600 dark:text-slate-400">
+        <p className="text-themed-text-secondary">
           Configure standalone authentication system with JWT tokens. This page is currently under development.
         </p>
       </div>
 
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow border dark:border-slate-700">
+      <div className="bg-themed-bg-tertiary rounded-lg shadow border border-themed-border-primary">
         <div className="p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="displayName" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label htmlFor="displayName" className="block text-sm font-medium text-themed-text-primary mb-2">
                 Display Name
               </label>
               <input
@@ -56,12 +56,12 @@ const DefaultAuth = () => {
                 value={formData.displayName}
                 onChange={handleChange}
                 placeholder="e.g., MetricsApp Login"
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full px-3 py-2 border border-themed-border-primary rounded-md shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
               />
             </div>
 
             <div>
-              <label htmlFor="jwtSecret" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label htmlFor="jwtSecret" className="block text-sm font-medium text-themed-text-primary mb-2">
                 JWT Secret Key
               </label>
               <div className="relative">
@@ -72,24 +72,24 @@ const DefaultAuth = () => {
                   value={formData.jwtSecret}
                   onChange={handleChange}
                   placeholder="Your JWT signing secret (minimum 32 characters)"
-                  className="w-full px-3 py-2 pr-10 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-3 py-2 pr-10 border border-themed-border-primary rounded-md shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
                 />
                 <button
                   type="button"
                   onClick={() => setShowJwtSecret(!showJwtSecret)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-themed-text-muted hover:text-themed-text-primary"
                 >
                   {showJwtSecret ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              <p className="mt-1 text-sm text-themed-text-secondary">
                 Keep this secret secure and use a strong, random value
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="tokenExpiration" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <label htmlFor="tokenExpiration" className="block text-sm font-medium text-themed-text-primary mb-2">
                   Token Expiration (hours)
                 </label>
                 <input
@@ -100,12 +100,12 @@ const DefaultAuth = () => {
                   onChange={handleChange}
                   min="1"
                   max="168"
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-3 py-2 border border-themed-border-primary rounded-md shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
                 />
               </div>
 
               <div>
-                <label htmlFor="refreshTokenExpiration" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <label htmlFor="refreshTokenExpiration" className="block text-sm font-medium text-themed-text-primary mb-2">
                   Refresh Token Expiration (hours)
                 </label>
                 <input
@@ -116,13 +116,13 @@ const DefaultAuth = () => {
                   onChange={handleChange}
                   min="24"
                   max="8760"
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-3 py-2 border border-themed-border-primary rounded-md shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="passwordMinLength" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label htmlFor="passwordMinLength" className="block text-sm font-medium text-themed-text-primary mb-2">
                 Minimum Password Length
               </label>
               <input
@@ -133,7 +133,7 @@ const DefaultAuth = () => {
                 onChange={handleChange}
                 min="6"
                 max="128"
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full px-3 py-2 border border-themed-border-primary rounded-md shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
               />
             </div>
 
@@ -145,9 +145,9 @@ const DefaultAuth = () => {
                   type="checkbox"
                   checked={formData.requireEmailVerification}
                   onChange={handleChange}
-                  className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded"
+                  className="h-4 w-4 themed-interactive-primary focus:ring-themed-interactive-primary border-themed-border-primary rounded"
                 />
-                <label htmlFor="requireEmailVerification" className="ml-2 block text-sm text-slate-900 dark:text-slate-300">
+                <label htmlFor="requireEmailVerification" className="ml-2 block text-sm text-themed-text-primary">
                   Require email verification for new accounts
                 </label>
               </div>
@@ -159,9 +159,9 @@ const DefaultAuth = () => {
                   type="checkbox"
                   checked={formData.allowSelfRegistration}
                   onChange={handleChange}
-                  className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded"
+                  className="h-4 w-4 themed-interactive-primary focus:ring-themed-interactive-primary border-themed-border-primary rounded"
                 />
-                <label htmlFor="allowSelfRegistration" className="ml-2 block text-sm text-slate-900 dark:text-slate-300">
+                <label htmlFor="allowSelfRegistration" className="ml-2 block text-sm text-themed-text-primary">
                   Allow users to self-register
                 </label>
               </div>
@@ -173,24 +173,24 @@ const DefaultAuth = () => {
                   type="checkbox"
                   checked={formData.passwordRequireSpecialChar}
                   onChange={handleChange}
-                  className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded"
+                  className="h-4 w-4 themed-interactive-primary focus:ring-themed-interactive-primary border-themed-border-primary rounded"
                 />
-                <label htmlFor="passwordRequireSpecialChar" className="ml-2 block text-sm text-slate-900 dark:text-slate-300">
+                <label htmlFor="passwordRequireSpecialChar" className="ml-2 block text-sm text-themed-text-primary">
                   Require special characters in passwords
                 </label>
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3 pt-6 border-t border-slate-200 dark:border-slate-700">
+            <div className="flex justify-end space-x-3 pt-6 border-t border-themed-border-primary">
               <button
                 type="button"
-                className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="btn-themed-secondary"
               >
                 Generate JWT Secret
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 border border-transparent rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 flex items-center space-x-2"
+                className="btn-themed-primary flex items-center space-x-2"
               >
                 <Save className="h-4 w-4" />
                 <span>Save Configuration</span>

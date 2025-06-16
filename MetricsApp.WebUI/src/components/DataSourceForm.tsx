@@ -277,7 +277,7 @@ export default function DataSourceForm({
               id={field.name}
               checked={value}
               onChange={(e) => handleFieldChange(field.name, e.target.checked)}
-              className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded"
+              className="h-4 w-4 bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary font-mono rounded"
             />
             <label htmlFor={field.name} className="ml-2 block text-sm text-slate-700 dark:text-slate-300">
               {field.label}
@@ -293,7 +293,7 @@ export default function DataSourceForm({
             value={value}
             onChange={(e) => handleFieldChange(field.name, parseInt(e.target.value) || 0)}
             placeholder={field.placeholder}
-            className="mt-1 block w-full px-4 py-3 border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white"
+            className="mt-1 block w-full px-4 py-3 border-slate-300 bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary font-mono"
             required={field.required}
           />
         )
@@ -307,7 +307,7 @@ export default function DataSourceForm({
               value={value}
               onChange={(e) => handleFieldChange(field.name, e.target.value)}
               placeholder={field.placeholder}
-              className="mt-1 block w-full pl-4 pr-10 py-3 border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white"
+              className="mt-1 block w-full pl-4 pr-10 py-3 bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary font-mono"
               required={field.required}
             />
             <button
@@ -330,7 +330,7 @@ export default function DataSourceForm({
             id={field.name}
             value={value}
             onChange={(e) => handleFieldChange(field.name, e.target.value)}
-            className="mt-1 block w-full px-4 py-3 border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white"
+            className="mt-1 block w-full px-4 py-3 bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary font-mono"
             required={field.required}
           >
             <option value="">Select {field.label}</option>
@@ -348,7 +348,7 @@ export default function DataSourceForm({
             value={value}
             onChange={(e) => handleFieldChange(field.name, e.target.value)}
             placeholder={field.placeholder}
-            className="mt-1 block w-full px-4 py-3 border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white"
+            className="mt-1 block w-full px-4 py-3 bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary font-mono"
             required={field.required}
           />
         )
@@ -358,10 +358,10 @@ export default function DataSourceForm({
   const renderAuthenticationFields = () => {
     return (
       <div className="space-y-4">
-        <h4 className="text-sm font-medium text-slate-900 dark:text-white">Authentication</h4>
+        <h4 className="text-lg font-medium text-themed-text-primary">Authentication</h4>
         
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label className="block text-sm font-medium text-themed-text-primary">
             Authentication Type
           </label>
           <select
@@ -370,7 +370,7 @@ export default function DataSourceForm({
               ...prev,
               authentication: { type: e.target.value as any }
             }))}
-            className="mt-1 block w-full px-4 py-3 border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white"
+            className="mt-1 block w-full px-4 py-3 bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
           >
             <option value="None">No Authentication</option>
             <option value="Basic">Username & Password</option>
@@ -382,7 +382,7 @@ export default function DataSourceForm({
         {formData.authentication?.type === 'Basic' && (
           <>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label className="block text-sm font-medium text-themed-text-primary">
                 Username
               </label>
               <input
@@ -390,11 +390,11 @@ export default function DataSourceForm({
                 value={formData.authentication.username || ''}
                 onChange={(e) => handleAuthFieldChange('username', e.target.value)}
                 placeholder="Enter username"
-                className="mt-1 block w-full px-4 py-3 border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white"
+                className="mt-1 block w-full px-4 py-3 bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label className="block text-sm font-medium text-themed-text-primary">
                 Password
               </label>
               <div className="relative">
@@ -403,7 +403,7 @@ export default function DataSourceForm({
                   value={formData.authentication.password || ''}
                   onChange={(e) => handleAuthFieldChange('password', e.target.value)}
                   placeholder="Enter password"
-                  className="mt-1 block w-full pl-4 pr-10 py-3 border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white"
+                  className="mt-1 block w-full pl-4 pr-10 py-3 bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
                 />
                 <button
                   type="button"
@@ -423,7 +423,7 @@ export default function DataSourceForm({
 
         {formData.authentication?.type === 'Bearer' && (
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="block text-sm font-medium text-themed-text-primary">
               Bearer Token
             </label>
             <div className="relative">
@@ -432,7 +432,7 @@ export default function DataSourceForm({
                 value={formData.authentication.token || ''}
                 onChange={(e) => handleAuthFieldChange('token', e.target.value)}
                 placeholder="Enter bearer token"
-                className="mt-1 block w-full pl-4 pr-10 py-3 border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white"
+                className="mt-1 block w-full pl-4 pr-10 py-3 bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
               />
               <button
                 type="button"
@@ -451,7 +451,7 @@ export default function DataSourceForm({
 
         {formData.authentication?.type === 'ApiKey' && (
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="block text-sm font-medium text-themed-text-primary">
               API Key
             </label>
             <div className="relative">
@@ -460,7 +460,7 @@ export default function DataSourceForm({
                 value={formData.authentication.apiKey || ''}
                 onChange={(e) => handleAuthFieldChange('apiKey', e.target.value)}
                 placeholder="Enter API key"
-                className="mt-1 block w-full pl-4 pr-10 py-3 border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white"
+                className="mt-1 block w-full pl-4 pr-10 py-3 bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
               />
               <button
                 type="button"
@@ -531,7 +531,7 @@ export default function DataSourceForm({
         <h3 className="text-lg font-medium text-slate-900 dark:text-white">Basic Information</h3>
         
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor="name" className="block text-sm font-medium text-themed-text-primary">
             Name *
           </label>
           <input
@@ -539,20 +539,20 @@ export default function DataSourceForm({
             id="name"
             value={formData.name}
             onChange={(e) => handleFieldChange('name', e.target.value)}
-            className="mt-1 block w-full px-4 py-3 border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white"
+            className="mt-1 block w-full px-4 py-3 rounded-md shadow-sm border border-themed-border-primary bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary font-mono text-sm"
             required
           />
         </div>
 
         <div>
-          <label htmlFor="dataSourceType" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor="dataSourceType" className="block text-sm font-medium text-themed-text-primary placeholder-themed-text-muted">
             Data Source Type *
           </label>
           <select
             id="dataSourceType"
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="mt-1 block w-full px-4 py-3 border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 dark:bg-slate-700 dark:text-white"
+            className="mt-1 block w-full px-4 py-3 border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 bg-themed-bg-surface dark:text-white"
             required
             disabled={!!initialData} // Disable type change when editing
           >
@@ -573,7 +573,7 @@ export default function DataSourceForm({
             onChange={(e) => handleFieldChange('isEnabled', e.target.checked)}
             className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded"
           />
-          <label htmlFor="isEnabled" className="ml-2 block text-sm text-slate-700 dark:text-slate-300">
+          <label htmlFor="isEnabled" className="ml-2 block text-sm bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary font-mono">
             Enabled
           </label>
         </div>
@@ -582,8 +582,8 @@ export default function DataSourceForm({
       {/* Configuration Fields */}
       {selectedTypeInfo && (
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-slate-900 dark:text-white">Configuration</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <h3 className="text-lg font-medium text-themed-text-primary dark:text-white">Configuration</h3>
+          <p className="text-sm text-themed-text-tertiary">
             {selectedTypeInfo.description}
           </p>
           
@@ -658,13 +658,13 @@ export default function DataSourceForm({
             <div className={`border rounded-md p-4 ${
               testResult.isSuccess 
                 ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
-                : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                : 'bg-themed-alert-info border-themed-alert-info'
             }`}>
               <div className="flex">
                 {testResult.isSuccess ? (
-                  <CheckCircle className="h-5 w-5 text-green-400" />
+                  <CheckCircle className="text-themed-alert-success h-5 w-5" />
                 ) : (
-                  <XCircle className="h-5 w-5 text-red-400" />
+                  <XCircle className="text-themed-alert-error h-5 w-5" />
                 )}
                 <div className="ml-3">
                   <h3 className={`text-sm font-medium ${

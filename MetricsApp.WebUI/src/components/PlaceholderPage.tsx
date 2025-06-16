@@ -49,9 +49,9 @@ const PlaceholderPage = ({ title, description, icon: Icon, children, features }:
       </div>
 
       {/* Info Section */}
-      <div className="bg-themed-status-info bg-opacity-10 border border-themed-status-info rounded-lg p-4">
+      <div className="bg-themed-alert-info border border-themed-alert-info rounded-lg p-4">
         <div className="text-center">
-          <p className="text-sm text-themed-status-info">
+          <p className="text-sm text-themed-alert-info">
             💡 This page is a placeholder and will be implemented in a future release.
           </p>
         </div>

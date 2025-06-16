@@ -52,6 +52,21 @@ export interface ThemeColors {
     primary: string[]
     gradients: string[]
   }
+  
+  alert: {
+    success: AlertTheme
+    error: AlertTheme
+    warning: AlertTheme
+    info: AlertTheme
+    neutral: AlertTheme
+  }
+}
+
+export interface AlertTheme {
+  background: string
+  text: string
+  border: string
+  icon?: string // Optional: for icon color
 }
 
 export interface ThemeLayout {
@@ -160,6 +175,38 @@ export const defaultTheme: Theme = {
         'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
         'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
       ]
+    },
+    alert: {
+      success: {
+        background: '#064e3b',
+        text: '#d1fae5',
+        border: '#10b981',
+        icon: '#10b981'
+      },
+      error: {
+        background: '#7f1d1d',
+        text: '#fee2e2',
+        border: '#ef4444',
+        icon: '#ef4444'
+      },
+      warning: {
+        background: '#78350f',
+        text: '#fef3c7',
+        border: '#f59e0b',
+        icon: '#f59e0b'
+      },
+      info: {
+        background: '#1e3a8a33',
+        text: '#93c5fd',
+        border: '#1e40af',
+        icon: '#3b82f6'
+      },
+      neutral: {
+        background: '#334155',
+        text: '#f1f5f9',
+        border: '#64748b',
+        icon: '#64748b'
+      }
     }
   },
   layout: {
@@ -257,6 +304,38 @@ export const professionalTheme: Theme = {
         'linear-gradient(90deg, #73bf69 0%, #56a64b 100%)',
         'linear-gradient(90deg, #00d4aa 0%, #00c199 100%)'
       ]
+    },
+    alert: {
+      success: {
+        background: '#10b98122',
+        text: '#d1fae5',
+        border: '#10b981',
+        icon: '#10b981'
+      },
+      error: {
+        background: '#ef444422',
+        text: '#ef4444',
+        border: '#ef4444',
+        icon: '#ef4444'
+      },
+      warning: {
+        background: '#f59e0b22',
+        text: '#fef3c7',
+        border: '#f59e0b',
+        icon: '#f59e0b'
+      },
+      info: {
+        background: '#1e3a8a33',
+        text: '#93c5fd',
+        border: '#1e40af',
+        icon: '#3b82f6'
+      },
+      neutral: {
+        background: '#6b728022',
+        text: '#6b7280',
+        border: '#6b7280',
+        icon: '#6b7280'
+      }
     }
   },
   layout: {
@@ -354,6 +433,38 @@ export const lightTheme: Theme = {
         'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
         'linear-gradient(135deg, #d97706 0%, #b45309 100%)'
       ]
+    },
+    alert: {
+      success: {
+        background: '#064e3b',
+        text: '#d1fae5',
+        border: '#10b981',
+        icon: '#10b981'
+      },
+      error: {
+        background: '#7f1d1d',
+        text: '#fee2e2',
+        border: '#ef4444',
+        icon: '#ef4444'
+      },
+      warning: {
+        background: '#78350f',
+        text: '#fef3c7',
+        border: '#f59e0b',
+        icon: '#f59e0b'
+      },
+      info: {
+        background: '#1e3a8a33',
+        text: '#93c5fd',
+        border: '#1e40af',
+        icon: '#3b82f6'
+      },
+      neutral: {
+        background: '#334155',
+        text: '#f1f5f9',
+        border: '#64748b',
+        icon: '#64748b'
+      }
     }
   },
   layout: {
@@ -476,6 +587,23 @@ export const getThemeVars = (theme: Theme): Record<string, string> => {
     '--shadow-sm': theme.layout.shadows.sm,
     '--shadow-md': theme.layout.shadows.md,
     '--shadow-lg': theme.layout.shadows.lg,
-    '--shadow-xl': theme.layout.shadows.xl
+    '--shadow-xl': theme.layout.shadows.xl,
+    
+    // Alerts
+    '--alert-success-bg': theme.colors.alert.success.background,
+    '--alert-success-text': theme.colors.alert.success.text,
+    '--alert-success-border': theme.colors.alert.success.border,
+    '--alert-error-bg': theme.colors.alert.error.background,
+    '--alert-error-text': theme.colors.alert.error.text,
+    '--alert-error-border': theme.colors.alert.error.border,
+    '--alert-warning-bg': theme.colors.alert.warning.background,
+    '--alert-warning-text': theme.colors.alert.warning.text,
+    '--alert-warning-border': theme.colors.alert.warning.border,
+    '--alert-info-bg': theme.colors.alert.info.background,
+    '--alert-info-text': theme.colors.alert.info.text,
+    '--alert-info-border': theme.colors.alert.info.border,
+    '--alert-neutral-bg': theme.colors.alert.neutral.background,
+    '--alert-neutral-text': theme.colors.alert.neutral.text,
+    '--alert-neutral-border': theme.colors.alert.neutral.border
   }
 } 

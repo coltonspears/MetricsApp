@@ -85,11 +85,11 @@ const Alerts = () => {
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'critical':
-        return 'bg-themed-status-error bg-opacity-10 text-themed-status-error border-themed-status-error'
+        return 'bg-themed-alert-error bg-opacity-10 text-themed-status-error border-themed-alert-error'
       case 'warning':
-        return 'bg-themed-status-warning bg-opacity-10 text-themed-status-warning border-themed-status-warning'
+        return 'border-themed-alert-error bg-opacity-10 text-themed-status-warning border-themed-status-warning'
       case 'info':
-        return 'bg-themed-status-info bg-opacity-10 text-themed-status-info border-themed-status-info'
+        return 'bg-themed-alert-info bg-opacity-10 text-themed-status-info border-themed-alert-info'
       default:
         return 'bg-themed-bg-surface text-themed-text-primary border-themed-border-primary'
     }
@@ -147,7 +147,7 @@ const Alerts = () => {
           <div className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="p-3 bg-themed-status-error bg-opacity-20 rounded-lg">
+                <div className="p-3 bg-themed-alert-error bg-opacity-20 rounded-lg">
                   <AlertTriangle className="h-6 w-6 text-themed-status-error" />
                 </div>
               </div>
@@ -167,7 +167,7 @@ const Alerts = () => {
           <div className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="p-3 bg-themed-status-warning bg-opacity-20 rounded-lg">
+                <div className="p-3 border-themed-alert-error bg-opacity-20 rounded-lg">
                   <Clock className="h-6 w-6 text-themed-status-warning" />
                 </div>
               </div>
@@ -187,7 +187,7 @@ const Alerts = () => {
           <div className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="p-3 bg-themed-status-success bg-opacity-20 rounded-lg">
+                <div className="p-3 border-themed-alert-success bg-opacity-20 rounded-lg">
                   <CheckCircle className="h-6 w-6 text-themed-status-success" />
                 </div>
               </div>
@@ -295,7 +295,7 @@ const Alerts = () => {
                   {alert.status === 'active' && (
                     <button
                       onClick={() => handleAcknowledge(alert.id)}
-                      className="inline-flex items-center px-3 py-2 border border-themed-status-warning text-sm font-medium rounded-sm text-themed-status-warning bg-themed-bg-surface hover:bg-themed-status-warning hover:text-themed-text-inverse transition-colors"
+                      className="inline-flex items-center px-3 py-2 border border-themed-status-warning text-sm font-medium rounded-sm text-themed-status-warning bg-themed-bg-surface hover:border-themed-alert-error hover:text-themed-text-inverse transition-colors"
                     >
                       Acknowledge
                     </button>
@@ -303,7 +303,7 @@ const Alerts = () => {
                   {(alert.status === 'active' || alert.status === 'acknowledged') && (
                     <button
                       onClick={() => handleResolve(alert.id)}
-                      className="inline-flex items-center px-3 py-2 border border-themed-status-success text-sm font-medium rounded-sm text-themed-status-success bg-themed-bg-surface hover:bg-themed-status-success hover:text-themed-text-inverse transition-colors"
+                      className="inline-flex items-center px-3 py-2 border border-themed-status-success text-sm font-medium rounded-sm text-themed-status-success bg-themed-bg-surface hover:border-themed-alert-success hover:text-themed-text-inverse transition-colors"
                     >
                       Resolve
                     </button>

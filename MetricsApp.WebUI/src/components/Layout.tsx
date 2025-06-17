@@ -1114,6 +1114,59 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 </div>
               </div>
 
+              {/* Docs & Guides Section */}
+              <div>
+                <h3 
+                  className="text-sm font-medium mb-2 flex items-center"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  <HelpCircle className="h-4 w-4 mr-1" />
+                  Docs & Guides
+                </h3>
+                <div className="space-y-1">
+                  <Link
+                    to="/docs/styleguide"
+                    className="flex items-center p-2 text-sm transition-colors rounded"
+                    style={{
+                      color: 'var(--text-primary)',
+                      borderRadius: 'var(--radius-sm)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                      e.currentTarget.style.color = 'var(--text-accent)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.color = 'var(--text-primary)'
+                    }}
+                    onClick={() => setSearchOpen(false)}
+                  >
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    Style Guide
+                  </Link>
+                  <Link
+                    to="/docs/themeshowcase"
+                    className="flex items-center p-2 text-sm transition-colors rounded"
+                    style={{
+                      color: 'var(--text-primary)',
+                      borderRadius: 'var(--radius-sm)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+                      e.currentTarget.style.color = 'var(--text-accent)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.color = 'var(--text-primary)'
+                    }}
+                    onClick={() => setSearchOpen(false)}
+                  >
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    Theme Showcase
+                  </Link>
+                </div>
+              </div>
+
               {/* Help Section */}
               <div>
                 <h3 
@@ -1360,17 +1413,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     >
                       <Icon className="mr-4 flex-shrink-0 h-6 w-6" />
                       {item.name}
-                      {item.wip && (
-                        <span 
-                          className="ml-auto px-1.5 py-0.5 text-xs font-medium rounded"
-                          style={{
-                            backgroundColor: 'var(--status-warning)',
-                            color: 'var(--text-inverse)'
-                          }}
-                        >
-                          WIP
-                        </span>
-                      )}
                     </Link>
                   )
                 })}
@@ -1414,17 +1456,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     >
                       <Icon className="mr-4 flex-shrink-0 h-6 w-6" />
                       {item.name}
-                      {item.wip && (
-                        <span 
-                          className="ml-auto px-1.5 py-0.5 text-xs font-medium rounded"
-                          style={{
-                            backgroundColor: 'var(--status-warning)',
-                            color: 'var(--text-inverse)'
-                          }}
-                        >
-                          WIP
-                        </span>
-                      )}
                     </Link>
                   )
                 })}

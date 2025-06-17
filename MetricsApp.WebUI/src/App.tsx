@@ -33,6 +33,7 @@ import Profile from './pages/Profile'
 import NotificationHistory from './pages/profile/Notifications'
 import ProfileSettings from './pages/profile/ProfileSettings'
 import Logout from './pages/Logout'
+import StyleGuide from './pages/StyleGuide'
 
 function App() {
   useEffect(() => {
@@ -99,6 +100,8 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/notifications" element={<NotificationHistory />} />
           <Route path="/profile/settings" element={<ProfileSettings />} />
+          <Route path="/docs/styleguide" element={<StyleGuide />} />
+          <Route path="/docs/themeshowcase" element={<ThemeShowcase />} />
           <Route path="/logout" element={<Logout />} />
         </Routes>
       </Layout>

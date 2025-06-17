@@ -240,4 +240,10 @@ public class DataSourceManager : IDataSourceManager
 
         return await instance.GetMetadataAsync(cancellationToken);
     }
+    
+    public async Task<RepositoryMetricSchema> GetInternalRepositoryMetricSchemaAsync(CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Fetching metric schema from internal data repository.");
+        return await _repository.GetMetricSchemaAsync(cancellationToken);
+    }
 } 

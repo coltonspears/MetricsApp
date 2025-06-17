@@ -67,4 +67,11 @@ public interface IDataSourceManager
     /// Get metadata from a specific datasource
     /// </summary>
     Task<DataSourceMetadata> GetDataSourceMetadataAsync(string dataSourceId, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Gets the metric schema from the internal data repository.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A <see cref="RepositoryMetricSchema"/> detailing available metrics in the internal repository.</returns>
+    Task<RepositoryMetricSchema> GetInternalRepositoryMetricSchemaAsync(CancellationToken cancellationToken = default);
 } 

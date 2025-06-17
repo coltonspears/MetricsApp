@@ -227,7 +227,7 @@ const Search = () => {
                 id="query"
                 value={filters.query}
                 onChange={(e) => setFilters({ ...filters, query: e.target.value })}
-                className="block w-full pl-10 pr-3 py-3 border border-themed-border-primary rounded-lg bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary font-mono text-sm"
+                className="bg-[var(--bg-surface)] border-[var(--border-primary)] text-[var(--text-primary)] rounded-[var(--radius-md)] block w-full pl-10 pr-3 py-3 focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary font-mono text-sm"
                 placeholder="Enter your search query..."
               />
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -247,7 +247,7 @@ const Search = () => {
                   id="startTime"
                   value={filters.startTime}
                   onChange={(e) => setFilters({ ...filters, startTime: e.target.value })}
-                  className="block w-full pl-10 pr-3 py-3 border border-themed-border-primary rounded-lg bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
+                  className="bg-[var(--bg-surface)] border-[var(--border-primary)] text-[var(--text-primary)] rounded-[var(--radius-md)] block w-full pl-10 pr-3 py-3 focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Calendar className="h-5 w-5 text-themed-text-muted" />
@@ -265,7 +265,7 @@ const Search = () => {
                   id="endTime"
                   value={filters.endTime}
                   onChange={(e) => setFilters({ ...filters, endTime: e.target.value })}
-                  className="block w-full pl-10 pr-3 py-3 border border-themed-border-primary rounded-lg bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
+                  className="bg-[var(--bg-surface)] border-[var(--border-primary)] text-[var(--text-primary)] rounded-[var(--radius-md)] block w-full pl-10 pr-3 py-3 focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Calendar className="h-5 w-5 text-themed-text-muted" />
@@ -282,7 +282,7 @@ const Search = () => {
               id="limit"
               value={filters.limit}
               onChange={(e) => setFilters({ ...filters, limit: parseInt(e.target.value) })}
-              className="block w-full px-3 py-3 border border-themed-border-primary rounded-lg bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
+              className="bg-[var(--bg-surface)] border-[var(--border-primary)] text-[var(--text-primary)] rounded-[var(--radius-md)] block w-full px-3 py-3 focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
             >
               <option value={10}>10 results</option>
               <option value={25}>25 results</option>
@@ -324,14 +324,14 @@ const Search = () => {
                 setResults([])
                 setError(null)
               }}
-              className="inline-flex items-center px-3 py-2 border border-themed-border-primary text-sm font-medium rounded-lg text-themed-text-primary bg-themed-bg-surface hover:bg-themed-interactive-secondary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors"
+              className="btn-themed-primary"
             >
               Clear
             </button>
             <button
               type="submit"
               disabled={loading || !filters.query}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-themed-text-inverse bg-themed-interactive-primary hover:bg-themed-interactive-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-themed-interactive-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="btn-themed-primary"
             >
               {loading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
@@ -346,20 +346,20 @@ const Search = () => {
 
       {/* Debug Section - Remove this in production */}
       {import.meta.env.DEV && error && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+        <div className="bg-[var(--alert-error-bg)] border border-[var(--alert-error-border)] rounded-lg p-4">
           <div className="flex">
-            <AlertCircle className="h-5 w-5 text-yellow-400 mr-2 mt-0.5" />
+            <AlertCircle className="h-5 w-5 text-[var(--alert-error-text)] mr-2 mt-0.5" />
             <div>
-              <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Debug Information</h3>
-              <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
+              <h3 className="text-sm font-medium text-[var(--alert-error-text)]">Debug Information</h3>
+              <p className="mt-1 text-sm text-[var(--alert-error-text)]">
                 Check the browser console (F12) for the actual API response structure. 
                 The application will try to handle different response formats automatically.
               </p>
               <details className="mt-2">
-                <summary className="text-sm font-medium text-yellow-800 dark:text-yellow-200 cursor-pointer">
+                <summary className="text-sm font-medium text-[var(--alert-error-text)] cursor-pointer">
                   Expected API Response Formats
                 </summary>
-                <pre className="mt-2 text-xs text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/30 p-2 rounded overflow-x-auto">
+                <pre className="mt-2 text-xs text-[var(--alert-error-text)] bg-[var(--alert-error-bg)] p-2 rounded overflow-x-auto">
 {`// Direct array:
 [{id: "1", timestamp: "...", metricName: "...", value: "...", source: "...", environment: "..."}]
 
@@ -380,12 +380,14 @@ const Search = () => {
 
       {/* Error Display */}
       {error && (
-        <div className="bg-themed-alert-error bg-opacity-10 border border-themed-alert-error rounded-lg p-4">
+        <div className="bg-[var(--alert-error-bg)] border border-[var(--alert-error-border)] rounded-lg p-4">
           <div className="flex">
-            <AlertCircle className="h-5 w-5 text-themed-status-error mr-2 mt-0.5" />
+            <AlertCircle className="h-5 w-5 text-[var(--alert-error-text)] mr-2 mt-0.5" />
             <div>
-              <h3 className="text-sm font-medium text-themed-status-error">Search Error</h3>
-              <p className="mt-1 text-sm text-themed-text-secondary">{error}</p>
+              <h3 className="text-sm font-medium text-[var(--alert-error-text)]">Search Error</h3>
+              <p className="mt-1 text-sm text-[var(--alert-error-text)]">
+                {error}
+              </p>
             </div>
           </div>
         </div>
@@ -405,7 +407,7 @@ const Search = () => {
               {results.length > 0 && (
                 <button
                   onClick={handleExport}
-                  className="inline-flex items-center px-4 py-2 border border-themed-border-primary text-sm font-medium rounded-lg text-themed-text-primary bg-themed-bg-surface hover:bg-themed-interactive-secondary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors"
+                  className="btn-themed-primary"
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Export CSV

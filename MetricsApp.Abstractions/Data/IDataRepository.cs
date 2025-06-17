@@ -12,4 +12,11 @@ namespace MetricsApp.Abstractions.Data;
 
         Task<LogQueryResult> QueryLogsAsync(LogQueryCriteria criteria, CancellationToken cancellationToken = default);
         Task<MetricQueryResult> QueryMetricsAsync(MetricQueryCriteria criteria, CancellationToken cancellationToken = default);
+        
+        /// <summary>
+        /// Gets the schema of available metrics, including names, attribute keys, and resource keys.
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A <see cref="RepositoryMetricSchema"/> detailing available metrics.</returns>
+        Task<RepositoryMetricSchema> GetMetricSchemaAsync(CancellationToken cancellationToken = default);
     }

@@ -117,4 +117,29 @@ namespace MetricsApp.Api.Controllers;
                                   new QueryApiErrorResponse("An error occurred while querying metrics.", "InternalServerError", ex.Message));
             }
         }
+        
+        /// <summary>
+        /// Gets the schema of available metrics from the internal repository.
+        /// This includes distinct metric names, attribute keys, and resource keys.
+        /// </summary>
+        /// <returns>A schema detailing available metrics.</returns>
+        [HttpGet("schema")] // Route: /api/v1/metrics/query/schema
+        [ProducesResponseType(typeof(QueryApiSuccessResponse<RepositoryMetricSchema>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(QueryApiErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetMetricSchema()
+        {
+            _logger.LogInformation("Fetching internal repository metric schema.");
+            try
+            {
+                // Assuming HttpContext.RequestAborted is the appropriate CancellationToken
+                var schema = await _dataRepository.GetMetricSchemaAsync(HttpContext.RequestAborted);
+                return Ok(new QueryApiSuccessResponse<RepositoryMetricSchema>(schema));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching internal repository metric schema.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new QueryApiErrorResponse("An error occurred while fetching the metric schema.", "InternalServerError", ex.Message));
+            }
+        }
     }

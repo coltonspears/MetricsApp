@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom'
 import { Database, Search, Bell, Settings, Sun, Moon, Activity, Layers, ChevronDown, Plus, BarChart3, User, LogOut, History, Star, Home, HelpCircle, Sliders, Bookmark, Menu, Shield, Users, Building, GitBranch } from 'lucide-react'
 import { useTheme } from '../lib/theme'
 import ThemeSelector from './ThemeSelector'
+import BreadcrumbDropdown, { BreadcrumbDropdownItem } from './BreadcrumbDropdown'
+import { DataSourceApi, DataSourceConfiguration } from '../lib/datasource-api'
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation()
@@ -19,35 +21,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [pinnedNavOpen, setPinnedNavOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [datasources, setDatasources] = useState<BreadcrumbDropdownItem[]>([])
 
-  // Persist sidebar collapsed state
-  useEffect(() => {
-    localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed))
-  }, [sidebarCollapsed])
-
-  // Handle ESC key for search popup
-  useEffect(() => {
-    const handleEscapeKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && searchOpen) {
-        setSearchOpen(false)
-      }
-    }
-
-    if (searchOpen) {
-      document.addEventListener('keydown', handleEscapeKey)
-      return () => {
-        document.removeEventListener('keydown', handleEscapeKey)
-      }
-    }
-  }, [searchOpen])
-
-  // Close all menus when location changes
-  useEffect(() => {
-    setProfileMenuOpen(false)
-    setPinnedNavOpen(false)
-    setSearchOpen(false)
-  }, [location.pathname])
-
+  // Restore navigation and related arrays
   const navigation = [
     { name: 'Dashboard', href: '/', icon: Database, current: location.pathname === '/' },
     { name: 'Explore', href: '/explore', icon: BarChart3, current: location.pathname === '/explore' },
@@ -89,18 +65,69 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticationActive = location.pathname.startsWith('/admin/authentication')
   const isAdministrationActive = location.pathname.startsWith('/admin/orgs') || location.pathname.startsWith('/admin/users') || location.pathname.startsWith('/org/users') || location.pathname.startsWith('/org/teams') || location.pathname.startsWith('/orgs/teams')
 
-  // Generate breadcrumb from current path
-  const generateBreadcrumbs = () => {
-    const pathSegments = location.pathname.split('/').filter(segment => segment !== '')
-    const breadcrumbs = [{ name: 'Home', href: '/' }]
-    
-    let currentPath = ''
-    pathSegments.forEach(segment => {
-      currentPath += `/${segment}`
-      const name = segment.charAt(0).toUpperCase() + segment.slice(1)
-      breadcrumbs.push({ name, href: currentPath })
+  // Persist sidebar collapsed state
+  useEffect(() => {
+    localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed))
+  }, [sidebarCollapsed])
+
+  // Handle ESC key for search popup
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && searchOpen) {
+        setSearchOpen(false)
+      }
+    }
+
+    if (searchOpen) {
+      document.addEventListener('keydown', handleEscapeKey)
+      return () => {
+        document.removeEventListener('keydown', handleEscapeKey)
+      }
+    }
+  }, [searchOpen])
+
+  // Close all menus when location changes
+  useEffect(() => {
+    setProfileMenuOpen(false)
+    setPinnedNavOpen(false)
+    setSearchOpen(false)
+  }, [location.pathname])
+
+  useEffect(() => {
+    DataSourceApi.getDataSources().then(list => {
+      setDatasources(list.map((ds: DataSourceConfiguration) => ({
+        id: ds.id,
+        name: ds.name,
+        href: `/datasources/${ds.id}`
+      })))
     })
-    
+  }, [])
+
+  const isGuid = (str: string) => /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(str)
+
+  const generateBreadcrumbs = () => {
+    const pathSegments = location.pathname.split('/').filter(Boolean)
+    const breadcrumbs: { name: React.ReactNode, href: string, isDropdown?: boolean }[] = [
+      { name: 'Home', href: '/' }
+    ]
+    let currentPath = ''
+    pathSegments.forEach((segment, idx) => {
+      currentPath += `/${segment}`
+      if (isGuid(segment) && pathSegments[idx - 1] === 'datasources') {
+        breadcrumbs.push({
+          name: (
+            <BreadcrumbDropdown
+              items={datasources}
+              currentId={segment}
+            />
+          ),
+          href: currentPath,
+          isDropdown: true
+        })
+      } else {
+        breadcrumbs.push({ name: segment.charAt(0).toUpperCase() + segment.slice(1), href: currentPath })
+      }
+    })
     return breadcrumbs
   }
 
@@ -536,23 +563,25 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     /
                   </span>
                 )}
-                <Link
-                  to={crumb.href}
-                  className={`transition-colors ${
-                    index === breadcrumbs.length - 1 ? 'font-medium' : ''
-                  }`}
-                  style={{ 
-                    color: index === breadcrumbs.length - 1 ? 'var(--text-primary)' : 'var(--text-secondary)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = 'var(--text-primary)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = index === breadcrumbs.length - 1 ? 'var(--text-primary)' : 'var(--text-secondary)'
-                  }}
-                >
-                  {crumb.name}
-                </Link>
+                {crumb.isDropdown ? crumb.name : (
+                  <Link
+                    to={crumb.href}
+                    className={`transition-colors ${
+                      index === breadcrumbs.length - 1 ? 'font-medium' : ''
+                    }`}
+                    style={{ 
+                      color: index === breadcrumbs.length - 1 ? 'var(--text-primary)' : 'var(--text-secondary)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = 'var(--text-primary)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = index === breadcrumbs.length - 1 ? 'var(--text-primary)' : 'var(--text-secondary)'
+                    }}
+                  >
+                    {crumb.name}
+                  </Link>
+                )}
               </div>
             ))}
           </div>
@@ -858,23 +887,25 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     /
                   </span>
                 )}
-                <Link
-                  to={crumb.href}
-                  className={`transition-colors ${
-                    index === breadcrumbs.length - 1 ? 'font-medium' : ''
-                  }`}
-                  style={{ 
-                    color: index === breadcrumbs.length - 1 ? 'var(--text-primary)' : 'var(--text-secondary)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = 'var(--text-primary)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = index === breadcrumbs.length - 1 ? 'var(--text-primary)' : 'var(--text-secondary)'
-                  }}
-                >
-                  {crumb.name}
-                </Link>
+                {crumb.isDropdown ? crumb.name : (
+                  <Link
+                    to={crumb.href}
+                    className={`transition-colors ${
+                      index === breadcrumbs.length - 1 ? 'font-medium' : ''
+                    }`}
+                    style={{ 
+                      color: index === breadcrumbs.length - 1 ? 'var(--text-primary)' : 'var(--text-secondary)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = 'var(--text-primary)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = index === breadcrumbs.length - 1 ? 'var(--text-primary)' : 'var(--text-secondary)'
+                    }}
+                  >
+                    {crumb.name}
+                  </Link>
+                )}
               </div>
             ))}
           </div>

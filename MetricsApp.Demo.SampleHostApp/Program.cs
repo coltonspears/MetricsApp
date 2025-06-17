@@ -46,7 +46,7 @@ namespace MetricsApp.Demo.SampleHostApp
                 .ConfigureServices((hostContext, services) =>
                 {
                     // 1. Register InMemoryQueue (provides IMessageQueueProducer for the Emitter)
-                    //services.AddInMemoryQueue();
+                    services.AddInMemoryQueue();
 
                     // 2. Register Agent Core Services
                     services.AddMetricsAgentCore(hostContext.Configuration);

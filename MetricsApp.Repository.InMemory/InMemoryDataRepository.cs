@@ -132,4 +132,46 @@ public class InMemoryDataRepository : IDataRepository
 
             return Task.FromResult(result);
         }
+        
+        public Task<RepositoryMetricSchema> GetMetricSchemaAsync(CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _logger.LogDebug("Generating metric schema from in-memory data.");
+
+            var metricNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var attributeKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var resourceKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            var currentMetrics = _metricsStore.ToList(); // Work on a snapshot
+
+            foreach (var metric in currentMetrics)
+            {
+                if (!string.IsNullOrEmpty(metric.Name))
+                {
+                    metricNames.Add(metric.Name);
+                }
+
+                foreach (var attrKey in metric.Attributes.Keys)
+                {
+                    attributeKeys.Add(attrKey);
+                }
+
+                foreach (var resKey in metric.Resource.Keys)
+                {
+                    resourceKeys.Add(resKey);
+                }
+            }
+
+            var schema = new RepositoryMetricSchema
+            {
+                MetricNames = metricNames.OrderBy(n => n).ToList(),
+                AttributeKeys = attributeKeys.OrderBy(k => k).ToList(),
+                ResourceKeys = resourceKeys.OrderBy(k => k).ToList()
+            };
+
+            _logger.LogInformation("Generated metric schema: {MetricCount} names, {AttributeKeyCount} attribute keys, {ResourceKeyCount} resource keys.",
+                schema.MetricNames.Count, schema.AttributeKeys.Count, schema.ResourceKeys.Count);
+
+            return Task.FromResult(schema);
+        }
     }

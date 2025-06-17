@@ -3,7 +3,6 @@
 
 # Exclude local metrics database and SQLite files
 metrics.db*
-*.sqlite
 *.sqlite3
 *.db
 
@@ -278,4 +277,4 @@ __pycache__/
 
 .DS_Store
 node_modules
-dist/
+**/dist/

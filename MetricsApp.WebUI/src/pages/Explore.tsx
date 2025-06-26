@@ -358,7 +358,7 @@ const Explore = () => {
   return (
     <div className="flex h-[calc(100vh-64px)]">
       {/* Sidebar */}
-      <div className={`transition-all duration-200 bg-themed-bg-tertiary border-r border-themed-border-primary ${sidebarCollapsed ? 'w-12' : 'w-64'} flex flex-col`}>
+      <div className={`bg-themed-bg-tertiary border-r border-themed-border-primary ${sidebarCollapsed ? 'w-12' : 'w-64'} flex flex-col`}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-themed-border-primary">
           <span className={`font-bold text-lg text-themed-text-primary transition-opacity ${sidebarCollapsed ? 'opacity-0 w-0' : 'opacity-100 w-auto'}`}>Data Sources</span>
           <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="text-themed-text-secondary hover:text-themed-text-primary">

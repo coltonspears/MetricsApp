@@ -112,7 +112,7 @@ export default function ThemeShowcase() {
           {availableThemes.map((theme) => (
             <div
               key={theme.id}
-              className="border p-4 transition-all"
+              className="border p-4"
               style={{
                 backgroundColor: theme.colors.background.tertiary,
                 borderColor: theme.colors.border.primary,
@@ -209,7 +209,7 @@ export default function ThemeShowcase() {
                         }}
                       >
                         <div
-                          className="h-full transition-all duration-500"
+                          className="h-full"
                           style={{
                             width: `${value}%`,
                             backgroundColor: theme.colors.chart.primary[index % theme.colors.chart.primary.length]
@@ -421,7 +421,7 @@ export default function ThemeShowcase() {
                     }}
                   >
                     <div
-                      className="h-full transition-all duration-1000 ease-out"
+                      className="h-full"
                       style={{
                         width: `${item.value}%`,
                         backgroundColor: item.color

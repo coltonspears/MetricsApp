@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Search as SearchIcon, Calendar, Download, Play, AlertCircle, Clock } from 'lucide-react'
+import { Search as SearchIcon, Calendar, Download,  AlertCircle, } from 'lucide-react'
 
 interface SearchFilters {
   query: string

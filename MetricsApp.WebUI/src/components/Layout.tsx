@@ -153,7 +153,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       }}
     >
       {/* Sidebar - Full Height */}
-      <div className={`hidden md:flex md:${sidebarWidth} md:flex-col md:fixed md:inset-y-0 transition-all duration-300`}>
+      <div className={`hidden md:flex md:${sidebarWidth} md:flex-col md:fixed md:inset-y-0  `}>
         <div 
           className="flex-1 flex flex-col min-h-0"
           style={{ backgroundColor: 'var(--bg-secondary)' }}
@@ -541,7 +541,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Top Navigation Bar - To the right of sidebar */}
       <div 
-        className={`hidden md:block fixed top-0 ${topNavOffset} right-0 h-[40px] z-50 transition-all duration-300`}
+        className={`hidden md:block fixed top-0 ${topNavOffset} right-0 h-[40px] z-50`}
         style={{ 
           backgroundColor: 'var(--bg-secondary)',
           borderBottom: `1px solid var(--border-primary)`
@@ -1497,7 +1497,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       {/* Main content */}
-      <div className={`${mainContentOffset} flex flex-col flex-1 transition-all duration-300`}>
+      <div className={`${mainContentOffset} flex flex-col flex-1`}>
         {/* Spacer for top nav */}
         <div className="h-[40px] hidden md:block" />
         <main className="flex-1">

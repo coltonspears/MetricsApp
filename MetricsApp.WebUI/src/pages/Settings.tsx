@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, RefreshCw, Database, Bell, Settings as SettingsIcon } from 'lucide-react'
+import { Save, RefreshCw, Database, Bell, Settings as SettingsIcon, ExternalLink } from 'lucide-react'
 import { useTheme } from '../lib/theme'
 import ThemeSelector from '../components/ThemeSelector'
 
@@ -14,6 +14,7 @@ interface AppSettings {
   dataRetention: number
   enableNotifications: boolean
   apiEndpoint: string
+  scalarURL: string
 }
 
 const Settings = () => {
@@ -28,7 +29,8 @@ const Settings = () => {
     },
     dataRetention: 30,
     enableNotifications: true,
-    apiEndpoint: 'https://localhost:7201/api/v1'
+    apiEndpoint: 'https://localhost:7201/api/v1',
+    scalarURL: 'https://localhost:7201/scalar'
   })
   
   const [loading, setLoading] = useState(true)
@@ -64,7 +66,8 @@ const Settings = () => {
       },
       dataRetention: 30,
       enableNotifications: true,
-      apiEndpoint: 'https://localhost:7201/api/v1'
+      apiEndpoint: 'https://localhost:7201/api/v1',
+      scalarURL: 'https://localhost:7201/scalar'
     })
   }
 
@@ -77,18 +80,31 @@ const Settings = () => {
     )
   }
 
+  function openInNewWindow(scalarURL: string) {
+    const newWindow = window.open(scalarURL, '_blank', 'noopener,noreferrer')
+    if (newWindow)
+      {
+        newWindow.opener = null
+      } 
+      else
+      {
+        console.error('Failed to open new window')
+      }
+        
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {/* Header */}
       <div className="border-b border-themed-border-primary pb-4">
         <h1 className="text-3xl font-bold text-themed-text-primary">Application Settings</h1>
         <p className="mt-2 text-themed-text-secondary">Configure your MetricsApp preferences and system parameters</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* General Settings */}
-        <div className="lg:col-span-2 space-y-8">
-          <div className="bg-themed-bg-tertiary shadow-lg rounded-lg border border-themed-border-primary">
+        <div className="lg:col-span-2 space-y-3">
+          <div className="bg-themed-bg-tertiary shadow-lg rounded-sm border border-themed-border-primary">
             <div className="px-6 py-4 border-b border-themed-border-primary">
               <h3 className="text-lg font-semibold text-themed-text-primary flex items-center">
                 <SettingsIcon className="h-5 w-5 mr-2 themed-text-accent" />
@@ -102,7 +118,7 @@ const Settings = () => {
                 </label>
                 <select
                   id="refreshInterval"
-                  className="block w-full px-3 py-3 border border-themed-border-primary rounded-lg bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
+                  className="block w-full px-3 py-3 border border-themed-border-primary rounded-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
                   value={settings.refreshInterval}
                   onChange={(e) => setSettings({ ...settings, refreshInterval: parseInt(e.target.value) })}
                 >
@@ -121,10 +137,32 @@ const Settings = () => {
                 <input
                   type="url"
                   id="apiEndpoint"
-                  className="block w-full px-3 py-3 border border-themed-border-primary rounded-lg bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary font-mono text-sm"
+                  className="block w-full px-3 py-3 border border-themed-border-primary rounded-sm bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary font-mono text-sm"
                   value={settings.apiEndpoint}
                   onChange={(e) => setSettings({ ...settings, apiEndpoint: e.target.value })}
                 />
+              </div>
+
+              <div>
+                <label htmlFor="scalarURL" className="block text-sm font-medium text-themed-text-primary mb-2">
+                  Scalar URL
+                </label>
+                <div className="flex space-x-2">
+                <input
+                  type="url"
+                  id="scalarURL"
+                  className="block w-full px-3 py-3 border border-themed-border-primary rounded-sm bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary font-mono text-sm"
+                  value={settings.scalarURL}
+                  readOnly
+                />
+                <button
+                  type="button"
+                  className="block inline-flex items-center px-3 py-3 border border-themed-border-primary rounded-sm text-sm font-medium btn-themed-primary hover:bg-themed-bg-elevated transition-colors"
+                  onClick={() => openInNewWindow(settings.scalarURL)}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  </button>
+              </div>
               </div>
 
               <div>
@@ -136,7 +174,7 @@ const Settings = () => {
                   id="dataRetention"
                   min="1"
                   max="365"
-                  className="block w-full px-3 py-3 border border-themed-border-primary rounded-lg bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
+                  className="block w-full px-3 py-3 border border-themed-border-primary rounded-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
                   value={settings.dataRetention}
                   onChange={(e) => setSettings({ ...settings, dataRetention: parseInt(e.target.value) })}
                 />
@@ -145,15 +183,15 @@ const Settings = () => {
           </div>
 
           {/* Alert Thresholds */}
-          <div className="bg-themed-bg-tertiary shadow-lg rounded-lg border border-themed-border-primary">
+          <div className="bg-themed-bg-tertiary shadow-lg rounded-sm border border-themed-border-primary">
             <div className="px-6 py-4 border-b border-themed-border-primary">
               <h3 className="text-lg font-semibold text-themed-text-primary flex items-center">
                 <Bell className="h-5 w-5 mr-2 themed-status-warning" />
                 Alert Thresholds
               </h3>
             </div>
-            <div className="p-6 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                   <label htmlFor="cpuThreshold" className="block text-sm font-medium text-themed-text-primary mb-2">
                     CPU Usage (%)
@@ -230,9 +268,9 @@ const Settings = () => {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-8">
+        <div className="space-y-4">
           {/* Notifications */}
-          <div className="bg-themed-bg-tertiary shadow-lg rounded-lg border border-themed-border-primary">
+          <div className="bg-themed-bg-tertiary shadow-lg rounded-sm border border-themed-border-primary">
             <div className="px-6 py-4 border-b border-themed-border-primary">
               <h3 className="text-lg font-semibold text-themed-text-primary flex items-center">
                 <Bell className="h-5 w-5 mr-2 themed-status-info" />
@@ -263,7 +301,7 @@ const Settings = () => {
           </div>
 
           {/* Actions */}
-          <div className="bg-themed-bg-tertiary shadow-lg rounded-lg border border-themed-border-primary">
+          <div className="bg-themed-bg-tertiary shadow-lg rounded-sm border border-themed-border-primary">
             <div className="px-6 py-4 border-b border-themed-border-primary">
               <h3 className="text-lg font-semibold text-themed-text-primary">Actions</h3>
             </div>
@@ -298,7 +336,7 @@ const Settings = () => {
           </div>
 
           {/* System Info */}
-          <div className="bg-themed-bg-tertiary shadow-lg rounded-lg border border-themed-border-primary">
+          <div className="bg-themed-bg-tertiary shadow-lg rounded-sm border border-themed-border-primary">
             <div className="px-6 py-4 border-b border-themed-border-primary">
               <h3 className="text-lg font-semibold text-themed-text-primary flex items-center">
                 <Database className="h-5 w-5 mr-2 themed-status-info" />

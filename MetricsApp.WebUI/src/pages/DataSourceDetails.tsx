@@ -85,7 +85,7 @@ export default function DataSourceDetails() {
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Data Source Not Found</h1>
         </div>
         
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 border-themed-alert-info rounded-md p-4">
           <div className="flex">
             <AlertCircle className="h-5 w-5 text-red-400" />
             <div className="ml-3">

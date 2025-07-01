@@ -36,6 +36,11 @@ builder.Services.AddInMemoryCaching();
 builder.Services.AddInMemoryRepository();
 builder.Services.AddWindowsPerfCounterParser();
 
+builder.Services.AddScoped<IEventRepository, SqlServerEventRepository>(x =>
+{
+    return new SqlServerEventRepository(builder.Configuration);
+});
+
 // Configure Agent Core services
 builder.Services.Configure<AgentOptions>(builder.Configuration.GetSection("MetricsAgent"));
 

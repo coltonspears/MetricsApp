@@ -5,10 +5,13 @@
 /// </summary>
 public class EventDto
 {
-    public string SourceType { get; set; } = string.Empty;
     public DateTimeOffset Timestamp { get; set; }
-    public string HostName { get; set; } = string.Empty;
-    
-    // Source-specific data structure
-    public object Payload { get; set; } = new object(); 
+    public string TenantId { get; set; }
+    public string AppId { get; set; }
+    public string Type { get; set; } // "log" or "metric"
+    public string SourceName { get; set; }
+    public string HostName { get; set; }
+    public string Ip { get; set; }
+    public string LogLevel { get; set; }
+    public object Payload { get; set; }
 }

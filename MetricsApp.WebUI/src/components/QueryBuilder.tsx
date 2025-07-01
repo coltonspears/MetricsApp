@@ -11,6 +11,22 @@ interface AvailableMetric {
   name: string
   type: string
   description?: string
+  isSearchable?: boolean
+  isAggregatable?: boolean
+}
+
+interface AvailableField {
+  name: string
+  type: string
+  description?: string
+  isSearchable: boolean
+  isAggregatable: boolean
+}
+
+interface AvailableTag {
+  name: string
+  values: string[]
+  description?: string
 }
 
 interface QueryBuilderProps {
@@ -20,6 +36,10 @@ interface QueryBuilderProps {
   queryMode: 'builder' | 'code'
   availableMetrics: AvailableMetric[]
   loadingMetrics: boolean
+  availableFields: AvailableField[]
+  loadingFields: boolean
+  availableTags: AvailableTag[]
+  loadingTags: boolean
   timeRange: {
     startTime: string
     endTime: string
@@ -40,6 +60,10 @@ const QueryBuilder = ({
   queryMode,
   availableMetrics,
   loadingMetrics,
+  availableFields,
+  loadingFields,
+  availableTags,
+  loadingTags,
   timeRange,
   onQueryChange,
   onQueryModeChange,
@@ -115,14 +139,14 @@ const QueryBuilder = ({
   }
 
   const addFilter = () => {
-    setBuilderState(prev => ({
+    setBuilderState((prev: { selectedMetric: string; filters: Array<{ field: string; operator: string; value: string }> }) => ({
       ...prev,
       filters: [...prev.filters, { field: '', operator: '=', value: '' }]
     }))
   }
 
   const updateFilter = (index: number, field: string, operator: string, value: string) => {
-    setBuilderState(prev => ({
+    setBuilderState((prev: { selectedMetric: string; filters: Array<{ field: string; operator: string; value: string }> }) => ({
       ...prev,
       filters: prev.filters.map((filter, i) => 
         i === index ? { field, operator, value } : filter
@@ -131,7 +155,7 @@ const QueryBuilder = ({
   }
 
   const removeFilter = (index: number) => {
-    setBuilderState(prev => ({
+    setBuilderState((prev: { selectedMetric: string; filters: Array<{ field: string; operator: string; value: string }> }) => ({
       ...prev,
       filters: prev.filters.filter((_, i) => i !== index)
     }))
@@ -184,7 +208,7 @@ const QueryBuilder = ({
           <select
             value={builderState.selectedMetric}
             onChange={(e) => {
-              setBuilderState(prev => ({ ...prev, selectedMetric: e.target.value }))
+              setBuilderState((prev: any) => ({ ...prev, selectedMetric: e.target.value }))
             }}
             className="block w-full px-3 py-2 border border-themed-border-tertiary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-tertiary focus:border-themed-interactive-tertiary bg-themed-bg-surface text-themed-text-primary text-sm"
             disabled={loadingMetrics}
@@ -223,9 +247,13 @@ const QueryBuilder = ({
                   className="flex-1 px-3 py-2 border border-themed-border-tertiary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-tertiary focus:border-themed-interactive-tertiary bg-themed-bg-surface text-themed-text-primary text-sm"
                 >
                   <option value="">Field</option>
-                  <option value="source">Source</option>
-                  <option value="environment">Environment</option>
-                  <option value="metricName">Metric Name</option>
+                  {loadingFields ? (
+                    <option value="" disabled>Loading fields...</option>
+                  ) : (
+                    availableFields.filter(f => f.isSearchable).map(field => (
+                      <option key={field.name} value={field.name}>{field.name}</option>
+                    ))
+                  )}
                 </select>
                 
                 <select
@@ -254,6 +282,30 @@ const QueryBuilder = ({
                 </button>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Tags for ingested data */}
+        {selectedDatasource.category === 'ingested' && availableTags.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-themed-text-primary mb-2">
+              Tags
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {loadingTags ? (
+                <span className="text-sm text-themed-text-secondary">Loading tags...</span>
+              ) : (
+                availableTags.map(tag => (
+                  <button
+                    key={tag.name}
+                                        onClick={() => onQueryChange(`${query} ${tag.name}=''`)}
+                    className="px-3 py-1 border border-themed-border-tertiary rounded-full text-xs text-themed-text-primary bg-themed-bg-surface hover:bg-themed-bg-surface-hover"
+                  >
+                    {tag.name}
+                  </button>
+                ))
+              )}
+            </div>
           </div>
         )}
 

@@ -9,7 +9,7 @@ public class EventDto
     public string TenantId { get; set; }
     public string AppId { get; set; }
     public string Type { get; set; } // "log" or "metric"
-    public string SourceName { get; set; }
+    public string SourceType { get; set; }
     public string HostName { get; set; }
     public string Ip { get; set; }
     public string LogLevel { get; set; }

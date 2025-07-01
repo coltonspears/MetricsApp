@@ -10,6 +10,7 @@
       <ProjectReference Include="..\MetricsApp.Abstractions\MetricsApp.Abstractions.csproj" />
       <ProjectReference Include="..\MetricsApp.Cache.InMemory\MetricsApp.Cache.InMemory.csproj" />
       <ProjectReference Include="..\MetricsApp.Queue.InMemory\MetricsApp.Queue.InMemory.csproj" />
+      <ProjectReference Include="..\MetricsApp.DataSources.SqlServer\MetricsApp.DataSources.SqlServer.csproj" />
     </ItemGroup>
 
     <ItemGroup>

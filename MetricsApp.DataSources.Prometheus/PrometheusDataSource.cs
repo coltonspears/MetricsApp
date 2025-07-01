@@ -227,6 +227,8 @@ public class PrometheusDataSource : IDataSource
         _httpClient?.Dispose();
         _httpClient = null;
         _configuration = null;
+
+        await Task.CompletedTask;
     }
 
     private HttpClient CreateHttpClient(DataSourceConfiguration configuration)

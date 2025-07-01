@@ -1,7 +1,8 @@
 using MetricsApp.DataSources.Prometheus;
+using MetricsApp.DataSources.SqlServer;
 using MetricsApp.Worker.Workers;
-using MetricsApp.Repository.InMemory.Extensions;
 using MetricsApp.Abstractions.Data;
+using MetricsApp.Repository.InMemory.Extensions;
 using MetricsApp.Agent.Collectors.WindowsPerfCounters;
 using MetricsApp.Agent.Core.Services;
 using MetricsApp.Agent.Core.Abstractions;
@@ -31,15 +32,16 @@ builder.Services.AddLogging(logging =>
     logging.AddDebug();
 });
 
+
+
+
 builder.Services.AddInMemoryQueue();
 builder.Services.AddInMemoryCaching();
 builder.Services.AddInMemoryRepository();
+builder.Services.AddTransient<IDataRepository, SqlServerDataRepository>();
 builder.Services.AddWindowsPerfCounterParser();
 
-builder.Services.AddScoped<IEventRepository, SqlServerEventRepository>(x =>
-{
-    return new SqlServerEventRepository(builder.Configuration);
-});
+
 
 // Configure Agent Core services
 builder.Services.Configure<AgentOptions>(builder.Configuration.GetSection("MetricsAgent"));
@@ -65,6 +67,8 @@ builder.Services.AddPrometheusDataSource(httpClient =>
 });
 
 builder.Services.AddHostedService<IngestionWorker>();
+
+
 
 var app = builder.Build();
 

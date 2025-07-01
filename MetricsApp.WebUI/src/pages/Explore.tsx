@@ -32,6 +32,22 @@ interface AvailableMetric {
   name: string
   type: string
   description?: string
+  isSearchable?: boolean
+  isAggregatable?: boolean
+}
+
+interface AvailableField {
+  name: string
+  type: string
+  description?: string
+  isSearchable: boolean
+  isAggregatable: boolean
+}
+
+interface AvailableTag {
+  name: string
+  values: string[]
+  description?: string
 }
 
 const Explore = () => {
@@ -50,7 +66,11 @@ const Explore = () => {
   const [showDebuggingInfo, setShowDebuggingInfo] = useState(false)
   const [showTimeRangeDropdown, setShowTimeRangeDropdown] = useState(false)
   const [availableMetrics, setAvailableMetrics] = useState<AvailableMetric[]>([])
+  const [availableFields, setAvailableFields] = useState<AvailableField[]>([])
+  const [availableTags, setAvailableTags] = useState<AvailableTag[]>([])
   const [loadingMetrics, setLoadingMetrics] = useState(false)
+  const [loadingFields, setLoadingFields] = useState(false)
+  const [loadingTags, setLoadingTags] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   // Load datasources on component mount
@@ -60,11 +80,11 @@ const Explore = () => {
 
   useEffect(() => {
     if (activeDatasourceId) {
-      loadAvailableMetrics(activeDatasourceId)
+      loadDataSourceMetadata(activeDatasourceId)
       const ds = datasources.find(ds => ds.id === activeDatasourceId)
       setQuery(getDefaultQuery(ds?.dataSourceType || ''))
     }
-  }, [activeDatasourceId])
+  }, [activeDatasourceId, datasources])
 
   function getDefaultTimeRange() {
     const now = new Date()
@@ -109,45 +129,24 @@ const Explore = () => {
     }
   }
 
-  const loadAvailableMetrics = async (datasourceId: string) => {
+  const loadDataSourceMetadata = async (datasourceId: string) => {
     setLoadingMetrics(true)
+    setLoadingFields(true)
+    setLoadingTags(true)
     try {
-      const datasource = datasources.find(ds => ds.id === datasourceId)
-      if (!datasource) return
-      if (datasource.category === 'ingested') {
-        const response = await fetch('/api/v1/metrics/available')
-        if (response.ok) {
-          const data = await response.json()
-          setAvailableMetrics(data || [])
-        } else {
-          setAvailableMetrics([
-            { name: 'cpu.usage', type: 'gauge', description: 'CPU usage percentage' },
-            { name: 'memory.usage', type: 'gauge', description: 'Memory usage percentage' },
-            { name: 'disk.free', type: 'gauge', description: 'Free disk space percentage' },
-            { name: 'response.time', type: 'gauge', description: 'Response time in milliseconds' },
-            { name: 'MSMQ', type: 'counter', description: 'MSMQ message count' }
-          ])
-        }
-      } else if (datasource.dataSourceType === 'prometheus') {
-        setAvailableMetrics([
-          { name: 'up', type: 'gauge', description: 'Instance up status' },
-          { name: 'http_requests_total', type: 'counter', description: 'Total HTTP requests' },
-          { name: 'http_request_duration_seconds', type: 'histogram', description: 'HTTP request duration' },
-          { name: 'process_cpu_seconds_total', type: 'counter', description: 'Process CPU time' },
-          { name: 'process_resident_memory_bytes', type: 'gauge', description: 'Process memory usage' }
-        ])
-      } else if (datasource.dataSourceType === 'sqlserver') {
-        setAvailableMetrics([
-          { name: 'Logs', type: 'table', description: 'Application logs table' },
-          { name: 'Metrics', type: 'table', description: 'Metrics data table' },
-          { name: 'Events', type: 'table', description: 'Event tracking table' }
-        ])
-      }
+      const metadata = await DataSourceApi.getDataSourceMetadata(datasourceId)
+      setAvailableMetrics(metadata.availableMetrics.map(m => ({ name: m, type: 'unknown' }))) // Assuming type is unknown from simple string list
+      setAvailableFields(metadata.availableFields || [])
+      setAvailableTags(metadata.availableTags || [])
     } catch (error) {
-      console.error('Failed to load available metrics:', error)
+      console.error('Failed to load data source metadata:', error)
       setAvailableMetrics([])
+      setAvailableFields([])
+      setAvailableTags([])
     } finally {
       setLoadingMetrics(false)
+      setLoadingFields(false)
+      setLoadingTags(false)
     }
   }
 
@@ -378,9 +377,10 @@ const Explore = () => {
               {/* Metrics list */}
               {activeDatasourceId === ds.id && !sidebarCollapsed && (
                 <div className="pl-8 pb-2">
+                  <h4 className="text-xs font-semibold text-themed-text-secondary mt-2 mb-1">Metrics</h4>
                   {loadingMetrics ? (
                     <div className="text-xs text-themed-text-secondary py-2">Loading metrics...</div>
-                  ) : (
+                  ) : availableMetrics.length > 0 ? (
                     <ul className="space-y-1">
                       {availableMetrics.map(metric => (
                         <li key={metric.name}>
@@ -394,6 +394,50 @@ const Explore = () => {
                         </li>
                       ))}
                     </ul>
+                  ) : (
+                    <div className="text-xs text-themed-text-secondary py-2">No metrics available.</div>
+                  )}
+
+                  <h4 className="text-xs font-semibold text-themed-text-secondary mt-4 mb-1">Fields</h4>
+                  {loadingFields ? (
+                    <div className="text-xs text-themed-text-secondary py-2">Loading fields...</div>
+                  ) : availableFields.length > 0 ? (
+                    <ul className="space-y-1">
+                      {availableFields.map(field => (
+                        <li key={field.name}>
+                          <button
+                            className="text-left text-sm text-themed-text-primary hover:text-themed-interactive-primary"
+                            title={field.description || field.name}
+                            onClick={() => setQuery(prev => `${prev} ${field.name}`)}
+                          >
+                            {field.name} <span className="text-xs text-themed-text-secondary ml-1">({field.type})</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="text-xs text-themed-text-secondary py-2">No fields available.</div>
+                  )}
+
+                  <h4 className="text-xs font-semibold text-themed-text-secondary mt-4 mb-1">Tags</h4>
+                  {loadingTags ? (
+                    <div className="text-xs text-themed-text-secondary py-2">Loading tags...</div>
+                  ) : availableTags.length > 0 ? (
+                    <ul className="space-y-1">
+                      {availableTags.map(tag => (
+                        <li key={tag.name}>
+                          <button
+                            className="text-left text-sm text-themed-text-primary hover:text-themed-interactive-primary"
+                            title={tag.description || tag.name}
+                            onClick={() => setQuery(prev => `${prev} ${tag.name}`)}
+                          >
+                            {tag.name} <span className="text-xs text-themed-text-secondary ml-1">({tag.values.join(', ')})</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="text-xs text-themed-text-secondary py-2">No tags available.</div>
                   )}
                 </div>
               )}
@@ -529,6 +573,10 @@ const Explore = () => {
               queryMode={queryMode}
               availableMetrics={availableMetrics}
               loadingMetrics={loadingMetrics}
+              availableFields={availableFields}
+              loadingFields={loadingFields}
+              availableTags={availableTags}
+              loadingTags={loadingTags}
               timeRange={timeRange}
               onQueryChange={setQuery}
               onQueryModeChange={setQueryMode}

@@ -177,6 +177,8 @@ public class SqlServerDataSource : IDataSource
     {
         _configuration = configuration;
         _connectionString = BuildConnectionString(configuration);
+
+        await CreateTablesIfNotExistAsync(cancellationToken);
         
         _logger.LogInformation("Initialized SQL Server datasource: {Name} to {Server}/{Database}", 
             configuration.Name, 
@@ -411,6 +413,47 @@ public class SqlServerDataSource : IDataSource
         {
             _logger.LogError(ex, "Error getting SQL Server metadata");
             return new DataSourceMetadata();
+        }
+    }
+
+    private async Task CreateTablesIfNotExistAsync(CancellationToken cancellationToken)
+    {
+        using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        var logTableExists = await TableExistsAsync(connection, "Logs", cancellationToken);
+        if (!logTableExists)
+        {
+            await CreateTableAsync(connection, "Logs", "CREATE TABLE [dbo].[Logs]([timestamp] [datetime] NOT NULL, [level] [nvarchar](max) NULL, [message] [nvarchar](max) NULL, [source] [nvarchar](max) NULL) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]", cancellationToken);
+        }
+
+        var metricTableExists = await TableExistsAsync(connection, "Metrics", cancellationToken);
+        if (!metricTableExists)
+        {
+            await CreateTableAsync(connection, "Metrics", "CREATE TABLE [dbo].[Metrics]([timestamp] [datetime] NOT NULL, [value] [float] NOT NULL) ON [PRIMARY]", cancellationToken);
+        }
+    }
+
+    private async Task<bool> TableExistsAsync(SqlConnection connection, string tableName, CancellationToken cancellationToken)
+    {
+        var command = new SqlCommand("SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = @TableName", connection);
+        command.Parameters.AddWithValue("@TableName", tableName);
+        var result = await command.ExecuteScalarAsync(cancellationToken);
+        return result != null;
+    }
+
+    private async Task CreateTableAsync(SqlConnection connection, string tableName, string createTableQuery, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var command = new SqlCommand(createTableQuery, connection);
+            await command.ExecuteNonQueryAsync(cancellationToken);
+            _logger.LogInformation($"Table '{tableName}' created successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Failed to create table '{tableName}'.");
+            throw;
         }
     }
 

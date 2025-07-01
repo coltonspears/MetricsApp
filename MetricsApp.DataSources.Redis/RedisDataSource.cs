@@ -214,7 +214,7 @@ public class RedisDataSource : IDataSource
         if (_redisConnection != null)
         {
             await _redisConnection.CloseAsync();
-            _redisConnection.Dispose();
+            await _redisConnection.DisposeAsync();
             _redisConnection = null;
         }
         _configuration = null;

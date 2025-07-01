@@ -32,7 +32,7 @@ public class SqlServerEventRepository : IEventRepository
             cmd.Parameters.AddWithValue("@TenantId", (object?)evt.TenantId ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@AppId", (object?)evt.AppId ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@Type", evt.Type ?? "log");
-            cmd.Parameters.AddWithValue("@SourceName", (object?)evt.SourceName ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@SourceName", (object?)evt.SourceType ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@HostName", (object?)evt.HostName ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@Ip", (object?)evt.Ip ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@LogLevel", (object?)evt.LogLevel ?? DBNull.Value);

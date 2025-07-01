@@ -311,7 +311,8 @@ namespace MetricsApp.Agent.Collectors.WindowsPerfCounters
                         SourceType = "WindowsPerfCounter",
                         Timestamp = DateTimeOffset.UtcNow,
                         HostName = _hostName,
-                        Payload = payload
+                        Payload = payload,
+                        Type = "metric"
                     });
                     
                     _logger.LogTrace("Collected: {DisplayName} = {Value} {Unit}", 

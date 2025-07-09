@@ -1,0 +1,32 @@
+﻿{
+  "manifest_version": "1.0.0",
+  "plugin_id": "initial-setup-plugin",
+  "name": "MetricsApp.Setup.InitialSetup",
+  "version": "0.0.1",
+  "type": "Setup",
+  "title": "Initial Setup",
+  "description": "This plugin provides the initial setup for the application, including configuration and basic data sources.",
+  "tags": [
+    "Setup",
+    "Configuration",
+    "Initialization"
+  ],
+  "author": {
+    "name": "Colton Spears",
+    "email": "coltonspears09@gmail.com",
+    "homepage": "https://github.com/coltonspears09"
+  },
+  "entry": {
+    "assembly": "Plugins/Setup/InitialSetupPlugin.dll",
+    "frontend_bundle": "/plugins/initial-setup-plugin.bundle.js"
+  },
+  "assets": {
+    "dashboards": [
+      "assets/dashboards/initial-setup-Overview_dashboard.json",
+      "assets/dashboards/initial-setup_dashboard.json"
+    ],
+    "monitors": [
+      "assets/monitors/initial-setup_high_processes_blocked.json"
+    ]
+  }
+}

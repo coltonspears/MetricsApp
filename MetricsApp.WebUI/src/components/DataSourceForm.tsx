@@ -279,7 +279,7 @@ export default function DataSourceForm({
               onChange={(e) => handleFieldChange(field.name, e.target.checked)}
               className="h-4 w-4 bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary font-mono rounded"
             />
-            <label htmlFor={field.name} className="ml-2 block text-sm text-slate-700 dark:text-slate-300">
+            <label htmlFor={field.name} className="ml-2 block text-sm text-themed-text-primary">
               {field.label}
             </label>
           </div>
@@ -293,7 +293,7 @@ export default function DataSourceForm({
             value={value}
             onChange={(e) => handleFieldChange(field.name, parseInt(e.target.value) || 0)}
             placeholder={field.placeholder}
-            className="mt-1 block w-full px-4 py-3 border-slate-300 bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary font-mono"
+            className="mt-1 block w-full px-4 py-3 border-themed-border-primary bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary font-mono"
             required={field.required}
           />
         )
@@ -316,9 +316,9 @@ export default function DataSourceForm({
               onClick={() => setShowPasswords(prev => ({ ...prev, [field.name]: !prev[field.name] }))}
             >
               {showPasswords[field.name] ? (
-                <EyeOff className="h-4 w-4 text-slate-400" />
+                <EyeOff className="h-4 w-4 text-themed-text-secondary" />
               ) : (
-                <Eye className="h-4 w-4 text-slate-400" />
+                <Eye className="h-4 w-4 text-themed-text-secondary" />
               )}
             </button>
           </div>
@@ -411,9 +411,9 @@ export default function DataSourceForm({
                   onClick={() => setShowPasswords(prev => ({ ...prev, password: !prev.password }))}
                 >
                   {showPasswords.password ? (
-                    <EyeOff className="h-4 w-4 text-slate-400" />
+                    <EyeOff className="h-4 w-4 text-themed-text-secondary" />
                   ) : (
-                    <Eye className="h-4 w-4 text-slate-400" />
+                    <Eye className="h-4 w-4 text-themed-text-secondary" />
                   )}
                 </button>
               </div>
@@ -440,9 +440,9 @@ export default function DataSourceForm({
                 onClick={() => setShowPasswords(prev => ({ ...prev, token: !prev.token }))}
               >
                 {showPasswords.token ? (
-                  <EyeOff className="h-4 w-4 text-slate-400" />
+                  <EyeOff className="h-4 w-4 text-themed-text-secondary" />
                 ) : (
-                  <Eye className="h-4 w-4 text-slate-400" />
+                  <Eye className="h-4 w-4 text-themed-text-secondary" />
                 )}
               </button>
             </div>
@@ -468,9 +468,9 @@ export default function DataSourceForm({
                 onClick={() => setShowPasswords(prev => ({ ...prev, apiKey: !prev.apiKey }))}
               >
                 {showPasswords.apiKey ? (
-                  <EyeOff className="h-4 w-4 text-slate-400" />
+                  <EyeOff className="h-4 w-4 text-themed-text-secondary" />
                 ) : (
-                  <Eye className="h-4 w-4 text-slate-400" />
+                  <Eye className="h-4 w-4 text-themed-text-secondary" />
                 )}
               </button>
             </div>
@@ -638,7 +638,7 @@ export default function DataSourceForm({
       {selectedTypeInfo && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-slate-900 dark:text-white">Test Connection</h3>
+            <h3 className="text-lg font-medium text-themed-text-primary">Test Connection</h3>
             <button
               type="button"
               onClick={handleTestConnection}
@@ -657,27 +657,27 @@ export default function DataSourceForm({
           {testResult && (
             <div className={`border rounded-md p-4 ${
               testResult.isSuccess 
-                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
-                : 'bg-themed-alert-info border-themed-alert-info'
+                ? 'bg-themed-alert-success border-themed-alert-success' 
+                : 'bg-themed-alert-error border-themed-alert-error'
             }`}>
               <div className="flex">
                 {testResult.isSuccess ? (
                   <CheckCircle className="text-themed-alert-success h-5 w-5" />
                 ) : (
-                  <XCircle className="text-themed-alert-error h-5 w-5" />
+                  <XCircle className="text-themed-alert-success h-5 w-5" />
                 )}
                 <div className="ml-3">
                   <h3 className={`text-sm font-medium ${
                     testResult.isSuccess 
-                      ? 'text-green-800 dark:text-green-200' 
-                      : 'text-red-800 dark:text-red-200'
+                      ? 'text-themed-alert-success' 
+                      : 'text-themed-alert-error'
                   }`}>
                     {testResult.isSuccess ? 'Connection Successful' : 'Connection Failed'}
                   </h3>
                   <div className={`mt-2 text-sm ${
                     testResult.isSuccess 
-                      ? 'text-green-700 dark:text-green-300' 
-                      : 'text-red-700 dark:text-red-300'
+                      ? 'text-themed-alert-success' 
+                      : 'text-themed-alert-error'
                   }`}>
                     <p>{testResult.errorMessage}</p>
                     {testResult.responseTimeMs > 0 && (

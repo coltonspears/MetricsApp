@@ -34,6 +34,8 @@ import NotificationHistory from './pages/profile/Notifications'
 import ProfileSettings from './pages/profile/ProfileSettings'
 import Logout from './pages/Logout'
 import StyleGuide from './pages/StyleGuide'
+import PluginsListPage from './pages/PluginsListPage'
+import PluginDetailPage from './pages/PluginDetailPage'
 
 function App() {
   useEffect(() => {
@@ -76,6 +78,9 @@ function App() {
           <Route path="/rum" element={<RUM />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/plugins" element={<PluginsListPage />} />
+          <Route path="/plugins/:pluginId" element={<PluginDetailPage />} />
+
           <Route path="/themes" element={<ThemeShowcase />} />
           
           {/* Authentication Routes */}

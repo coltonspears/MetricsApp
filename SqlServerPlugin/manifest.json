@@ -1,0 +1,34 @@
+﻿{
+  "manifest_version": "1.0.0",
+  "plugin_id": "sql-server",
+  "name": "SQL Server DataSource",
+  "version": "0.0.1",
+  "type": "DataSource",
+  "title": "SQL Server",
+  "description": "Collect important SQL Server performance and health metrics.",
+  "tags": [
+    "Data Stores",
+    "Integration",
+    "Windows",
+    "Linux",
+    "macOS"
+  ],
+  "author": {
+    "name": "Colton Spears",
+    "email": "coltonspears09@gmail.com",
+    "homepage": "https://github.com/coltonspears09"
+  },
+  "entry": {
+    "assembly": "Plugins/DataSources/SqlServerPlugin/SqlServerPlugin.dll",
+    "frontend_bundle": "/plugins/sqlserver-plugin.bundle.js"
+  },
+  "assets": {
+    "dashboards": [
+      "assets/dashboards/SQLServer-Overview_dashboard.json",
+      "assets/dashboards/sqlserver_dashboard.json"
+    ],
+    "monitors": [
+      "assets/monitors/sqlserver_high_processes_blocked.json"
+    ]
+  }
+}

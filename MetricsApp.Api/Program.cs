@@ -2,6 +2,7 @@ using MetricsApp.DataSources.Prometheus;
 using MetricsApp.DataSources.SqlServer;
 using MetricsApp.Worker.Workers;
 using MetricsApp.Abstractions.Data;
+using MetricsApp.Abstractions.Plugins;
 using MetricsApp.Repository.InMemory.Extensions;
 using MetricsApp.Agent.Collectors.WindowsPerfCounters;
 using MetricsApp.Agent.Core.Services;
@@ -43,19 +44,19 @@ builder.Services.AddWindowsPerfCounterParser();
 
 
 
-// Configure Agent Core services
-builder.Services.Configure<AgentOptions>(builder.Configuration.GetSection("MetricsAgent"));
-
-// Register Windows Performance Counter Collector
-if (OperatingSystem.IsWindows())
-{
-    builder.Services.AddWindowsPerfCounterCollector(builder.Configuration);
-    builder.Services.AddHostedService<CollectorBackgroundService>();
-}
+// // Configure Agent Core services
+// builder.Services.Configure<AgentOptions>(builder.Configuration.GetSection("MetricsAgent"));
+//
+// // Register Windows Performance Counter Collector
+// if (OperatingSystem.IsWindows())
+// {
+//     builder.Services.AddWindowsPerfCounterCollector(builder.Configuration);
+//     builder.Services.AddHostedService<CollectorBackgroundService>();
+// }
 
 // Register data sources
 builder.Services.AddDataSources();
-builder.Services.AddSqlServerDataSource();
+// builder.Services.AddSqlServerDataSource(); // Replaced with plugin
 builder.Services.AddSqliteDataSource();
 builder.Services.AddMySqlDataSource();
 builder.Services.AddPostgreSQLDataSource();
@@ -68,6 +69,8 @@ builder.Services.AddPrometheusDataSource(httpClient =>
 
 builder.Services.AddHostedService<IngestionWorker>();
 
+// Register the plugin manager
+builder.Services.AddPlugins(builder.Configuration, Path.Combine(AppContext.BaseDirectory, "Plugins"));
 
 
 var app = builder.Build();

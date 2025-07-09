@@ -1,0 +1,17 @@
+﻿{
+  "name": "initial-setup-plugin",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.1.1",
+    "vite": "^4.5.0",
+    "typescript": "^5.2.2"
+  }
+}

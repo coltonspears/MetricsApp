@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Database, Search, Bell, Settings, Sun, Moon, Activity, Layers, ChevronDown, Plus, BarChart3, User, LogOut, History, Star, Home, HelpCircle, Sliders, Bookmark, Menu, Shield, Users, Building, GitBranch } from 'lucide-react'
+import { Database, Search, Bell, Settings, Sun, Moon, Activity, Layers, ChevronDown, Plus, BarChart3, User, LogOut, History, Star, Home, HelpCircle, Sliders, Bookmark, Menu, Shield, Users, Building, GitBranch, BookCopy } from 'lucide-react'
 import { useTheme } from '../lib/theme'
 import ThemeSelector from './ThemeSelector'
 import BreadcrumbDropdown, { BreadcrumbDropdownItem } from './BreadcrumbDropdown'
@@ -31,6 +31,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { name: 'RUM', href: '/rum', icon: Activity, current: location.pathname === '/rum' },
     { name: 'Alerts', href: '/alerts', icon: Bell, current: location.pathname === '/alerts' },
     { name: 'Settings', href: '/settings', icon: Settings, current: location.pathname === '/settings' },
+    { name: 'Plugins', href: '/plugins', icon: BookCopy, current: location.pathname === '/plugins' },
   ]
 
   const connectionsItems = [

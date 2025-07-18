@@ -8,6 +8,7 @@ using MetricsApp.Agent.Collectors.WindowsPerfCounters;
 using MetricsApp.Agent.Core.Services;
 using MetricsApp.Agent.Core.Abstractions;
 using MetricsApp.Api.Services;
+using MetricsApp.Queue.RabbitMQ.Extensions;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,7 +39,16 @@ builder.Services.AddLogging(logging =>
 
 
 
-builder.Services.AddInMemoryQueue();
+// Configure queue (RabbitMQ in production, InMemory in development)
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddInMemoryQueue();
+}
+else
+{
+    builder.Services.AddRabbitMqQueue(builder.Configuration);
+}
+
 builder.Services.AddInMemoryCaching();
 builder.Services.AddInMemoryRepository();
 builder.Services.AddTransient<IDataRepository, SqlServerDataRepository>();
@@ -58,7 +68,7 @@ builder.Services.AddWindowsPerfCounterParser();
 
 // Register data sources
 builder.Services.AddDataSources();
-// builder.Services.AddSqlServerDataSource(); // Replaced with plugin
+builder.Services.AddSqlServerDataSource(); 
 builder.Services.AddSqliteDataSource();
 builder.Services.AddMySqlDataSource();
 builder.Services.AddPostgreSQLDataSource();

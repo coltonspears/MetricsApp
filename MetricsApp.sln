@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsApp.Parser.WindowsPe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsApp.Queue.InMemory", "MetricsApp.Queue.InMemory\MetricsApp.Queue.InMemory.csproj", "{E802F3E3-AB79-4ACC-B794-5A48B9D436D3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsApp.Queue.RabbitMQ", "MetricsApp.Queue.RabbitMQ\MetricsApp.Queue.RabbitMQ.csproj", "{F912F4F4-AC79-4ACC-B794-5A48B9D436D4}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsApp.Cache.InMemory", "MetricsApp.Cache.InMemory\MetricsApp.Cache.InMemory.csproj", "{7EABBF77-9C99-4C68-88A6-C65CBEE8516C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsApp.Repository.InMemory", "MetricsApp.Repository.InMemory\MetricsApp.Repository.InMemory.csproj", "{B70DA925-CFEB-4B5E-82D4-5C006E0F279B}"
@@ -96,6 +98,10 @@ Global
 		{E802F3E3-AB79-4ACC-B794-5A48B9D436D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E802F3E3-AB79-4ACC-B794-5A48B9D436D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E802F3E3-AB79-4ACC-B794-5A48B9D436D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F912F4F4-AC79-4ACC-B794-5A48B9D436D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F912F4F4-AC79-4ACC-B794-5A48B9D436D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F912F4F4-AC79-4ACC-B794-5A48B9D436D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F912F4F4-AC79-4ACC-B794-5A48B9D436D4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7EABBF77-9C99-4C68-88A6-C65CBEE8516C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7EABBF77-9C99-4C68-88A6-C65CBEE8516C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7EABBF77-9C99-4C68-88A6-C65CBEE8516C}.Release|Any CPU.ActiveCfg = Release|Any CPU

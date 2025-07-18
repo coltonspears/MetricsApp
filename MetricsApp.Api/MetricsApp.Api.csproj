@@ -10,6 +10,12 @@
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5" />
         <PackageReference Include="Scalar.AspNetCore" Version="2.4.8" />
         <PackageReference Include="Scalar.AspNetCore.Swashbuckle" Version="2.4.8" />
+        
+        <!-- OpenTelemetry OTLP Support -->
+        <PackageReference Include="OpenTelemetry.Proto" Version="1.3.2" />
+        <PackageReference Include="Google.Protobuf" Version="3.25.1" />
+        <PackageReference Include="Grpc.Net.Client" Version="2.59.0" />
+        <PackageReference Include="System.Text.Json" Version="9.0.5" />
     </ItemGroup>
 
     <ItemGroup>
@@ -27,6 +33,7 @@
       <ProjectReference Include="..\MetricsApp.DataSources.WindowsPerformanceCounters\MetricsApp.DataSources.WindowsPerformanceCounters.csproj" />
       <ProjectReference Include="..\MetricsApp.Parser.WindowsPerfCounters\MetricsApp.Parser.WindowsPerfCounters.csproj" />
       <ProjectReference Include="..\MetricsApp.Queue.InMemory\MetricsApp.Queue.InMemory.csproj" />
+      <ProjectReference Include="..\MetricsApp.Queue.RabbitMQ\MetricsApp.Queue.RabbitMQ.csproj" />
       <ProjectReference Include="..\MetricsApp.Repository.InMemory\MetricsApp.Repository.InMemory.csproj" />
       <ProjectReference Include="..\MetricsApp.ServiceDefaults\MetricsApp.ServiceDefaults.csproj" />
       <ProjectReference Include="..\MetricsApp.Worker\MetricsApp.Worker.csproj" />

@@ -12,6 +12,8 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -74,6 +76,8 @@ builder.Services.AddPlugins(builder.Configuration, Path.Combine(AppContext.BaseD
 
 
 var app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 // // Seed the repository with sample data sources on startup
 // using (var scope = app.Services.CreateScope())

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
@@ -28,6 +28,7 @@
       <ProjectReference Include="..\MetricsApp.Parser.WindowsPerfCounters\MetricsApp.Parser.WindowsPerfCounters.csproj" />
       <ProjectReference Include="..\MetricsApp.Queue.InMemory\MetricsApp.Queue.InMemory.csproj" />
       <ProjectReference Include="..\MetricsApp.Repository.InMemory\MetricsApp.Repository.InMemory.csproj" />
+      <ProjectReference Include="..\MetricsApp.ServiceDefaults\MetricsApp.ServiceDefaults.csproj" />
       <ProjectReference Include="..\MetricsApp.Worker\MetricsApp.Worker.csproj" />
     </ItemGroup>
 

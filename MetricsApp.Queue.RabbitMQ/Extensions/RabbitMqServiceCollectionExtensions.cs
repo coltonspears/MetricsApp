@@ -11,7 +11,13 @@ public static class RabbitMqServiceCollectionExtensions
     public static IServiceCollection AddRabbitMqQueue(this IServiceCollection services, IConfiguration configuration)
     {
         // Configure options
-        services.Configure<RabbitMqOptions>(configuration.GetSection(RabbitMqOptions.SectionName));
+
+        var optionsSection = configuration.GetSection(RabbitMqOptions.SectionName);
+
+        //services.Configure<RabbitMqOptions>(optionsSection =>
+        //{
+        //    optionsSection.Bind(options);
+        //});
 
         // Register RabbitMQ connection as singleton
         services.AddSingleton<IConnection>(provider =>
@@ -56,4 +62,4 @@ public static class RabbitMqServiceCollectionExtensions
 
         return services;
     }
-} 
+}

@@ -1,11 +1,13 @@
 import { useEffect } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { ThemeProvider } from './lib/theme'
 import { rumCollector, trackPageView } from './lib/rum-collector'
+import { traceRouteChange } from './lib/simple-telemetry'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Explore from './pages/Explore'
 import Search from './pages/Search'
+import TelemetryExplorer from './pages/TelemetryExplorer'
 import AddConnection from './pages/AddConnection'
 import DataSourceDetails from './pages/DataSourceDetails'
 import DataSources from './pages/DataSources'
@@ -38,6 +40,8 @@ import PluginsListPage from './pages/PluginsListPage'
 import PluginDetailPage from './pages/PluginDetailPage'
 
 function App() {
+  const location = useLocation()
+
   useEffect(() => {
     // Initialize RUM tracking
     rumCollector.enable()
@@ -64,6 +68,25 @@ function App() {
     }
   }, [])
 
+  // Track route changes with OpenTelemetry
+  useEffect(() => {
+    const routeName = location.pathname
+    
+    // Track page view with existing RUM
+    trackPageView(routeName, {
+      title: document.title,
+      search: location.search,
+      hash: location.hash
+    })
+    
+    // Track route change with OpenTelemetry
+    traceRouteChange(routeName, {
+      'route.path': routeName,
+      'route.search': location.search,
+      'route.hash': location.hash,
+    })
+  }, [location])
+
   return (
     <ThemeProvider>
       <Layout>
@@ -71,6 +94,7 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/telemetry" element={<TelemetryExplorer />} />
           <Route path="/connections/add" element={<AddConnection />} />
           <Route path="/connections/datasources/:dataSourceType" element={<DataSourceDetails />} />
           <Route path="/connections/datasources" element={<DataSources />} />

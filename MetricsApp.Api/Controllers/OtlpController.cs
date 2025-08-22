@@ -11,7 +11,7 @@ namespace MetricsApp.Api.Controllers;
 /// This is a simplified version that accepts OTLP data and converts it to our internal EventDto format.
 /// </summary>
 [ApiController]
-[Route("v1")]
+[Route("api/v1/[controller]")]
 public class OtlpController : ControllerBase
 {
     private readonly ILogger<OtlpController> _logger;
@@ -188,6 +188,29 @@ public class OtlpController : ControllerBase
     public IActionResult GetHealth()
     {
         return Ok(new { status = "healthy", timestamp = DateTimeOffset.UtcNow });
+    }
+
+    /// <summary>
+    /// Debug endpoint to view recent OTLP data collection statistics
+    /// </summary>
+    [HttpGet("debug/stats")]
+    public IActionResult GetDebugStats()
+    {
+        // This provides basic stats about what OTLP data has been received
+        // You can enhance this to show actual data by integrating with your data repository
+        return Ok(new
+        {
+            status = "active",
+            endpoints = new
+            {
+                traces = "/v1/traces",
+                metrics = "/v1/metrics", 
+                logs = "/v1/logs"
+            },
+            supportedContentTypes = new[] { "application/x-protobuf", "application/json" },
+            timestamp = DateTimeOffset.UtcNow,
+            info = "OTLP data is being queued and processed. Use /api/v1/metrics/query to retrieve processed metrics."
+        });
     }
 
     private string ExtractHostFromHeaders()

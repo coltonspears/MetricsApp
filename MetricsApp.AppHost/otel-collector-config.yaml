@@ -7,23 +7,7 @@ receivers:
       http:
         endpoint: 0.0.0.0:4318
 
-  # Windows Performance Counters (when running on Windows)
-  windowsperfcounters:
-    collection_interval: 30s
-    counters:
-      - object: "Processor"
-        instances: ["*"]
-        counters: ["% Processor Time"]
-      - object: "Memory"
-        counters: ["Available MBytes", "Committed Bytes"]
-      - object: "LogicalDisk"
-        instances: ["*"]
-        counters: ["% Free Space", "Free Megabytes"]
-      - object: "Network Interface"
-        instances: ["*"]
-        counters: ["Bytes Total/sec"]
-
-  # Host metrics (cross-platform)
+  # Host metrics (cross-platform) - removed windowsperfcounters as it has configuration issues
   hostmetrics:
     collection_interval: 30s
     scrapers:
@@ -58,6 +42,7 @@ processors:
   # Memory limiter to prevent OOM
   memory_limiter:
     limit_mib: 256
+    check_interval: 1s
 
   # Resource processor to add consistent resource attributes
   resource:
@@ -70,9 +55,21 @@ processors:
         action: upsert
 
 exporters:
-  # Forward to MetricsApp API
-  otlphttp/metricsapp:
-    endpoint: http://metricsapp-api:8080/v1/otlp
+  # Forward to MetricsApp API - separate endpoints for different data types
+  otlphttp/metricsapp-traces:
+    endpoint: http://metricsapp-api:5247/api/v1/otlp/traces
+    headers:
+      content-type: "application/x-protobuf"
+    compression: gzip
+
+  otlphttp/metricsapp-metrics:
+    endpoint: http://metricsapp-api:5247/api/v1/otlp/metrics
+    headers:
+      content-type: "application/x-protobuf"
+    compression: gzip
+
+  otlphttp/metricsapp-logs:
+    endpoint: http://metricsapp-api:5247/api/v1/otlp/logs
     headers:
       content-type: "application/x-protobuf"
     compression: gzip
@@ -83,13 +80,13 @@ exporters:
     tls:
       insecure: true
 
-  # Console exporter for debugging
-  logging:
-    loglevel: info
+  # Debug exporter for debugging (replaces deprecated logging exporter)
+  debug:
+    verbosity: detailed
 
   # Prometheus metrics endpoint for collector monitoring
   prometheus:
-    endpoint: "0.0.0.0:8888"
+    endpoint: "0.0.0.0:9090"
 
 extensions:
   # Health check extension
@@ -100,31 +97,27 @@ extensions:
   pprof:
     endpoint: 0.0.0.0:8889
 
-  # Memory ballast for stability
-  memory_ballast:
-    size_mib: 64
-
 service:
-  extensions: [health_check, pprof, memory_ballast]
+  extensions: [health_check, pprof]
   
   pipelines:
     traces:
       receivers: [otlp]
       processors: [memory_limiter, resource, batch]
-      exporters: [otlphttp/metricsapp, otlp/jaeger, logging]
+      exporters: [otlphttp/metricsapp-traces, otlp/jaeger, debug]
     
     metrics:
       receivers: [otlp, hostmetrics]
       processors: [memory_limiter, resource, batch]
-      exporters: [otlphttp/metricsapp, prometheus, logging]
+      exporters: [otlphttp/metricsapp-metrics, prometheus, debug]
     
     logs:
       receivers: [otlp]
       processors: [memory_limiter, resource, batch]
-      exporters: [otlphttp/metricsapp, logging]
+      exporters: [otlphttp/metricsapp-logs, debug]
 
   telemetry:
     logs:
       level: "info"
     metrics:
-      address: 0.0.0.0:8888 
+      level: "basic" 

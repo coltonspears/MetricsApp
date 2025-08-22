@@ -8,7 +8,6 @@ using MetricsApp.Agent.Collectors.WindowsPerfCounters;
 using MetricsApp.Agent.Core.Services;
 using MetricsApp.Agent.Core.Abstractions;
 using MetricsApp.Api.Services;
-using MetricsApp.Queue.RabbitMQ.Extensions;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +28,18 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowWebUI", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "https://localhost:5173", "http://localhost:3533", "https://localhost:3533")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 builder.Services.AddLogging(logging =>
 {
     logging.ClearProviders();
@@ -39,16 +50,7 @@ builder.Services.AddLogging(logging =>
 
 
 
-// Configure queue (RabbitMQ in production, InMemory in development)
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddInMemoryQueue();
-}
-else
-{
-    builder.Services.AddRabbitMqQueue(builder.Configuration);
-}
-
+builder.Services.AddInMemoryQueue();
 builder.Services.AddInMemoryCaching();
 builder.Services.AddInMemoryRepository();
 builder.Services.AddTransient<IDataRepository, SqlServerDataRepository>();
@@ -118,6 +120,9 @@ if (app.Environment.IsDevelopment())
             .WithClientButton(true);
     });
 }
+
+// Enable CORS
+app.UseCors("AllowWebUI");
 
 app.UseHttpsRedirection();
 

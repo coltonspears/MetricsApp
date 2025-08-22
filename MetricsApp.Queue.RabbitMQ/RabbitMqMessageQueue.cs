@@ -154,4 +154,13 @@ public class RabbitMqMessageQueue<T> : IMessageQueueProducer<T>, IMessageQueueCo
             }
         }
     }
+
+    public async Task EnqueueBatchAsync(IEnumerable<T> messages, CancellationToken cancellationToken = default)
+    {
+        // Enqueue the batched messages
+        foreach (var message in messages)
+        {
+            await EnqueueAsync(message, cancellationToken);
+        }
+    }
 } 

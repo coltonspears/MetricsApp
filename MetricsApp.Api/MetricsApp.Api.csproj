@@ -10,6 +10,12 @@
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5" />
         <PackageReference Include="Scalar.AspNetCore" Version="2.4.8" />
         <PackageReference Include="Scalar.AspNetCore.Swashbuckle" Version="2.4.8" />
+        
+        <!-- OpenTelemetry packages for proper OTLP support -->
+        <PackageReference Include="OpenTelemetry" Version="1.9.0" />
+        <PackageReference Include="OpenTelemetry.Api" Version="1.9.0" />
+        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.9.0" />
+        <PackageReference Include="System.Text.Json" Version="9.0.5" />
     </ItemGroup>
 
     <ItemGroup>
@@ -26,6 +32,7 @@
       <ProjectReference Include="..\MetricsApp.DataSources.SqlServer\MetricsApp.DataSources.SqlServer.csproj" />
       <ProjectReference Include="..\MetricsApp.DataSources.WindowsPerformanceCounters\MetricsApp.DataSources.WindowsPerformanceCounters.csproj" />
       <ProjectReference Include="..\MetricsApp.Parser.WindowsPerfCounters\MetricsApp.Parser.WindowsPerfCounters.csproj" />
+      <ProjectReference Include="..\MetricsApp.Parser.OpenTelemetry\MetricsApp.Parser.OpenTelemetry.csproj" />
       <ProjectReference Include="..\MetricsApp.Queue.InMemory\MetricsApp.Queue.InMemory.csproj" />
       <ProjectReference Include="..\MetricsApp.Repository.InMemory\MetricsApp.Repository.InMemory.csproj" />
       <ProjectReference Include="..\MetricsApp.ServiceDefaults\MetricsApp.ServiceDefaults.csproj" />

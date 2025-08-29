@@ -8,6 +8,7 @@ using MetricsApp.Agent.Collectors.WindowsPerfCounters;
 using MetricsApp.Agent.Core.Services;
 using MetricsApp.Agent.Core.Abstractions;
 using MetricsApp.Api.Services;
+using MetricsApp.Parser.OpenTelemetry.Extensions;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -55,6 +56,7 @@ builder.Services.AddInMemoryCaching();
 builder.Services.AddInMemoryRepository();
 builder.Services.AddTransient<IDataRepository, SqlServerDataRepository>();
 builder.Services.AddWindowsPerfCounterParser();
+builder.Services.AddOpenTelemetryParsers();
 
 
 

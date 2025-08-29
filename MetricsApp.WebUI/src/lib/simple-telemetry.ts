@@ -19,8 +19,8 @@ class SimpleTelemetry {
   private traces: TraceData[] = []
 
   constructor() {
-    // Use the API proxy instead of direct OTLP collector to avoid CORS
-    this.collectorUrl = '/api/v1/otlp/traces'  // This will go through Vite proxy to your API
+    // Use the new OpenTelemetry-compliant endpoints
+    this.collectorUrl = '/v1/traces'  // This will go through Vite proxy to your API
     this.serviceName = 'metricsapp-webui'
     this.serviceVersion = '1.0.0'
   }

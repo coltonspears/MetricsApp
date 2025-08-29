@@ -13,6 +13,13 @@ export default defineConfig({
         secure: false, // Allow self-signed certificates
         rewrite: (path) => path.replace(/^\/api/, '/api'),
       },
+      // Proxy OpenTelemetry standard endpoints
+      '/v1': {
+        target: 'https://localhost:7201',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path,
+      },
     },
   },
 }) 

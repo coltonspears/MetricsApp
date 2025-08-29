@@ -62,18 +62,28 @@ export class TelemetryApi {
   private static baseUrl = '/api/v1'  // Use relative URL to go through Vite proxy
 
   /**
-   * Get available metric metadata from OTLP and other sources
+   * Get available metric metadata from the new telemetry API
    */
   static async getMetricMetadata(dataSource?: string): Promise<MetricMetadata[]> {
     try {
-      // First try to get metrics schema from the query endpoint
-      const response = await fetch(`${this.baseUrl}/metrics/query/schema`)
+      // Use the new telemetry metadata endpoint
+      const response = await fetch(`${this.baseUrl}/telemetry/metrics/metadata`)
       if (response.ok) {
-        const schema = await response.json()
-        return this.parseMetricMetadata(schema)
+        const result = await response.json()
+        if (result.status === 'success' && result.data?.metrics) {
+          return result.data.metrics.map((metric: any) => ({
+            name: metric.name,
+            type: metric.type || 'gauge',
+            description: metric.description,
+            unit: metric.unit || 'value',
+            labels: metric.labels || [],
+            lastSeen: new Date(metric.lastSeen),
+            sampleCount: metric.sampleCount || 0
+          }))
+        }
       }
 
-      // Fallback to getting available metrics from the metrics controller
+      // Fallback to legacy metrics endpoint for performance counters
       const metricsResponse = await fetch(`${this.baseUrl}/metrics/available-metrics`)
       if (metricsResponse.ok) {
         const data = await metricsResponse.json()
@@ -97,7 +107,7 @@ export class TelemetryApi {
   }
 
   /**
-   * Query metrics data using the existing metrics API
+   * Query metrics data using the new telemetry API
    */
   static async queryMetrics(params: TelemetryQueryParams): Promise<OTLPMetric[]> {
     try {
@@ -108,17 +118,21 @@ export class TelemetryApi {
       })
 
       if (params.metricNames?.length) {
-        queryParams.set('query', `metricName=${params.metricNames.join('|')}`)
+        params.metricNames.forEach(name => queryParams.append('metricNames', name))
       }
 
-      const response = await fetch(`${this.baseUrl}/metrics/query?${queryParams}`)
+      const response = await fetch(`${this.baseUrl}/telemetry/metrics?${queryParams}`)
       
       if (!response.ok) {
         throw new Error(`Query failed: ${response.statusText}`)
       }
 
-      const data = await response.json()
-      return this.parseMetricsResponse(data.data || data)
+      const result = await response.json()
+      if (result.status === 'success' && result.data?.metrics) {
+        return this.parseNewTelemetryResponse(result.data)
+      }
+      
+      throw new Error('Invalid response format')
     } catch (error) {
       console.error('Failed to query metrics:', error)
       // Return mock data for development
@@ -176,7 +190,7 @@ export class TelemetryApi {
   }
 
   /**
-   * Query logs from OTLP endpoint
+   * Query logs from telemetry API
    */
   static async queryLogs(params: {
     startTime: Date
@@ -187,12 +201,40 @@ export class TelemetryApi {
     limit?: number
   }): Promise<LogEntry[]> {
     try {
-      // For now, return mock log data
-      // In a real implementation, this would query your log storage
+      const queryParams = new URLSearchParams({
+        startTime: params.startTime.toISOString(),
+        endTime: params.endTime.toISOString(),
+        limit: (params.limit || 100).toString()
+      })
+
+      if (params.level) queryParams.set('level', params.level)
+      if (params.searchText) queryParams.set('search', params.searchText)
+
+      const response = await fetch(`${this.baseUrl}/telemetry/logs?${queryParams}`)
+      
+      if (!response.ok) {
+        throw new Error(`Query failed: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      if (result.status === 'success' && result.data?.logs) {
+        return result.data.logs.map((log: any) => ({
+          timestamp: log.timestamp,
+          level: log.level,
+          message: log.message,
+          attributes: log.attributes || {},
+          resource: log.resource || {},
+          traceId: log.traceId,
+          spanId: log.spanId
+        }))
+      }
+      
+      // Fallback to mock data
       return this.generateMockLogs(params)
     } catch (error) {
       console.error('Failed to query logs:', error)
-      return []
+      // Return mock data for development
+      return this.generateMockLogs(params)
     }
   }
 
@@ -217,7 +259,7 @@ export class TelemetryApi {
    */
   static async testOTLPHealth(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/otlp/health`)
+      const response = await fetch(`${this.baseUrl}/telemetry/health`)
       return response.ok
     } catch (error) {
       console.error('OTLP health check failed:', error)
@@ -262,6 +304,22 @@ export class TelemetryApi {
     }
 
     return []
+  }
+
+  private static parseNewTelemetryResponse(data: any): OTLPMetric[] {
+    if (!data?.metrics) return []
+
+    return data.metrics.map((metric: any) => ({
+      name: metric.name,
+      type: metric.type as 'gauge' | 'counter' | 'histogram',
+      description: metric.description,
+      unit: metric.unit,
+      samples: metric.samples?.map((sample: any) => ({
+        timestamp: sample.timestamp,
+        value: sample.value,
+        labels: sample.labels || {}
+      })) || []
+    }))
   }
 
   private static generateMockMetrics(params: TelemetryQueryParams): OTLPMetric[] {

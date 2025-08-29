@@ -6,8 +6,13 @@ using System.Text.Json;
 
 namespace MetricsApp.Api.Controllers;
 
+/// <summary>
+/// Legacy metrics controller for Windows Performance Counters.
+/// For new telemetry data, use /api/v1/telemetry/metrics instead.
+/// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
+[Obsolete("Use TelemetryController for new implementations")]
 public class MetricsController : ControllerBase
 {
     private readonly IDataRepository _dataRepository;

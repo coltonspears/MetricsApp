@@ -8,6 +8,8 @@ import Dashboard from './pages/Dashboard'
 import Explore from './pages/Explore'
 import Search from './pages/Search'
 import TelemetryExplorer from './pages/TelemetryExplorer'
+import TelemetryTesting from './pages/TelemetryTesting'
+import LogViewer from './pages/LogViewer'
 import AddConnection from './pages/AddConnection'
 import DataSourceDetails from './pages/DataSourceDetails'
 import DataSources from './pages/DataSources'
@@ -95,6 +97,8 @@ function App() {
           <Route path="/explore" element={<Explore />} />
           <Route path="/search" element={<Search />} />
           <Route path="/telemetry" element={<TelemetryExplorer />} />
+          <Route path="/telemetry/testing" element={<TelemetryTesting />} />
+          <Route path="/logs" element={<LogViewer />} />
           <Route path="/connections/add" element={<AddConnection />} />
           <Route path="/connections/datasources/:dataSourceType" element={<DataSourceDetails />} />
           <Route path="/connections/datasources" element={<DataSources />} />

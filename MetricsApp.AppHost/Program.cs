@@ -27,8 +27,8 @@ var metricsApi = builder.AddProject<Projects.MetricsApp_Api>("metricsapp-api")
     .WithReference(rabbitmq)
     //.WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", otlpCollector.GetEndpoint("otlp-grpc"))
     //.WithEnvironment("ASPNETCORE_URLS", "http://+:8080")
-    .WithHttpEndpoint(5247, name: "metrics-api-http")
-    .WithHttpEndpoint(7201, name: "metrics-api-https")
+   // .WithHttpEndpoint(5247, name: "metrics-api-http")
+    //.WithHttpEndpoint(7201, name: "metrics-api-https")
     .WaitFor(database)
     .WaitFor(redis)
     .WaitFor(rabbitmq);
@@ -38,7 +38,8 @@ builder.AddNpmApp("ReactWebUI", "../MetricsApp.WebUI", "dev")
     .WithReference(metricsApi)
     .WaitFor(metricsApi)
     .WithEnvironment("BROWSER", "none") // Disable opening browser on npm start
-    .WithHttpEndpoint(3533)
+    //.WithHttpEndpoint(3533)
+    .WithHttpEndpoint(13533, 3533, name: "frontend-http")
     .WithExternalHttpEndpoints();
 
 // Optional: Jaeger for tracing visualization

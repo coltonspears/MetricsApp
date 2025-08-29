@@ -212,12 +212,15 @@ const TelemetryExplorer = () => {
 
   const checkOTLPHealth = async () => {
     try {
-      const [health, stats] = await Promise.all([
-        TelemetryApi.testOTLPHealth(),
-        TelemetryApi.getOTLPStats()
-      ])
+      const health = await TelemetryApi.testOTLPHealth()
       setOTLPHealth(health)
-      setOTLPStats(stats)
+      
+      // Get telemetry stats
+      const response = await fetch('/api/v1/telemetry/stats')
+      if (response.ok) {
+        const stats = await response.json()
+        setOTLPStats(stats)
+      }
     } catch (err) {
       setOTLPHealth(false)
       setOTLPStats(null)
@@ -545,6 +548,14 @@ const TelemetryExplorer = () => {
           </div>
 
           <div className="flex items-center space-x-2">
+            <a
+              href="/telemetry/testing"
+              className="px-3 py-2 text-sm font-medium rounded-lg bg-themed-bg-surface text-themed-text-primary border border-themed-border-primary hover:bg-themed-interactive-secondary-hover transition-colors"
+            >
+              <Activity className="h-4 w-4 mr-1 inline" />
+              API Testing
+            </a>
+            
             <button
               onClick={() => setQueryBuilderOpen(!queryBuilderOpen)}
               className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${

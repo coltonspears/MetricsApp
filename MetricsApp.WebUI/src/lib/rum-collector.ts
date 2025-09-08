@@ -191,48 +191,68 @@ class RumCollector {
   }
 
   private interceptNetworkRequests(): void {
+    // Skip network interception in development if RUM_DISABLE_NETWORK_TRACKING is set
+    if (process.env.NODE_ENV === 'development' && window.localStorage.getItem('RUM_DISABLE_NETWORK_TRACKING') === 'true') {
+      console.log('RUM network tracking disabled via localStorage')
+      return
+    }
+    
     // Intercept fetch
     const originalFetch = window.fetch
     window.fetch = async (...args) => {
+      const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || 'unknown'
+      
+      // Skip tracking for RUM endpoint to avoid infinite loops
+      if (url.includes('/api/v1/rum/events')) {
+        return originalFetch(...args)
+      }
+      
       const startTime = performance.now()
       try {
         const response = await originalFetch(...args)
         const duration = performance.now() - startTime
         
-        this.trackEvent('performance', {
-          eventType: 'network_request',
-          url: args[0],
-          method: args[1]?.method || 'GET',
-          status: response.status,
-          duration,
-          success: response.ok
-        })
-
-        if (!response.ok) {
-          this.trackError({
-            message: `Network request failed: ${response.status} ${response.statusText}`,
-            type: 'network',
-            severity: response.status >= 500 ? 'high' : 'medium'
+        // Only track if not RUM endpoint and request completed
+        if (!url.includes('/api/v1/rum/events')) {
+          this.trackEvent('performance', {
+            eventType: 'network_request',
+            url: url,
+            method: args[1]?.method || 'GET',
+            status: response.status,
+            duration,
+            success: response.ok
           })
+
+          if (!response.ok) {
+            this.trackError({
+              message: `Network request failed: ${response.status} ${response.statusText}`,
+              type: 'network',
+              severity: response.status >= 500 ? 'high' : 'medium'
+            })
+          }
         }
 
         return response
       } catch (error) {
         const duration = performance.now() - startTime
-        this.trackError({
-          message: `Network request failed: ${error}`,
-          type: 'network',
-          severity: 'high'
-        })
         
-        this.trackEvent('performance', {
-          eventType: 'network_request',
-          url: args[0],
-          method: args[1]?.method || 'GET',
-          duration,
-          success: false,
-          error: error instanceof Error ? error.message : String(error)
-        })
+        // Only track errors if not RUM endpoint
+        if (!url.includes('/api/v1/rum/events')) {
+          this.trackError({
+            message: `Network request failed: ${error}`,
+            type: 'network',
+            severity: 'high'
+          })
+          
+          this.trackEvent('performance', {
+            eventType: 'network_request',
+            url: url,
+            method: args[1]?.method || 'GET',
+            duration,
+            success: false,
+            error: error instanceof Error ? error.message : String(error)
+          })
+        }
         
         throw error
       }

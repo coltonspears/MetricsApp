@@ -55,23 +55,23 @@ processors:
         action: upsert
 
 exporters:
-  # Forward to MetricsApp API - separate endpoints for different data types
+  # Forward to MetricsApp API - OTLP exporter adds /v1/{signal} automatically
   otlphttp/metricsapp-traces:
-    endpoint: http://metricsapp-api:5247/api/v1/otlp/traces
+    endpoint: http://metricsapp-api:5247
     headers:
-      content-type: "application/x-protobuf"
+      content-type: "application/json"
     compression: gzip
 
-  otlphttp/metricsapp-metrics:
-    endpoint: http://metricsapp-api:5247/api/v1/otlp/metrics
-    headers:
-      content-type: "application/x-protobuf"
-    compression: gzip
+#  otlphttp/metricsapp-metrics:
+#    endpoint: http://metricsapp-api:5247
+#    headers:
+#      content-type: "application/json"
+#    compression: gzip
 
   otlphttp/metricsapp-logs:
-    endpoint: http://metricsapp-api:5247/api/v1/otlp/logs
+    endpoint: http://metricsapp-api:5247
     headers:
-      content-type: "application/x-protobuf"
+      content-type: "application/json"
     compression: gzip
 
   # Forward to Jaeger for tracing
@@ -96,7 +96,7 @@ extensions:
   # Performance profiling
   pprof:
     endpoint: 0.0.0.0:8889
-
+  
 service:
   extensions: [health_check, pprof]
   
@@ -109,7 +109,8 @@ service:
     metrics:
       receivers: [otlp, hostmetrics]
       processors: [memory_limiter, resource, batch]
-      exporters: [otlphttp/metricsapp-metrics, prometheus, debug]
+      exporters: [prometheus, debug]
+    #otlphttp/metricsapp-metrics
     
     logs:
       receivers: [otlp]

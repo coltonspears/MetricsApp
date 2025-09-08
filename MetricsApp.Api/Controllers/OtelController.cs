@@ -15,13 +15,19 @@ public class OtelController : ControllerBase
 {
     private readonly ILogger<OtelController> _logger;
     private readonly IMessageQueueProducer<EventDto> _queueProducer;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IConfiguration _configuration;
 
     public OtelController(
         ILogger<OtelController> logger,
-        IMessageQueueProducer<EventDto> queueProducer)
+        IMessageQueueProducer<EventDto> queueProducer,
+        IHttpClientFactory httpClientFactory,
+        IConfiguration configuration)
     {
         _logger = logger;
         _queueProducer = queueProducer;
+        _httpClientFactory = httpClientFactory;
+        _configuration = configuration;
     }
 
     /// <summary>
@@ -82,6 +88,8 @@ public class OtelController : ControllerBase
 
     private async Task<IActionResult> ProcessOtlpRequest(string dataType)
     {
+        _logger.LogInformation("Received OTLP {DataType} request", dataType);
+        
         try
         {
             // Determine content type first
@@ -90,6 +98,7 @@ public class OtelController : ControllerBase
 
             object payload;
             int contentLength;
+            string? debugContent = null;
 
             if (isProtobuf)
             {
@@ -106,6 +115,7 @@ public class OtelController : ControllerBase
 
                 contentLength = contentBytes.Length;
                 payload = contentBytes;
+                debugContent = $"Protobuf data: {contentBytes.Length} bytes";
             }
             else
             {
@@ -120,6 +130,7 @@ public class OtelController : ControllerBase
                 }
 
                 contentLength = content.Length;
+                debugContent = content;
                 try
                 {
                     payload = JsonSerializer.Deserialize<JsonElement>(content);
@@ -131,6 +142,7 @@ public class OtelController : ControllerBase
                 }
             }
 
+            _logger.LogDebug("Request Headers: {Headers}", string.Join(", ", Request.Headers.Select(h => $"[{h.Key}, {string.Join(", ", (IEnumerable<string>)h.Value)}]")));
             _logger.LogInformation("Processing OTLP {DataType} request. ContentType: {ContentType}, Size: {Size} bytes", 
                 dataType, contentType, contentLength);
 
@@ -168,6 +180,22 @@ public class OtelController : ControllerBase
 
             // Queue the event for processing
             await _queueProducer.EnqueueAsync(eventDto);
+
+            // Also forward traces to Jaeger for dual storage
+            if (dataType == "traces")
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await ForwardToJaeger(payload, contentType);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to forward trace to Jaeger, continuing with internal processing");
+                    }
+                });
+            }
 
             _logger.LogDebug("Successfully queued OTLP {DataType} event from {HostName} with source type {SourceType}", 
                 dataType, eventDto.HostName, eventDto.SourceType);
@@ -272,6 +300,53 @@ public class OtelController : ControllerBase
                Request.Headers["X-Real-IP"].FirstOrDefault() ??
                HttpContext.Connection.RemoteIpAddress?.ToString() ??
                "unknown";
+    }
+
+    private async Task ForwardToJaeger(object payload, string contentType)
+    {
+        try
+        {
+            var jaegerHttpUrl = _configuration["Jaeger:QueryUrl"];
+            if (string.IsNullOrEmpty(jaegerHttpUrl))
+            {
+                _logger.LogDebug("No Jaeger:QueryUrl configured, skipping Jaeger forwarding");
+                return;
+            }
+
+            // Use Jaeger's HTTP collector endpoint instead of gRPC
+            var jaegerCollectorUrl = jaegerHttpUrl.Replace(":16686", ":14268");
+            
+            using var httpClient = _httpClientFactory.CreateClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(10);
+
+            HttpContent content;
+            if (contentType.Contains("application/x-protobuf") && payload is byte[] protobufData)
+            {
+                content = new ByteArrayContent(protobufData);
+                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-protobuf");
+            }
+            else
+            {
+                var jsonContent = payload is JsonElement element ? element.GetRawText() : JsonSerializer.Serialize(payload);
+                content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+            }
+
+            var response = await httpClient.PostAsync($"{jaegerCollectorUrl}/api/traces", content);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogDebug("Successfully forwarded trace to Jaeger collector at {JaegerUrl}", jaegerCollectorUrl);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to forward trace to Jaeger collector. Status: {StatusCode}, Reason: {ReasonPhrase}", 
+                    response.StatusCode, response.ReasonPhrase);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Exception occurred while forwarding trace to Jaeger");
+        }
     }
 
     public record ProcessingResult(bool IsSuccess, string? ErrorMessage = null)

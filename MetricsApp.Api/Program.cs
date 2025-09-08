@@ -29,6 +29,9 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add HttpClient for Jaeger proxy
+builder.Services.AddHttpClient();
+
 // Add CORS
 builder.Services.AddCors(options =>
 {
@@ -58,7 +61,9 @@ builder.Services.AddTransient<IDataRepository, SqlServerDataRepository>();
 builder.Services.AddWindowsPerfCounterParser();
 builder.Services.AddOpenTelemetryParsers();
 
-
+// Note: OpenTelemetry is already configured by AddServiceDefaults() from Aspire
+// The OTEL_EXPORTER_OTLP_ENDPOINT environment variable will be automatically used
+// No additional OTLP exporter configuration needed - Aspire handles this
 
 // // Configure Agent Core services
 // builder.Services.Configure<AgentOptions>(builder.Configuration.GetSection("MetricsAgent"));

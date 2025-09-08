@@ -169,10 +169,48 @@ public class SqlServerDataRepository : IDataRepository
 
     public Task<RepositoryMetricSchema> GetMetricSchemaAsync(CancellationToken cancellationToken = default)
     {
-        // This is a placeholder. A real implementation would query the database
-        // to discover available metrics and their attributes/resources.
+        var metricsSchema = new RepositoryMetricSchema();
+        
+        // Get distinct metric names, attribute keys, and resource keys from the Metrics table
+        using var connection = new SqlConnection(_connectionString);
+        connection.Open();
+        
+        var distinctNames = new List<string>();
+        var distinctAttributeKeys = new HashSet<string>();
+        var distinctResourceKeys = new HashSet<string>();
+        var query = "SELECT DISTINCT name, attributes, resource FROM [dbo].[Metrics]";
+        
+        using var command = new SqlCommand(query, connection);
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            distinctNames.Add(reader.GetString(0));
+            
+            if (!reader.IsDBNull(1))
+            {
+                var attributes = JsonSerializer.Deserialize<Dictionary<string, object>>(reader.GetString(1));
+                foreach (var key in attributes.Keys)
+                {
+                    distinctAttributeKeys.Add(key);
+                }
+            }
+            
+            if (!reader.IsDBNull(2))
+            {
+                var resource = JsonSerializer.Deserialize<Dictionary<string, object>>(reader.GetString(2));
+                foreach (var key in resource.Keys)
+                {
+                    distinctResourceKeys.Add(key);
+                }
+            }
+        }
+        
+        metricsSchema.MetricNames = distinctNames;
+        metricsSchema.AttributeKeys = distinctAttributeKeys.ToList();
+        metricsSchema.ResourceKeys = distinctResourceKeys.ToList();
+        
         _logger.LogWarning("GetMetricSchemaAsync is not fully implemented for SqlServerDataRepository.");
-        return Task.FromResult(new RepositoryMetricSchema());
+        return Task.FromResult(metricsSchema);
     }
 
     private async Task CreateTablesIfNotExistAsync(CancellationToken cancellationToken)
@@ -207,6 +245,25 @@ public class SqlServerDataRepository : IDataRepository
                     [resource] NVARCHAR(MAX) NULL
                 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]", cancellationToken);
         }
+        
+        var traceTableExists = await TableExistsAsync(connection, "Traces", cancellationToken);
+        if (!traceTableExists)
+        {
+            await CreateTableAsync(connection, "Traces", @"
+                CREATE TABLE [dbo].[Traces](
+                    [traceId] NVARCHAR(32) NOT NULL,
+                    [spanId] NVARCHAR(16) NOT NULL,
+                    [parentSpanId] NVARCHAR(16) NULL,
+                    [name] NVARCHAR(MAX) NULL,
+                    [kind] NVARCHAR(50) NULL,
+                    [startTime] DATETIME NOT NULL,
+                    [endTime] DATETIME NOT NULL,
+                    [attributes] NVARCHAR(MAX) NULL,
+                    [resource] NVARCHAR(MAX) NULL
+                ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]", cancellationToken);
+        }
+        
+        _logger.LogInformation("Ensured necessary tables exist in the database.");
     }
 
     private async Task<bool> TableExistsAsync(SqlConnection connection, string tableName, CancellationToken cancellationToken)

@@ -168,17 +168,38 @@ public class TelemetryController : ControllerBase
 
         try
         {
-            // TODO: Implement trace querying when repository supports it
-            var response = new TelemetryTracesResponse
+            // Build query for traces based on filters
+            var queryParts = new List<string>();
+            if (!string.IsNullOrEmpty(traceId))
+                queryParts.Add(traceId);
+            if (!string.IsNullOrEmpty(serviceName))
+                queryParts.Add(serviceName);
+
+            var criteria = new LogQueryCriteria
             {
-                Traces = new List<TelemetryTrace>(),
-                TimeRange = new TelemetryTimeRange
-                {
-                    StartTime = startTime,
-                    EndTime = endTime
-                }
+                StartTime = startTime,
+                EndTime = endTime,
+                Query = queryParts.Any() ? string.Join(" ", queryParts) : null,
+                Limit = Math.Min(limit, 1000)
             };
 
+            // Query traces from repository (using QueryTracesAsync extension method)
+            LogQueryResult traceLogs;
+            if (_dataRepository is MetricsApp.Repository.InMemory.InMemoryDataRepository inMemoryRepo)
+            {
+                traceLogs = await inMemoryRepo.QueryTracesAsync(criteria, HttpContext.RequestAborted);
+            }
+            else
+            {
+                // Fallback: query all logs and filter for traces
+                traceLogs = await _dataRepository.QueryLogsAsync(criteria, HttpContext.RequestAborted);
+                traceLogs.Logs = traceLogs.Logs.Where(l => 
+                    l.Attributes.ContainsKey("trace.id") || 
+                    l.Attributes.ContainsKey("span.id") ||
+                    l.Attributes.ContainsKey("span.name")).ToList();
+            }
+
+            var response = ConvertTracesToTelemetryResponse(traceLogs, startTime, endTime);
             return Ok(new QueryApiSuccessResponse<TelemetryTracesResponse>(response));
         }
         catch (Exception ex)
@@ -220,14 +241,43 @@ public class TelemetryController : ControllerBase
     {
         try
         {
-            // TODO: Implement real statistics from repository
-            var stats = new TelemetryStatsResponse
+            // Get real statistics from repository
+            TelemetryStatsResponse stats;
+            
+            if (_dataRepository is MetricsApp.Repository.InMemory.InMemoryDataRepository inMemoryRepo)
             {
-                Metrics = new TelemetryDataStats { Count = 0, LastReceived = null },
-                Logs = new TelemetryDataStats { Count = 0, LastReceived = null },
-                Traces = new TelemetryDataStats { Count = 0, LastReceived = null },
-                Timestamp = DateTimeOffset.UtcNow
-            };
+                var telemetryStats = await inMemoryRepo.GetTelemetryStatsAsync(HttpContext.RequestAborted);
+                stats = new TelemetryStatsResponse
+                {
+                    Metrics = new TelemetryDataStats 
+                    { 
+                        Count = telemetryStats.MetricsCount, 
+                        LastReceived = telemetryStats.LastMetricReceived 
+                    },
+                    Logs = new TelemetryDataStats 
+                    { 
+                        Count = telemetryStats.LogsCount, 
+                        LastReceived = telemetryStats.LastLogReceived 
+                    },
+                    Traces = new TelemetryDataStats 
+                    { 
+                        Count = telemetryStats.TracesCount, 
+                        LastReceived = telemetryStats.LastTraceReceived 
+                    },
+                    Timestamp = DateTimeOffset.UtcNow
+                };
+            }
+            else
+            {
+                // Fallback for other repository implementations
+                stats = new TelemetryStatsResponse
+                {
+                    Metrics = new TelemetryDataStats { Count = 0, LastReceived = null },
+                    Logs = new TelemetryDataStats { Count = 0, LastReceived = null },
+                    Traces = new TelemetryDataStats { Count = 0, LastReceived = null },
+                    Timestamp = DateTimeOffset.UtcNow
+                };
+            }
 
             return Ok(stats);
         }
@@ -304,6 +354,48 @@ public class TelemetryController : ControllerBase
             {
                 StartTime = DateTimeOffset.MinValue, // LogQueryResult doesn't have QueryTimeRange
                 EndTime = DateTimeOffset.MaxValue
+            }
+        };
+    }
+
+    private TelemetryTracesResponse ConvertTracesToTelemetryResponse(LogQueryResult result, DateTimeOffset startTime, DateTimeOffset endTime)
+    {
+        // Group span logs by trace ID to construct traces
+        var traceGroups = result.Logs
+            .Where(log => log.Attributes.TryGetValue("trace.id", out _))
+            .GroupBy(log => log.Attributes["trace.id"]?.ToString() ?? "unknown")
+            .ToList();
+
+        var traces = traceGroups.Select(traceGroup =>
+        {
+            var traceId = traceGroup.Key;
+            var spans = traceGroup.Select(spanLog => new TelemetrySpan
+            {
+                SpanId = spanLog.Attributes.TryGetValue("span.id", out var spanId) ? spanId?.ToString() ?? "" : "",
+                ParentSpanId = spanLog.Attributes.TryGetValue("span.parent_id", out var parentId) ? parentId?.ToString() : null,
+                Name = spanLog.Attributes.TryGetValue("span.name", out var spanName) ? spanName?.ToString() ?? "" : spanLog.Body?.ToString() ?? "",
+                StartTime = spanLog.Attributes.TryGetValue("span.start_time", out var startTimeStr) && DateTimeOffset.TryParse(startTimeStr?.ToString(), out var start) 
+                    ? start : spanLog.Timestamp,
+                EndTime = spanLog.Attributes.TryGetValue("span.end_time", out var endTimeStr) && DateTimeOffset.TryParse(endTimeStr?.ToString(), out var end) 
+                    ? end : spanLog.Timestamp,
+                Attributes = spanLog.Attributes.Where(kvp => !kvp.Key.StartsWith("span.") && !kvp.Key.StartsWith("trace."))
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+            }).ToList();
+
+            return new TelemetryTrace
+            {
+                TraceId = traceId,
+                Spans = spans
+            };
+        }).ToList();
+
+        return new TelemetryTracesResponse
+        {
+            Traces = traces,
+            TimeRange = new TelemetryTimeRange
+            {
+                StartTime = startTime,
+                EndTime = endTime
             }
         };
     }

@@ -250,10 +250,18 @@ public class OtlpLogsParser : IDataParser
                 
                 if (valueElement.TryGetProperty("stringValue", out var stringVal))
                     value = stringVal.GetString();
-                else if (valueElement.TryGetProperty("intValue", out var intVal) && intVal.TryGetInt64(out var intValue))
-                    value = intValue;
+                else if (valueElement.TryGetProperty("intValue", out var intVal))
+                {
+                    var intValue = ParseLongValue(intVal);
+                    if (intValue.HasValue)
+                        value = intValue.Value;
+                }
                 else if (valueElement.TryGetProperty("doubleValue", out var doubleVal))
-                    value = doubleVal.GetDouble();
+                {
+                    var doubleValue = ParseDoubleValue(doubleVal);
+                    if (!double.IsNaN(doubleValue))
+                        value = doubleValue;
+                }
                 else if (valueElement.TryGetProperty("boolValue", out var boolVal))
                     value = boolVal.GetBoolean();
                 else if (valueElement.TryGetProperty("arrayValue", out var arrayVal))
@@ -285,5 +293,39 @@ public class OtlpLogsParser : IDataParser
             }
         }
         return null;
+    }
+
+    private long? ParseLongValue(JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Number && element.TryGetInt64(out var longVal))
+        {
+            return longVal;
+        }
+        else if (element.ValueKind == JsonValueKind.String)
+        {
+            var str = element.GetString();
+            if (!string.IsNullOrEmpty(str) && long.TryParse(str, out longVal))
+            {
+                return longVal;
+            }
+        }
+        return null;
+    }
+
+    private double ParseDoubleValue(JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Number && element.TryGetDouble(out var doubleVal))
+        {
+            return doubleVal;
+        }
+        else if (element.ValueKind == JsonValueKind.String)
+        {
+            var str = element.GetString();
+            if (!string.IsNullOrEmpty(str) && double.TryParse(str, out doubleVal))
+            {
+                return doubleVal;
+            }
+        }
+        return double.NaN;
     }
 }

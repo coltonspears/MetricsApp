@@ -284,9 +284,10 @@ public class OtlpTracesParser : IDataParser
 
     private string MapSpanKind(JsonElement kindElement)
     {
-        if (kindElement.TryGetInt32(out var kindValue))
+        var kindValue = ParseIntValue(kindElement);
+        if (kindValue.HasValue)
         {
-            return kindValue switch
+            return kindValue.Value switch
             {
                 0 => "UNSPECIFIED",
                 1 => "INTERNAL", 
@@ -376,10 +377,18 @@ public class OtlpTracesParser : IDataParser
                 
                 if (valueElement.TryGetProperty("stringValue", out var stringVal))
                     value = stringVal.GetString();
-                else if (valueElement.TryGetProperty("intValue", out var intVal) && intVal.TryGetInt64(out var intValue))
-                    value = intValue;
+                else if (valueElement.TryGetProperty("intValue", out var intVal))
+                {
+                    var intValue = ParseLongValue(intVal);
+                    if (intValue.HasValue)
+                        value = intValue.Value;
+                }
                 else if (valueElement.TryGetProperty("doubleValue", out var doubleVal))
-                    value = doubleVal.GetDouble();
+                {
+                    var doubleValue = ParseDoubleValue(doubleVal);
+                    if (!double.IsNaN(doubleValue))
+                        value = doubleValue;
+                }
                 else if (valueElement.TryGetProperty("boolValue", out var boolVal))
                     value = boolVal.GetBoolean();
                 else if (valueElement.TryGetProperty("arrayValue", out var arrayVal))
@@ -408,6 +417,57 @@ public class OtlpTracesParser : IDataParser
             if (!string.IsNullOrEmpty(timeStr) && long.TryParse(timeStr, out timeNanos))
             {
                 return DateTimeOffset.FromUnixTimeMilliseconds(timeNanos / 1_000_000);
+            }
+        }
+        return null;
+    }
+
+    private long? ParseLongValue(JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Number && element.TryGetInt64(out var longVal))
+        {
+            return longVal;
+        }
+        else if (element.ValueKind == JsonValueKind.String)
+        {
+            var str = element.GetString();
+            if (!string.IsNullOrEmpty(str) && long.TryParse(str, out longVal))
+            {
+                return longVal;
+            }
+        }
+        return null;
+    }
+
+    private double ParseDoubleValue(JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Number && element.TryGetDouble(out var doubleVal))
+        {
+            return doubleVal;
+        }
+        else if (element.ValueKind == JsonValueKind.String)
+        {
+            var str = element.GetString();
+            if (!string.IsNullOrEmpty(str) && double.TryParse(str, out doubleVal))
+            {
+                return doubleVal;
+            }
+        }
+        return double.NaN;
+    }
+
+    private int? ParseIntValue(JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Number && element.TryGetInt32(out var intVal))
+        {
+            return intVal;
+        }
+        else if (element.ValueKind == JsonValueKind.String)
+        {
+            var str = element.GetString();
+            if (!string.IsNullOrEmpty(str) && int.TryParse(str, out intVal))
+            {
+                return intVal;
             }
         }
         return null;

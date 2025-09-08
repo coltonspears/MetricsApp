@@ -84,42 +84,93 @@ public class OtelController : ControllerBase
     {
         try
         {
-            // Read the request body
-            using var reader = new StreamReader(Request.Body);
-            var content = await reader.ReadToEndAsync();
-
-            if (string.IsNullOrEmpty(content))
-            {
-                _logger.LogWarning("Received empty OTLP {DataType} request", dataType);
-                return BadRequest("Empty request body");
-            }
-
-            // Determine content type
+            // Determine content type first
             var contentType = Request.ContentType ?? "application/json";
             var isProtobuf = contentType.Contains("application/x-protobuf");
 
+            object payload;
+            int contentLength;
+
+            if (isProtobuf)
+            {
+                // For protobuf, read as byte array
+                using var memoryStream = new MemoryStream();
+                await Request.Body.CopyToAsync(memoryStream);
+                var contentBytes = memoryStream.ToArray();
+                
+                if (contentBytes.Length == 0)
+                {
+                    _logger.LogWarning("Received empty OTLP {DataType} protobuf request", dataType);
+                    return BadRequest("Empty request body");
+                }
+
+                contentLength = contentBytes.Length;
+                payload = contentBytes;
+            }
+            else
+            {
+                // For JSON, read as string and parse
+                using var reader = new StreamReader(Request.Body);
+                var content = await reader.ReadToEndAsync();
+
+                if (string.IsNullOrEmpty(content))
+                {
+                    _logger.LogWarning("Received empty OTLP {DataType} JSON request", dataType);
+                    return BadRequest("Empty request body");
+                }
+
+                contentLength = content.Length;
+                try
+                {
+                    payload = JsonSerializer.Deserialize<JsonElement>(content);
+                }
+                catch (JsonException)
+                {
+                    // If JSON parsing fails, store as string for downstream parsing
+                    payload = content;
+                }
+            }
+
             _logger.LogInformation("Processing OTLP {DataType} request. ContentType: {ContentType}, Size: {Size} bytes", 
-                dataType, contentType, content.Length);
+                dataType, contentType, contentLength);
+
+            // Map dataType to correct source type for parsers
+            var sourceType = dataType switch
+            {
+                "traces" => "otlp-traces",
+                "metrics" => "otlp-metrics", 
+                "logs" => "otlp-logs",
+                _ => $"otlp-{dataType}"
+            };
+
+            // Map dataType to EventDto.Type 
+            var eventType = dataType switch
+            {
+                "traces" => "trace",
+                "metrics" => "metric",
+                "logs" => "log",
+                _ => dataType
+            };
 
             // Create event for the queue
             var eventDto = new EventDto
             {
                 Timestamp = DateTimeOffset.UtcNow,
                 TenantId = "default",
-                AppId = ExtractServiceName(content) ?? "unknown-service",
-                Type = dataType,
-                SourceType = $"otlp-{dataType}",
-                HostName = ExtractHostName(content) ?? Request.Headers["Host"].FirstOrDefault() ?? "unknown-host",
+                AppId = isProtobuf ? "unknown-service" : (ExtractServiceName(payload) ?? "unknown-service"),
+                Type = eventType,
+                SourceType = sourceType,
+                HostName = isProtobuf ? "unknown-host" : (ExtractHostName(payload) ?? Request.Headers["Host"].FirstOrDefault() ?? "unknown-host"),
                 Ip = GetClientIpAddress(),
                 LogLevel = "INFO",
-                Payload = isProtobuf ? content : JsonSerializer.Deserialize<JsonElement>(content)
+                Payload = payload
             };
 
             // Queue the event for processing
             await _queueProducer.EnqueueAsync(eventDto);
 
-            _logger.LogDebug("Successfully queued OTLP {DataType} event from {HostName}", 
-                dataType, eventDto.HostName);
+            _logger.LogDebug("Successfully queued OTLP {DataType} event from {HostName} with source type {SourceType}", 
+                dataType, eventDto.HostName, eventDto.SourceType);
 
             // Return success response
             return Ok(new ProcessingResult(true));
@@ -136,12 +187,15 @@ public class OtelController : ControllerBase
         }
     }
 
-    private string? ExtractServiceName(string content)
+    private string? ExtractServiceName(object payload)
     {
         try
         {
-            // Quick extraction without full parsing
-            if (content.Contains("service.name"))
+            if (payload is JsonElement jsonElement)
+            {
+                return ExtractAttributeValue(jsonElement, "service.name");
+            }
+            else if (payload is string content && content.Contains("service.name"))
             {
                 var jsonDoc = JsonDocument.Parse(content);
                 return ExtractAttributeValue(jsonDoc.RootElement, "service.name");
@@ -154,12 +208,15 @@ public class OtelController : ControllerBase
         return null;
     }
 
-    private string? ExtractHostName(string content)
+    private string? ExtractHostName(object payload)
     {
         try
         {
-            // Quick extraction without full parsing
-            if (content.Contains("host.name"))
+            if (payload is JsonElement jsonElement)
+            {
+                return ExtractAttributeValue(jsonElement, "host.name");
+            }
+            else if (payload is string content && content.Contains("host.name"))
             {
                 var jsonDoc = JsonDocument.Parse(content);
                 return ExtractAttributeValue(jsonDoc.RootElement, "host.name");

@@ -8,7 +8,7 @@ namespace MetricsApp.Parser.OpenTelemetry;
 public class OtlpMetricsParser : IDataParser
 {
     private readonly ILogger<OtlpMetricsParser> _logger;
-    private const string SourceType = "otlp-metric";
+    private const string SourceType = "otlp-metrics";
 
     public OtlpMetricsParser(ILogger<OtlpMetricsParser> logger)
     {
@@ -46,7 +46,7 @@ public class OtlpMetricsParser : IDataParser
             {
                 _logger.LogWarning("Unsupported OTLP metrics payload type '{PayloadType}' for event from host {HostName}.", 
                     rawEvent.Payload.GetType().FullName, rawEvent.HostName);
-                return Enumerable.Empty<object>();
+                return [];
             }
 
             return ParseOtlpMetrics(jsonPayload, rawEvent);
@@ -54,12 +54,12 @@ public class OtlpMetricsParser : IDataParser
         catch (JsonException ex)
         {
             _logger.LogError(ex, "Failed to deserialize OTLP metrics payload from host {HostName}.", rawEvent.HostName);
-            return Enumerable.Empty<object>();
+            return [];
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error parsing OTLP metrics from host {HostName}.", rawEvent.HostName);
-            return Enumerable.Empty<object>();
+            return [];
         }
     }
 
@@ -160,11 +160,15 @@ public class OtlpMetricsParser : IDataParser
                 // Extract value
                 if (dataPoint.TryGetProperty("asDouble", out var doubleValue))
                 {
-                    metric.GaugeValueDouble = doubleValue.GetDouble();
+                    metric.GaugeValueDouble = ParseDoubleValue(doubleValue);
                 }
-                else if (dataPoint.TryGetProperty("asInt", out var intValue) && intValue.TryGetInt64(out var intVal))
+                else if (dataPoint.TryGetProperty("asInt", out var intValue))
                 {
-                    metric.GaugeValueDouble = intVal;
+                    var intVal = ParseLongValue(intValue);
+                    if (intVal.HasValue)
+                    {
+                        metric.GaugeValueDouble = intVal.Value;
+                    }
                 }
 
                 // Extract attributes
@@ -210,11 +214,15 @@ public class OtlpMetricsParser : IDataParser
                 // Extract value
                 if (dataPoint.TryGetProperty("asDouble", out var doubleValue))
                 {
-                    metric.SumValue = doubleValue.GetDouble();
+                    metric.SumValue = ParseDoubleValue(doubleValue);
                 }
-                else if (dataPoint.TryGetProperty("asInt", out var intValue) && intValue.TryGetInt64(out var intVal))
+                else if (dataPoint.TryGetProperty("asInt", out var intValue))
                 {
-                    metric.SumValue = intVal;
+                    var intVal = ParseLongValue(intValue);
+                    if (intVal.HasValue)
+                    {
+                        metric.SumValue = intVal.Value;
+                    }
                 }
 
                 // Extract attributes
@@ -251,17 +259,18 @@ public class OtlpMetricsParser : IDataParser
                 }
 
                 // Extract histogram values
-                if (dataPoint.TryGetProperty("count", out var countElement) && countElement.TryGetInt64(out var count))
+                if (dataPoint.TryGetProperty("count", out var countElement))
                 {
-                    metric.HistogramCount = count;
+                    var count = ParseLongValue(countElement);
+                    if (count.HasValue)
+                    {
+                        metric.HistogramCount = count.Value;
+                    }
                 }
 
                 if (dataPoint.TryGetProperty("sum", out var sumElement))
                 {
-                    if (sumElement.TryGetDouble(out var sum))
-                    {
-                        metric.SumValue = sum; // Store sum value
-                    }
+                    metric.SumValue = ParseDoubleValue(sumElement);
                 }
 
                 // Extract bucket counts and bounds
@@ -270,8 +279,9 @@ public class OtlpMetricsParser : IDataParser
                     var buckets = new List<long>();
                     foreach (var bucketCount in bucketCounts.EnumerateArray())
                     {
-                        if (bucketCount.TryGetInt64(out var bucketVal))
-                            buckets.Add(bucketVal);
+                        var bucketVal = ParseLongValue(bucketCount);
+                        if (bucketVal.HasValue)
+                            buckets.Add(bucketVal.Value);
                     }
                     metric.Attributes["histogram.bucket_counts"] = string.Join(",", buckets);
                 }
@@ -281,7 +291,8 @@ public class OtlpMetricsParser : IDataParser
                     var bounds = new List<double>();
                     foreach (var bound in explicitBounds.EnumerateArray())
                     {
-                        if (bound.TryGetDouble(out var boundVal))
+                        var boundVal = ParseDoubleValue(bound);
+                        if (!double.IsNaN(boundVal))
                             bounds.Add(boundVal);
                     }
                     metric.Attributes["histogram.explicit_bounds"] = string.Join(",", bounds);
@@ -379,5 +390,39 @@ public class OtlpMetricsParser : IDataParser
             }
         }
         return null;
+    }
+
+    private long? ParseLongValue(JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Number && element.TryGetInt64(out var longVal))
+        {
+            return longVal;
+        }
+        else if (element.ValueKind == JsonValueKind.String)
+        {
+            var str = element.GetString();
+            if (!string.IsNullOrEmpty(str) && long.TryParse(str, out longVal))
+            {
+                return longVal;
+            }
+        }
+        return null;
+    }
+
+    private double ParseDoubleValue(JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Number && element.TryGetDouble(out var doubleVal))
+        {
+            return doubleVal;
+        }
+        else if (element.ValueKind == JsonValueKind.String)
+        {
+            var str = element.GetString();
+            if (!string.IsNullOrEmpty(str) && double.TryParse(str, out doubleVal))
+            {
+                return doubleVal;
+            }
+        }
+        return double.NaN;
     }
 }

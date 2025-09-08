@@ -388,7 +388,13 @@ public class JaegerTraceResponse
 
 public class JaegerOperationsResponse
 {
-    public List<JaegerOperation> Data { get; set; } = new();
+    //public List<JaegerOperation> Data { get; set; } = new();
+
+    public List<string> Data { get; set; } = [];
+    public int Total { get; set; }
+    public int Limit { get; set; }
+    public int Offset { get; set; }
+    public object Errors { get; set; }
 }
 
 public class JaegerDependenciesResponse

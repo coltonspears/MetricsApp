@@ -108,6 +108,27 @@ const JaegerTraceViewer: React.FC = () => {
     loadServices();
   }, []);
 
+  // Auto-load services in background if none are present
+  useEffect(() => {
+    if (services.length === 0) {
+      // Try to load services in background
+      loadServices();
+    }
+  }, []);
+  
+  // Retry loading services periodically if none are found
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (services.length === 0) {
+      interval = setInterval(() => {
+        loadServices();
+      }, 5000); // Retry every 5 seconds
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [services.length]);
+
   // Load operations when service changes
   useEffect(() => {
     if (filters.service) {
@@ -194,6 +215,11 @@ const JaegerTraceViewer: React.FC = () => {
   };
 
   const searchTraces = async () => {
+    if (!filters.service) {
+      setError('Please select a service to search for traces');
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     
@@ -217,30 +243,45 @@ const JaegerTraceViewer: React.FC = () => {
         
         if (result.data && result.data.data) {
           // Handle Jaeger format response
-          traces = result.data.data.map((jaegerTrace: any) => ({
-            traceId: jaegerTrace.traceID,
-            spans: jaegerTrace.spans.map((span: any) => ({
-              traceId: span.traceID,
-              spanId: span.spanID,
-              parentSpanId: span.parentSpanID,
-              name: span.operationName,
-              serviceName: jaegerTrace.processes[span.processID]?.serviceName || 'unknown',
-              startTime: span.startTime,
-              duration: span.duration,
-              attributes: span.tags.reduce((acc: any, tag: any) => {
-                acc[tag.key] = tag.value;
-                return acc;
-              }, {}),
-              status: { code: 0 },
-              isError: span.tags.some((tag: any) => tag.key === 'error' && tag.value === true)
-            })),
-            services: Object.fromEntries(
-              jaegerTrace.spans.map((span: any) => [
-                span.spanID, 
-                jaegerTrace.processes[span.processID]?.serviceName || 'unknown'
-              ])
-            )
-          }));
+          traces = result.data.data.map((jaegerTrace: any) => {
+            const normalizedSpans = jaegerTrace.spans.map((span: any) => {
+              // Find parent from references if parentSpanID is empty
+              let parentSpanId = span.parentSpanID;
+              if (!parentSpanId && span.references && span.references.length > 0) {
+                const childOfRef = span.references.find((ref: any) => ref.refType === 'CHILD_OF');
+                if (childOfRef) {
+                  parentSpanId = childOfRef.spanID;
+                }
+              }
+              
+              return {
+                traceId: span.traceID,
+                spanId: span.spanID,
+                parentSpanId: parentSpanId || undefined,
+                name: span.operationName,
+                serviceName: jaegerTrace.processes[span.processID]?.serviceName || 'unknown',
+                startTime: span.startTime,
+                duration: span.duration,
+                attributes: span.tags.reduce((acc: any, tag: any) => {
+                  acc[tag.key] = tag.value;
+                  return acc;
+                }, {}),
+                status: { code: 0 },
+                isError: span.tags.some((tag: any) => tag.key === 'error' && tag.value === true)
+              };
+            });
+            
+            return {
+              traceId: jaegerTrace.traceID,
+              spans: normalizedSpans,
+              services: Object.fromEntries(
+                jaegerTrace.spans.map((span: any) => [
+                  span.spanID, 
+                  jaegerTrace.processes[span.processID]?.serviceName || 'unknown'
+                ])
+              )
+            };
+          });
         } else if (result.resourceSpans) {
           // Handle OTLP format response  
           traces = normalizeOtlpTrace(result);
@@ -296,12 +337,20 @@ const JaegerTraceViewer: React.FC = () => {
         if (result.data && result.data.data && result.data.data.length > 0) {
           // Handle Jaeger format response
           const jaegerTrace = result.data.data[0];
-          normalizedTrace = {
-            traceId: jaegerTrace.traceID,
-            spans: jaegerTrace.spans.map((span: any) => ({
+          const normalizedSpans = jaegerTrace.spans.map((span: any) => {
+            // Find parent from references if parentSpanID is empty
+            let parentSpanId = span.parentSpanID;
+            if (!parentSpanId && span.references && span.references.length > 0) {
+              const childOfRef = span.references.find((ref: any) => ref.refType === 'CHILD_OF');
+              if (childOfRef) {
+                parentSpanId = childOfRef.spanID;
+              }
+            }
+            
+            return {
               traceId: span.traceID,
               spanId: span.spanID,
-              parentSpanId: span.parentSpanID,
+              parentSpanId: parentSpanId || undefined,
               name: span.operationName,
               serviceName: jaegerTrace.processes[span.processID]?.serviceName || 'unknown',
               startTime: span.startTime,
@@ -312,7 +361,12 @@ const JaegerTraceViewer: React.FC = () => {
               }, {}),
               status: { code: 0 },
               isError: span.tags.some((tag: any) => tag.key === 'error' && tag.value === true)
-            })),
+            };
+          });
+          
+          normalizedTrace = {
+            traceId: jaegerTrace.traceID,
+            spans: normalizedSpans,
             services: Object.fromEntries(
               jaegerTrace.spans.map((span: any) => [
                 span.spanID, 
@@ -370,7 +424,8 @@ const JaegerTraceViewer: React.FC = () => {
       }
     });
 
-    return rootSpans;
+    // Sort root spans by start time
+    return rootSpans.sort((a, b) => a.startTime - b.startTime);
   };
 
   const getChildSpans = (parentId: string, spans: NormalizedSpan[]): NormalizedSpan[] => {
@@ -399,123 +454,342 @@ const JaegerTraceViewer: React.FC = () => {
     const childSpans = getChildSpans(span.spanId, allSpans);
     const hasChildren = childSpans.length > 0;
     const isExpanded = expandedSpans.has(span.spanId);
+    const [showDetails, setShowDetails] = useState(false);
     const serviceName = span.serviceName;
     const spanColor = getSpanColor(serviceName);
     
     // Calculate span position and width relative to trace
     const spanStart = ((span.startTime - traceStartTime) / traceDuration) * 100;
     const spanWidth = (span.duration / traceDuration) * 100;
+    const selfTime = span.duration - childSpans.reduce((acc, child) => acc + child.duration, 0);
 
     const isError = span.isError;
+    
+    // Get key attributes for display
+    const httpMethod = span.attributes['http.request.method'];
+    const httpStatus = span.attributes['http.response.status_code'];
+    const httpRoute = span.attributes['http.route'] || span.attributes['url.path'];
+    const spanKind = span.attributes['span.kind'];
 
     return (
       <>
         <div 
-          className="flex items-center py-2 px-4 border-b transition-colors"
+          className="border-b transition-colors"
           style={{
             borderColor: 'var(--border-primary)'
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent'
-          }}
         >
-          <div className="flex items-center" style={{ marginLeft: `${depth * 20}px` }}>
-            {hasChildren && (
-              <button
-                onClick={() => toggleSpanExpansion(span.spanId)}
-                className="mr-2 transition-colors"
-                style={{ color: 'var(--text-tertiary)' }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = 'var(--text-primary)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'var(--text-tertiary)'
-                }}
-              >
-                {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-              </button>
-            )}
-            <div className="flex items-center space-x-2 min-w-0 flex-1">
-              <div 
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: spanColor }}
-              />
-              <span 
-                className="font-medium truncate"
-                style={{ 
-                  fontSize: 'var(--text-sm)',
-                  color: 'var(--text-primary)',
-                  fontFamily: 'var(--font-sans)'
-                }}
-              >
-                {serviceName}
-              </span>
-              <span 
-                className="truncate"
-                style={{ 
-                  fontSize: 'var(--text-sm)',
-                  color: 'var(--text-secondary)'
-                }}
-              >
-                {span.name}
-              </span>
-              {isError && <AlertCircle size={16} style={{ color: 'var(--status-error)' }} />}
+          <div 
+            className="flex items-center py-2 px-4 cursor-pointer"
+            onClick={() => setShowDetails(!showDetails)}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent'
+            }}
+          >
+            <div className="flex items-center" style={{ marginLeft: `${depth * 20}px` }}>
+              {hasChildren && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleSpanExpansion(span.spanId);
+                  }}
+                  className="mr-2 transition-colors"
+                  style={{ color: 'var(--text-tertiary)' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'var(--text-primary)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'var(--text-tertiary)'
+                  }}
+                >
+                  {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                </button>
+              )}
+              <div className="flex items-center space-x-3 min-w-0 flex-1">
+                <div 
+                  className="w-3 h-3 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: spanColor }}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center space-x-2">
+                    <span 
+                      className="font-medium truncate"
+                      style={{ 
+                        fontSize: 'var(--text-sm)',
+                        color: 'var(--text-primary)',
+                        fontFamily: 'var(--font-sans)'
+                      }}
+                    >
+                      {serviceName}
+                    </span>
+                    <span 
+                      className="truncate"
+                      style={{ 
+                        fontSize: 'var(--text-sm)',
+                        color: 'var(--text-secondary)'
+                      }}
+                    >
+                      {span.name}
+                    </span>
+                    {httpMethod && (
+                      <span 
+                        className="px-1 py-0.5 text-xs rounded"
+                        style={{ 
+                          backgroundColor: 'var(--bg-tertiary)',
+                          color: 'var(--text-secondary)',
+                          fontFamily: 'var(--font-mono)'
+                        }}
+                      >
+                        {httpMethod}
+                      </span>
+                    )}
+                    {httpStatus && (
+                      <span 
+                        className="px-1 py-0.5 text-xs rounded"
+                        style={{ 
+                          backgroundColor: httpStatus >= 400 ? 'var(--status-error)' : 
+                                        httpStatus >= 300 ? 'var(--status-warning)' : 'var(--status-success)',
+                          color: 'white',
+                          fontFamily: 'var(--font-mono)'
+                        }}
+                      >
+                        {httpStatus}
+                      </span>
+                    )}
+                    {spanKind && (
+                      <span 
+                        className="px-1 py-0.5 text-xs rounded"
+                        style={{ 
+                          backgroundColor: 'var(--bg-elevated)',
+                          color: 'var(--text-tertiary)',
+                          fontFamily: 'var(--font-mono)'
+                        }}
+                      >
+                        {spanKind}
+                      </span>
+                    )}
+                    {isError && <AlertCircle size={16} style={{ color: 'var(--status-error)' }} />}
+                  </div>
+                  {httpRoute && (
+                    <div 
+                      className="mt-1 truncate"
+                      style={{ 
+                        fontSize: 'var(--text-xs)',
+                        color: 'var(--text-tertiary)',
+                        fontFamily: 'var(--font-mono)'
+                      }}
+                    >
+                      {httpRoute}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-4 ml-4">
+              <div className="text-right">
+                <div 
+                  className="min-w-max font-mono"
+                  style={{ 
+                    fontSize: 'var(--text-xs)',
+                    color: 'var(--text-secondary)',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {formatDuration(span.duration)}
+                </div>
+                {selfTime !== span.duration && (
+                  <div 
+                    className="min-w-max font-mono"
+                    style={{ 
+                      fontSize: 'var(--text-xs)',
+                      color: 'var(--text-tertiary)'
+                    }}
+                  >
+                    self: {formatDuration(selfTime)}
+                  </div>
+                )}
+              </div>
+              <div className="text-right">
+                <div 
+                  className="min-w-max"
+                  style={{ 
+                    fontSize: 'var(--text-xs)',
+                    color: 'var(--text-tertiary)'
+                  }}
+                >
+                  {formatTime(span.startTime)}
+                </div>
+                <div 
+                  className="min-w-max font-mono"
+                  style={{ 
+                    fontSize: 'var(--text-xs)',
+                    color: 'var(--text-tertiary)'
+                  }}
+                >
+                  +{formatDuration(span.startTime - traceStartTime)}
+                </div>
+              </div>
             </div>
           </div>
           
-          <div className="flex items-center space-x-4 ml-4">
-            <span 
-              className="min-w-max"
-              style={{ 
-                fontSize: 'var(--text-xs)',
-                color: 'var(--text-tertiary)'
-              }}
-            >
-              {formatTime(span.startTime)}
-            </span>
-            <span 
-              className="min-w-max"
-              style={{ 
-                fontSize: 'var(--text-xs)',
-                color: 'var(--text-secondary)',
-                fontFamily: 'var(--font-mono)'
-              }}
-            >
-              {formatDuration(span.duration)}
-            </span>
-          </div>
-        </div>
-        
-        {/* Span timeline visualization */}
-        <div 
-          className="px-4 py-1"
-          style={{ backgroundColor: 'var(--bg-tertiary)' }}
-        >
+          {/* Span timeline visualization */}
           <div 
-            className="relative h-4"
-            style={{ 
-              backgroundColor: 'var(--bg-secondary)',
-              borderRadius: 'var(--radius-sm)'
-            }}
+            className="px-4 py-1"
+            style={{ backgroundColor: 'var(--bg-tertiary)' }}
           >
-            <div
-              className="absolute h-full"
-              style={{
-                left: `${spanStart}%`,
-                width: `${Math.max(spanWidth, 0.5)}%`,
-                backgroundColor: isError ? 'var(--status-error)' : spanColor,
-                opacity: 0.8,
+            <div 
+              className="relative h-4"
+              style={{ 
+                backgroundColor: 'var(--bg-secondary)',
                 borderRadius: 'var(--radius-sm)'
               }}
-            />
+            >
+              <div
+                className="absolute h-full"
+                style={{
+                  left: `${spanStart}%`,
+                  width: `${Math.max(spanWidth, 0.5)}%`,
+                  backgroundColor: isError ? 'var(--status-error)' : spanColor,
+                  opacity: 0.8,
+                  borderRadius: 'var(--radius-sm)'
+                }}
+              />
+            </div>
           </div>
+          
+          {/* Detailed information when expanded */}
+          {showDetails && (
+            <div 
+              className="px-4 py-3 border-t"
+              style={{
+                backgroundColor: 'var(--bg-elevated)',
+                borderColor: 'var(--border-secondary)'
+              }}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 
+                    className="font-semibold mb-2"
+                    style={{ 
+                      fontSize: 'var(--text-sm)',
+                      color: 'var(--text-primary)'
+                    }}
+                  >
+                    Span Details
+                  </h4>
+                  <div className="space-y-1">
+                    <div className="flex">
+                      <span 
+                        className="w-24 flex-shrink-0"
+                        style={{ 
+                          fontSize: 'var(--text-xs)',
+                          color: 'var(--text-tertiary)'
+                        }}
+                      >
+                        Span ID:
+                      </span>
+                      <span 
+                        className="font-mono"
+                        style={{ 
+                          fontSize: 'var(--text-xs)',
+                          color: 'var(--text-secondary)'
+                        }}
+                      >
+                        {span.spanId}
+                      </span>
+                    </div>
+                    {span.parentSpanId && (
+                      <div className="flex">
+                        <span 
+                          className="w-24 flex-shrink-0"
+                          style={{ 
+                            fontSize: 'var(--text-xs)',
+                            color: 'var(--text-tertiary)'
+                          }}
+                        >
+                          Parent ID:
+                        </span>
+                        <span 
+                          className="font-mono"
+                          style={{ 
+                            fontSize: 'var(--text-xs)',
+                            color: 'var(--text-secondary)'
+                          }}
+                        >
+                          {span.parentSpanId}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex">
+                      <span 
+                        className="w-24 flex-shrink-0"
+                        style={{ 
+                          fontSize: 'var(--text-xs)',
+                          color: 'var(--text-tertiary)'
+                        }}
+                      >
+                        Duration:
+                      </span>
+                      <span 
+                        className="font-mono"
+                        style={{ 
+                          fontSize: 'var(--text-xs)',
+                          color: 'var(--text-secondary)'
+                        }}
+                      >
+                        {formatDuration(span.duration)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 
+                    className="font-semibold mb-2"
+                    style={{ 
+                      fontSize: 'var(--text-sm)',
+                      color: 'var(--text-primary)'
+                    }}
+                  >
+                    Tags
+                  </h4>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {Object.entries(span.attributes).map(([key, value]) => (
+                      <div key={key} className="flex">
+                        <span 
+                          className="w-32 flex-shrink-0 truncate"
+                          style={{ 
+                            fontSize: 'var(--text-xs)',
+                            color: 'var(--text-tertiary)'
+                          }}
+                          title={key}
+                        >
+                          {key}:
+                        </span>
+                        <span 
+                          className="font-mono break-all"
+                          style={{ 
+                            fontSize: 'var(--text-xs)',
+                            color: 'var(--text-secondary)'
+                          }}
+                        >
+                          {String(value)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Child spans */}
-        {isExpanded && childSpans.map(childSpan => (
+        {isExpanded && childSpans.sort((a, b) => a.startTime - b.startTime).map(childSpan => (
           <SpanRow
             key={childSpan.spanId}
             span={childSpan}
@@ -582,7 +856,7 @@ const JaegerTraceViewer: React.FC = () => {
               fontSize: 'var(--text-sm)'
             }}
           >
-            <option value="">All Services</option>
+            <option value="">{services.length === 0 ? 'Loading services...' : 'Select a service'}</option>
             {services.map(service => (
               <option key={service} value={service}>{service}</option>
             ))}
@@ -674,16 +948,27 @@ const JaegerTraceViewer: React.FC = () => {
         <div className="flex items-center space-x-4 mt-4">
           <button
             onClick={searchTraces}
-            disabled={loading}
+            disabled={loading || !filters.service}
             className="btn-themed-primary flex items-center space-x-2"
             style={{
-              opacity: loading ? 0.5 : 1,
-              cursor: loading ? 'not-allowed' : 'pointer'
+              opacity: (loading || !filters.service) ? 0.5 : 1,
+              cursor: (loading || !filters.service) ? 'not-allowed' : 'pointer'
             }}
           >
             <Search size={16} />
             <span>{loading ? 'Searching...' : 'Find Traces'}</span>
           </button>
+          
+          {!filters.service && (
+            <span 
+              style={{ 
+                fontSize: 'var(--text-xs)',
+                color: 'var(--text-tertiary)'
+              }}
+            >
+              Select a service to search for traces
+            </span>
+          )}
           
           <button
             onClick={generateSampleTrace}
@@ -732,30 +1017,44 @@ const JaegerTraceViewer: React.FC = () => {
               borderColor: 'var(--border-primary)'
             }}
           >
-            <h2 
-              className="font-semibold"
-              style={{ 
-                color: 'var(--text-primary)',
-                fontFamily: 'var(--font-sans)'
-              }}
-            >
-              {traces.length} Trace{traces.length !== 1 ? 's' : ''} Found
-            </h2>
+              <div className="flex items-center justify-between">
+                <h2 
+                  className="font-semibold"
+                  style={{ 
+                    color: 'var(--text-primary)',
+                    fontFamily: 'var(--font-sans)'
+                  }}
+                >
+                  {traces.length} Trace{traces.length !== 1 ? 's' : ''} Found
+                </h2>
+                {services.length === 0 && (
+                  <span 
+                    className="text-xs animate-pulse"
+                    style={{ color: 'var(--text-tertiary)' }}
+                  >
+                    Loading services...
+                  </span>
+                )}
+              </div>
           </div>
           
           <div className="overflow-auto h-full">
             {traces.map(trace => {
               const rootSpan = trace.spans.find(span => !span.parentSpanId);
               const serviceName = rootSpan?.serviceName || 'unknown';
-              const duration = Math.max(...trace.spans.map(span => span.duration));
+              const rootOperation = rootSpan?.name || 'unknown';
+              const totalDuration = Math.max(...trace.spans.map(span => span.startTime + span.duration)) - Math.min(...trace.spans.map(span => span.startTime));
               const spanCount = trace.spans.length;
               const hasErrors = trace.spans.some(span => span.isError);
+              const serviceCount = new Set(trace.spans.map(span => span.serviceName)).size;
+              const errorCount = trace.spans.filter(span => span.isError).length;
+              const traceStartTime = Math.min(...trace.spans.map(span => span.startTime));
 
               return (
                 <div
                   key={trace.traceId}
                   onClick={() => loadTraceDetails(trace.traceId)}
-                  className="p-4 border-b cursor-pointer transition-colors"
+                  className="px-4 py-3 border-b cursor-pointer transition-colors"
                   style={{
                     backgroundColor: selectedTrace?.traceId === trace.traceId 
                       ? 'var(--interactive-secondary)' 
@@ -775,41 +1074,105 @@ const JaegerTraceViewer: React.FC = () => {
                     }
                   }}
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between mb-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center space-x-2">
                         <span 
-                          className="font-medium"
+                          className="font-semibold"
                           style={{ 
                             color: 'var(--text-primary)',
-                            fontSize: 'var(--text-sm)',
+                            fontSize: 'var(--text-base)',
                             fontFamily: 'var(--font-sans)'
                           }}
                         >
-                          {serviceName}
+                          {rootOperation}
                         </span>
-                        {hasErrors && <AlertCircle size={14} style={{ color: 'var(--status-error)' }} />}
+                        {hasErrors && (
+                          <div className="flex items-center space-x-1">
+                            <AlertCircle size={14} style={{ color: 'var(--status-error)' }} />
+                            <span 
+                              style={{ 
+                                fontSize: 'var(--text-xs)',
+                                color: 'var(--status-error)',
+                                fontWeight: 'bold'
+                              }}
+                            >
+                              {errorCount} error{errorCount !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <div 
-                        className="mt-1 truncate"
+                        className="mt-1"
                         style={{ 
-                          fontSize: 'var(--text-xs)',
-                          color: 'var(--text-secondary)',
-                          fontFamily: 'var(--font-mono)'
+                          fontSize: 'var(--text-sm)',
+                          color: 'var(--text-secondary)'
                         }}
                       >
-                        {trace.traceId}
+                        {serviceName}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div 
+                        className="font-mono font-semibold"
+                        style={{ 
+                          fontSize: 'var(--text-sm)',
+                          color: 'var(--text-primary)'
+                        }}
+                      >
+                        {formatDuration(totalDuration)}
                       </div>
                       <div 
-                        className="flex items-center space-x-4 mt-2"
                         style={{ 
                           fontSize: 'var(--text-xs)',
                           color: 'var(--text-tertiary)'
                         }}
                       >
-                        <span>{spanCount} span{spanCount !== 1 ? 's' : ''}</span>
-                        <span style={{ fontFamily: 'var(--font-mono)' }}>{formatDuration(duration)}</span>
+                        {formatTime(traceStartTime)}
                       </div>
+                    </div>
+                  </div>
+                  
+                  <div 
+                    className="mb-2 text-xs truncate"
+                    style={{ 
+                      color: 'var(--text-tertiary)',
+                      fontFamily: 'var(--font-mono)'
+                    }}
+                  >
+                    {trace.traceId}
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div 
+                      className="flex items-center space-x-4"
+                      style={{ 
+                        fontSize: 'var(--text-xs)',
+                        color: 'var(--text-tertiary)'
+                      }}
+                    >
+                      <span>{spanCount} span{spanCount !== 1 ? 's' : ''}</span>
+                      <span>{serviceCount} service{serviceCount !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {trace.spans.slice(0, 3).map((span) => (
+                        <div
+                          key={span.spanId}
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: getSpanColor(span.serviceName) }}
+                          title={span.serviceName}
+                        />
+                      ))}
+                      {trace.spans.length > 3 && (
+                        <span 
+                          style={{ 
+                            fontSize: 'var(--text-xs)',
+                            color: 'var(--text-tertiary)'
+                          }}
+                        >
+                          +{trace.spans.length - 3}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

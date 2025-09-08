@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>MetricsApp.Serilog.Sink</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Authors>MetricsApp Team</Authors>
+    <Description>Custom Serilog sink that sends logs directly to MetricsApp API endpoints for centralized logging and telemetry collection</Description>
+    <PackageTags>Serilog;Sink;MetricsApp;Logging;Telemetry;OpenTelemetry</PackageTags>
+    <RepositoryUrl>https://github.com/coltonspears/MetricsApp</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog" Version="3.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.5" />
+    <PackageReference Include="System.Text.Json" Version="8.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MetricsApp.Core\MetricsApp.Core.csproj" />
+  </ItemGroup>
+
+</Project>

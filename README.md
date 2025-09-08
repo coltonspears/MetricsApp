@@ -13,4 +13,4 @@ The two main entry points for this solution are:
 
 Given the ongoing development, please refer to the source code for the latest project structure and functionality.
 
-![img.png](img.png)
+![tracing.png](tracing.png)

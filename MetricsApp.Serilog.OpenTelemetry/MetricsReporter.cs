@@ -247,7 +247,7 @@ public class MetricsReporter : IDisposable
 
         try
         {
-            var response = await _httpClient.PostAsync($"{_config.Endpoint}/v1/metrics", content);
+            var response = await _httpClient.PostAsync($"{_config.Endpoint}/api/v1/ingest/otlp/metrics", content);
 
             if (!response.IsSuccessStatusCode && _config.LogFailures)
             {
@@ -333,3 +333,4 @@ public class MetricsReporter : IDisposable
         public DateTimeOffset Timestamp { get; set; }
     }
 }
+

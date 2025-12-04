@@ -56,7 +56,7 @@ interface DataSource extends DataSourceConfiguration {
 1. **Data Source Detection**: Determines query type based on data source category
 2. **Time Range Application**: Applies tab-specific time ranges to all queries
 3. **Query Routing**: 
-   - Ingested data → Direct API call to `/api/v1/metrics/Query`
+   - Ingested data → Direct API call to `/api/v1/telemetry/metrics`
    - SQL-like queries → `DataSourceApi.queryLogs()`
    - Metric queries → `DataSourceApi.queryMetrics()`
 
@@ -111,7 +111,7 @@ interface DataSource extends DataSourceConfiguration {
 
 ### Ingested Data Querying
 ```typescript
-const response = await fetch(`/api/v1/metrics/Query?startTime=${startTime}&endTime=${endTime}&limit=1000${query ? '&query=' + query : ''}`)
+const response = await fetch(`/api/v1/telemetry/metrics?startTime=${startTime}&endTime=${endTime}&limit=1000${query ? '&query=' + query : ''}`)
 ```
 
 ### Response Processing

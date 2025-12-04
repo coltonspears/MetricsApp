@@ -100,8 +100,8 @@ public class MetricsAppSinkConfiguration
         return TargetEndpoint.ToLowerInvariant() switch
         {
             "telemetry" => $"{baseUrl}/api/v1/telemetry/logs",
-            "otel" => $"{baseUrl}/v1/logs",
-            "jaeger" => $"{baseUrl}/api/v1/jaeger/traces", // For trace-like logs
+            "otel" => $"{baseUrl}/api/v1/ingest/otlp/logs",
+            "jaeger" => $"{baseUrl}/api/v1/integrations/jaeger/traces", // For trace-like logs
             _ => $"{baseUrl}/api/v1/telemetry/logs"
         };
     }
@@ -138,3 +138,4 @@ public class MetricsAppSinkConfiguration
         return errors;
     }
 }
+

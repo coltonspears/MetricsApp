@@ -26,7 +26,7 @@ This document outlines the implementation plan for a Grafana-style datasource pl
 
 #### 4. API Integration (`MetricsApp.Api`)
 - **DataSourcesController**: REST endpoints for datasource management
-- **Enhanced QueryController**: Multi-datasource querying
+- **Enhanced TelemetryController**: Multi-datasource querying
 
 #### 5. UI Integration (`MetricsApp.WebUI`)
 - **Datasource Management Pages**: CRUD operations

@@ -71,7 +71,7 @@ const TelemetryTesting = () => {
 
   const sendOtlpData = async (endpoint: string, data: string, dataType: string) => {
     const testResult = addTestResult({
-      endpoint: `/v1/${endpoint}`,
+      endpoint: `/api/v1/ingest/otlp/${endpoint}`,
       method: 'POST',
       status: 'pending'
     })
@@ -79,7 +79,7 @@ const TelemetryTesting = () => {
     const startTime = performance.now()
 
     try {
-      const response = await fetch(`/v1/${endpoint}`, {
+      const response = await fetch(`/api/v1/ingest/otlp/${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -476,7 +476,7 @@ const TelemetryTesting = () => {
                     className="w-full px-4 py-2 bg-themed-interactive-primary text-themed-text-inverse rounded-lg hover:bg-themed-interactive-primary-hover"
                   >
                     <CheckCircle className="h-4 w-4 mr-2 inline" />
-                    Check OTLP Health (/v1/health)
+                    Check OTLP Health (/api/v1/ingest/otlp/health)
                   </button>
                   
                   <button
@@ -707,3 +707,4 @@ const sampleLogsData = {
 }
 
 export default TelemetryTesting
+

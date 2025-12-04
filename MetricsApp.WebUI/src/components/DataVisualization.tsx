@@ -425,108 +425,68 @@ const DataVisualization = ({ data, datasourceType, viewMode }: DataVisualization
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-themed-bg-tertiary p-6 rounded-lg border border-themed-border-primary">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <TrendingUp className="h-8 w-8 text-themed-text-accent" />
-            </div>
-            <div className="ml-5 w-0 flex-1">
-              <dl>
-                <dt className="text-sm font-medium text-themed-text-secondary truncate">
-                  Total Records
-                </dt>
-                <dd className="text-2xl font-semibold text-themed-text-primary">
-                  {data.length || '0'}
-                </dd>
-              </dl>
-            </div>
-          </div>
+      <div className="stat-grid stat-grid--quartet">
+        <div className="stat-card">
+          <span className="stat-card__icon">
+            <TrendingUp className="h-5 w-5 text-themed-status-success" />
+          </span>
+          <div className="stat-card__label">Total Records</div>
+          <div className="stat-card__value">{data.length.toLocaleString()}</div>
+          <div className="stat-card__meta">Rows returned by this query</div>
         </div>
 
-        <div className="bg-themed-bg-tertiary p-6 rounded-lg border border-themed-border-primary">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <Activity className="h-8 w-8 text-themed-text-accent" />
-            </div>
-            <div className="ml-5 w-0 flex-1">
-              <dl>
-                <dt className="text-sm font-medium text-themed-text-secondary truncate">
-                  Chart Points
-                </dt>
-                <dd className="text-2xl font-semibold text-themed-text-primary">
-                  {chartData.length || '0'}
-                </dd>
-              </dl>
-            </div>
-          </div>
+        <div className="stat-card">
+          <span className="stat-card__icon">
+            <Activity className="h-5 w-5 text-themed-status-info" />
+          </span>
+          <div className="stat-card__label">Chart Points</div>
+          <div className="stat-card__value">{chartData.length.toLocaleString()}</div>
+          <div className="stat-card__meta">Transformed for visualization</div>
         </div>
 
-        <div className="bg-themed-bg-tertiary p-6 rounded-lg border border-themed-border-primary">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <BarChart3 className="h-8 w-8 text-themed-text-accent" />
-            </div>
-            <div className="ml-5 w-0 flex-1">
-              <dl>
-                <dt className="text-sm font-medium text-themed-text-secondary truncate">
-                  Data Series
-                </dt>
-                <dd className="text-2xl font-semibold text-themed-text-primary">
-                  {seriesConfig.length || '0'}
-                </dd>
-              </dl>
-            </div>
-          </div>
+        <div className="stat-card">
+          <span className="stat-card__icon">
+            <BarChart3 className="h-5 w-5 text-themed-status-warning" />
+          </span>
+          <div className="stat-card__label">Data Series</div>
+          <div className="stat-card__value">{seriesConfig.length.toLocaleString()}</div>
+          <div className="stat-card__meta">Active series in this view</div>
         </div>
 
-        <div className="bg-themed-bg-tertiary p-6 rounded-lg border border-themed-border-primary">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <Database className="h-8 w-8 text-themed-text-accent" />
-            </div>
-            <div className="ml-5 w-0 flex-1">
-              <dl>
-                <dt className="text-sm font-medium text-themed-text-secondary truncate">
-                  Data Source
-                </dt>
-                <dd className="text-2xl font-semibold text-themed-text-primary">
-                  {datasourceType || 'N/A'}
-                </dd>
-              </dl>
-            </div>
-          </div>
+        <div className="stat-card">
+          <span className="stat-card__icon">
+            <Database className="h-5 w-5 text-themed-status-success" />
+          </span>
+          <div className="stat-card__label">Data Source</div>
+          <div className="stat-card__value">{datasourceType || 'N/A'}</div>
+          <div className="stat-card__meta">Origin for this result set</div>
         </div>
       </div>
 
-      <div className="bg-themed-bg-secondary rounded-lg border border-themed-border-primary p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium text-themed-text-primary">
+      <div className="panel">
+        <div className="panel-header">
+          <h3 className="panel-title">
             {chartType === 'line' ? 'Time Series' : chartType === 'bar' ? 'Distribution' : 'Chart'}
           </h3>
           {seriesConfig.length > 1 && (
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-themed-text-secondary">Series:</span>
-              {seriesConfig.map((series) => (
-                <div key={series.key} className="flex items-center space-x-2">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
+            <div className="flex flex-wrap items-center gap-2">
+              {seriesConfig.map(series => (
+                <span key={series.key} className="badge-muted">
+                  <span
+                    className="inline-block h-2.5 w-2.5 rounded-full"
                     style={{ backgroundColor: series.color }}
                   />
-                  <span className="text-sm text-themed-text-primary">{series.name}</span>
-                </div>
+                  {series.name}
+                </span>
               ))}
             </div>
           )}
         </div>
         {renderChart()}
-        {chartData.length > 0 && (
-          <div className="mt-4 text-xs text-themed-text-secondary">
-            Showing {chartData.length} data points
-            {seriesConfig.length > 1 && ` across ${seriesConfig.length} series`}
-          </div>
-        )}
+        <div className="panel-footer">
+          Showing {chartData.length} data points
+          {seriesConfig.length > 1 ? ` across ${seriesConfig.length} series.` : '.'}
+        </div>
       </div>
     </div>
   )

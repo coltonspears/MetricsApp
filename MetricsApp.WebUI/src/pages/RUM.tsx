@@ -82,7 +82,7 @@ const RUM = () => {
           message: 'Network request failed: 500 Internal Server Error',
           type: 'network',
           severity: 'high',
-          url: '/api/v1/metrics/Query',
+          url: '/api/v1/telemetry/metrics',
           userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
           resolved: false
         }

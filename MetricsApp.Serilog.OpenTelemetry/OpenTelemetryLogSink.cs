@@ -129,7 +129,7 @@ public class OpenTelemetryLogSink : ILogEventSink, IDisposable
         
         try
         {
-            var response = await _httpClient.PostAsync($"{_config.Endpoint}/v1/logs", content);
+            var response = await _httpClient.PostAsync($"{_config.Endpoint}/api/v1/ingest/otlp/logs", content);
             
             if (!response.IsSuccessStatusCode && _config.LogFailures)
             {
@@ -317,3 +317,4 @@ public class OpenTelemetryLogSink : ILogEventSink, IDisposable
         _flushSemaphore?.Dispose();
     }
 }
+

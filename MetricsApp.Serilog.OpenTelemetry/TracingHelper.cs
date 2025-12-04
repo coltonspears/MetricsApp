@@ -201,7 +201,7 @@ public class TracingHelper : IDisposable
 
         try
         {
-            var response = await _httpClient.PostAsync($"{_config.Endpoint}/v1/traces", content);
+            var response = await _httpClient.PostAsync($"{_config.Endpoint}/api/v1/ingest/otlp/traces", content);
 
             if (!response.IsSuccessStatusCode && _config.LogFailures)
             {
@@ -267,3 +267,4 @@ public class TracingHelper : IDisposable
         _httpClient?.Dispose();
     }
 }
+

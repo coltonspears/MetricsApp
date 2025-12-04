@@ -105,7 +105,7 @@ processors:
 exporters:
   # Forward to MetricsApp API
   otlphttp:
-    endpoint: http://api:8080/v1/traces
+    endpoint: http://api:8080/api/v1/ingest/otlp/traces
     headers:
       api-key: "your-api-key"
   

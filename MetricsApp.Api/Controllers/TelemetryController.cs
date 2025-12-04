@@ -4,6 +4,8 @@ using MetricsApp.Abstractions.Caching;
 using MetricsApp.Core.Models;
 using MetricsApp.Api.Models;
 using System.Text.Json;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace MetricsApp.Api.Controllers;
 
@@ -40,8 +42,10 @@ public class TelemetryController : ControllerBase
         [FromQuery] DateTimeOffset startTime,
         [FromQuery] DateTimeOffset endTime,
         [FromQuery] string[]? metricNames = null,
+        [FromQuery] string? query = null,
         [FromQuery] int limit = 1000,
-        [FromQuery] string? step = null)
+        [FromQuery] string? step = null,
+        [FromQuery] string? aggregator = null)
     {
         if (startTime == default || endTime == default || startTime >= endTime)
         {
@@ -50,9 +54,21 @@ public class TelemetryController : ControllerBase
 
         try
         {
-            var cacheKey = $"telemetry-metrics-{startTime:O}-{endTime:O}-{string.Join(",", metricNames ?? Array.Empty<string>())}-{limit}";
-            
-            var cachedResult = await _cachingService.GetAsync<TelemetryMetricsResponse>(cacheKey, HttpContext.RequestAborted);
+            var normalizedLimit = Math.Clamp(limit, 1, 10000);
+            var normalizedStep = string.IsNullOrWhiteSpace(step) ? null : step.Trim();
+            var normalizedAggregator = string.IsNullOrWhiteSpace(aggregator) ? null : aggregator.Trim();
+
+            var candidateQuery = !string.IsNullOrWhiteSpace(query)
+                ? query.Trim()
+                : BuildMetricQuery(metricNames);
+
+            var normalizedQuery = string.IsNullOrWhiteSpace(candidateQuery) ? null : candidateQuery;
+            var hashSource = $"{normalizedQuery ?? "all"}|{normalizedStep ?? "none"}|{normalizedAggregator ?? "none"}|{normalizedLimit}";
+            var queryHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(hashSource)));
+            var cacheKey = $"telemetry-metrics::{startTime:O}::{endTime:O}::{queryHash}";
+
+            var cancellationToken = HttpContext.RequestAborted;
+            var cachedResult = await _cachingService.GetAsync<TelemetryMetricsResponse>(cacheKey, cancellationToken);
             if (cachedResult != null)
             {
                 return Ok(new QueryApiSuccessResponse<TelemetryMetricsResponse>(cachedResult));
@@ -62,15 +78,17 @@ public class TelemetryController : ControllerBase
             {
                 StartTime = startTime,
                 EndTime = endTime,
-                Query = BuildMetricQuery(metricNames),
-                Limit = Math.Min(limit, 10000)
+                Query = normalizedQuery,
+                Step = normalizedStep,
+                Aggregator = normalizedAggregator,
+                Limit = normalizedLimit
             };
 
-            var result = await _dataRepository.QueryMetricsAsync(criteria, HttpContext.RequestAborted);
-            var response = ConvertToTelemetryResponse(result);
+            var result = await _dataRepository.QueryMetricsAsync(criteria, cancellationToken);
+            var response = ConvertToTelemetryResponse(result, startTime, endTime);
 
-            await _cachingService.SetAsync(cacheKey, response, TimeSpan.FromMinutes(1), cancellationToken: HttpContext.RequestAborted);
-            
+            await _cachingService.SetAsync(cacheKey, response, TimeSpan.FromMinutes(1), cancellationToken: cancellationToken);
+
             return Ok(new QueryApiSuccessResponse<TelemetryMetricsResponse>(response));
         }
         catch (Exception ex)
@@ -136,7 +154,7 @@ public class TelemetryController : ControllerBase
             };
 
             var result = await _dataRepository.QueryLogsAsync(criteria, HttpContext.RequestAborted);
-            var response = ConvertLogsToTelemetryResponse(result);
+            var response = ConvertLogsToTelemetryResponse(result, startTime, endTime);
 
             return Ok(new QueryApiSuccessResponse<TelemetryLogsResponse>(response));
         }
@@ -288,39 +306,74 @@ public class TelemetryController : ControllerBase
         }
     }
 
-    private string BuildMetricQuery(string[]? metricNames)
+    private static string? BuildMetricQuery(string[]? metricNames)
     {
-        if (metricNames?.Length > 0)
+        if (metricNames == null)
         {
-            return $"metricName={string.Join("|", metricNames)}";
+            return null;
         }
-        return string.Empty;
+
+        var sanitized = metricNames
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Select(name => name.Trim())
+            .Where(name => name.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (sanitized.Length == 0)
+        {
+            return null;
+        }
+
+        return $"metricName={string.Join("|", sanitized)}";
     }
 
-    private TelemetryMetricsResponse ConvertToTelemetryResponse(MetricQueryResult result)
+    private TelemetryMetricsResponse ConvertToTelemetryResponse(MetricQueryResult result, DateTimeOffset requestedStart, DateTimeOffset requestedEnd)
     {
         var metrics = new List<TelemetryMetric>();
+        var timestamps = new List<long>();
 
         if (result.Result is IEnumerable<MetricTimeSeries> timeSeries)
         {
             foreach (var series in timeSeries)
             {
+                var labels = ExtractLabels(series.MetricInfo);
+                var samples = new List<TelemetryMetricSample>();
+
+                foreach (var (timestamp, value) in series.Values)
+                {
+                    timestamps.Add(timestamp);
+                    samples.Add(new TelemetryMetricSample
+                    {
+                        Timestamp = timestamp,
+                        Value = ParseValue(value),
+                        Labels = new Dictionary<string, string>(labels)
+                    });
+                }
+
                 var metric = new TelemetryMetric
                 {
                     Name = series.MetricInfo.Name,
                     Type = DetermineMetricType(series.MetricInfo),
                     Unit = series.MetricInfo.Attributes.TryGetValue("unit", out var unit) ? unit?.ToString() : null,
                     Description = series.MetricInfo.Attributes.TryGetValue("description", out var desc) ? desc?.ToString() : null,
-                    Samples = series.Values.Select(v => new TelemetryMetricSample
-                    {
-                        Timestamp = v.Item1,
-                        Value = ParseValue(v.Item2),
-                        Labels = ExtractLabels(series.MetricInfo)
-                    }).ToList()
+                    Samples = samples
                 };
 
                 metrics.Add(metric);
             }
+        }
+
+        var resolvedStart = requestedStart;
+        var resolvedEnd = requestedEnd;
+
+        if (timestamps.Count > 0)
+        {
+            var minTicks = timestamps.Min();
+            var maxTicks = timestamps.Max();
+            resolvedStart = DateTimeOffset.FromUnixTimeSeconds(minTicks);
+            resolvedEnd = DateTimeOffset.FromUnixTimeSeconds(maxTicks);
         }
 
         return new TelemetryMetricsResponse
@@ -328,32 +381,42 @@ public class TelemetryController : ControllerBase
             Metrics = metrics,
             TimeRange = new TelemetryTimeRange
             {
-                StartTime = DateTimeOffset.MinValue, // MetricQueryResult doesn't have QueryTimeRange
-                EndTime = DateTimeOffset.MaxValue
+                StartTime = resolvedStart,
+                EndTime = resolvedEnd
             }
         };
     }
 
-    private TelemetryLogsResponse ConvertLogsToTelemetryResponse(LogQueryResult result)
+    private TelemetryLogsResponse ConvertLogsToTelemetryResponse(LogQueryResult result, DateTimeOffset requestedStart, DateTimeOffset requestedEnd)
     {
-        var logs = result.Logs.Select(log => new TelemetryLogEntry
+        var logRecords = result.Logs?.ToList() ?? new List<LogRecord>();
+        var logs = logRecords.Select(log => new TelemetryLogEntry
         {
             Timestamp = log.Timestamp,
             Level = log.SeverityText ?? "INFO",
-            Message = log.Body?.ToString() ?? "",
-            Source = log.Attributes.TryGetValue("source", out var source) ? source?.ToString() ?? "" : "",
+            Message = log.Body?.ToString() ?? string.Empty,
+            Source = log.Attributes.TryGetValue("source", out var source) ? source?.ToString() ?? string.Empty : string.Empty,
             TraceId = log.TraceId,
             SpanId = log.SpanId,
             Attributes = log.Attributes ?? new Dictionary<string, object>()
         }).ToList();
+
+        var resolvedStart = requestedStart;
+        var resolvedEnd = requestedEnd;
+
+        if (logRecords.Count > 0)
+        {
+            resolvedStart = logRecords.Min(log => log.Timestamp);
+            resolvedEnd = logRecords.Max(log => log.Timestamp);
+        }
 
         return new TelemetryLogsResponse
         {
             Logs = logs,
             TimeRange = new TelemetryTimeRange
             {
-                StartTime = DateTimeOffset.MinValue, // LogQueryResult doesn't have QueryTimeRange
-                EndTime = DateTimeOffset.MaxValue
+                StartTime = resolvedStart,
+                EndTime = resolvedEnd
             }
         };
     }

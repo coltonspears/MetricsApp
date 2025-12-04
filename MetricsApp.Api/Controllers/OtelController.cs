@@ -10,7 +10,8 @@ namespace MetricsApp.Api.Controllers;
 /// Handles traces, metrics, and logs according to OTLP specification.
 /// </summary>
 [ApiController]
-[Route("v1")]
+[Route("api/v1/ingest/otlp")]
+[ApiExplorerSettings(GroupName = "ingestion")]
 public class OtelController : ControllerBase
 {
     private readonly ILogger<OtelController> _logger;
@@ -80,7 +81,7 @@ public class OtelController : ControllerBase
     {
         return Ok(new
         {
-            endpoints = new[] { "/v1/traces", "/v1/metrics", "/v1/logs" },
+            endpoints = new[] { "/api/v1/ingest/otlp/traces", "/api/v1/ingest/otlp/metrics", "/api/v1/ingest/otlp/logs" },
             supportedContentTypes = new[] { "application/x-protobuf", "application/json" },
             timestamp = DateTimeOffset.UtcNow
         });
@@ -314,7 +315,7 @@ public class OtelController : ControllerBase
             }
 
             // Use Jaeger's HTTP collector endpoint instead of gRPC
-            var jaegerCollectorUrl = jaegerHttpUrl.Replace(":16686", ":14268");
+            //var jaegerCollectorUrl = jaegerHttpUrl.Replace(":16686", ":14318").TrimEnd('/');
             
             using var httpClient = _httpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(10);
@@ -328,14 +329,17 @@ public class OtelController : ControllerBase
             else
             {
                 var jsonContent = payload is JsonElement element ? element.GetRawText() : JsonSerializer.Serialize(payload);
-                content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+                
+                content = new StringContent(jsonContent, System.Text.Encoding.UTF8);
+                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+                //content.Headers.Add("Content-Encoding", "gzip"); // Jaeger expects gzip encoding for traces
             }
 
-            var response = await httpClient.PostAsync($"{jaegerCollectorUrl}/api/traces", content);
+            var response = await httpClient.PostAsync($"{jaegerHttpUrl}/api/traces", content);
             
             if (response.IsSuccessStatusCode)
             {
-                _logger.LogDebug("Successfully forwarded trace to Jaeger collector at {JaegerUrl}", jaegerCollectorUrl);
+                _logger.LogDebug("Successfully forwarded trace to Jaeger collector at {JaegerUrl}", jaegerHttpUrl);
             }
             else
             {
@@ -355,3 +359,4 @@ public class OtelController : ControllerBase
         public static ProcessingResult Error(string message) => new(false, message);
     }
 }
+

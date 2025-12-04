@@ -1,20 +1,24 @@
-import { WebTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace-web'
+import type { BasicTracerProvider } from '@opentelemetry/sdk-trace-base'
+import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base'
+import { WebTracerProvider } from '@opentelemetry/sdk-trace-web'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
-import { Resource } from '@opentelemetry/resources'
+import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources'
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import { registerInstrumentations } from '@opentelemetry/instrumentation'
 import { FetchInstrumentation } from '@opentelemetry/instrumentation-fetch'
 import { XMLHttpRequestInstrumentation } from '@opentelemetry/instrumentation-xml-http-request'
 import { UserInteractionInstrumentation } from '@opentelemetry/instrumentation-user-interaction'
 import { DocumentLoadInstrumentation } from '@opentelemetry/instrumentation-document-load'
-import { trace, SpanStatusCode, Span } from '@opentelemetry/api'
+import { trace, SpanStatusCode, Span, SpanKind } from '@opentelemetry/api'
 
-// Configuration
-const OTEL_COLLECTOR_URL = import.meta.env.VITE_OTEL_COLLECTOR_URL || 'http://localhost:4318/v1/traces'
-const SERVICE_NAME = 'metricsapp-webui'
-const SERVICE_VERSION = '1.0.0'
+type Attributes = Record<string, any>
+
+const OTEL_COLLECTOR_URL = import.meta.env.VITE_OTEL_COLLECTOR_URL ?? '/api/v1/ingest/otlp/traces'
+const SERVICE_NAME = import.meta.env.VITE_OTEL_SERVICE_NAME ?? 'metricsapp-webui'
+const SERVICE_VERSION = import.meta.env.VITE_OTEL_SERVICE_VERSION ?? '1.1.0'
 
 let isInitialized = false
+let provider: WebTracerProvider | undefined
 
 export function initializeTelemetry() {
   if (isInitialized) {
@@ -23,103 +27,114 @@ export function initializeTelemetry() {
   }
 
   try {
-    // Create OTLP trace exporter
     const traceExporter = new OTLPTraceExporter({
       url: OTEL_COLLECTOR_URL,
       headers: {
-        'Content-Type': 'application/json',
-      },
+        'Content-Type': 'application/json'
+      }
     })
 
-    // Create resource
-    const resource = Resource.default().merge(
-      new Resource({
+    const resource = defaultResource().merge(
+      resourceFromAttributes({
         [SemanticResourceAttributes.SERVICE_NAME]: SERVICE_NAME,
         [SemanticResourceAttributes.SERVICE_VERSION]: SERVICE_VERSION,
         [SemanticResourceAttributes.SERVICE_NAMESPACE]: 'metricsapp',
-        [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: import.meta.env.MODE || 'development',
+        [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: import.meta.env.MODE || 'development'
       })
     )
 
-    // Create tracer provider
-    const provider = new WebTracerProvider({
-      resource,
+    const TracerProvider = WebTracerProvider as unknown as new (config?: { resource: ReturnType<typeof defaultResource> }) => WebTracerProvider
+    const tracerProvider = new TracerProvider({
+      resource
     })
 
-    // Add span processor
-    provider.addSpanProcessor(new BatchSpanProcessor(traceExporter, {
-      maxQueueSize: 1000,
-      scheduledDelayMillis: 5000,
-    }))
+    (tracerProvider as BasicTracerProvider).addSpanProcessor(new SimpleSpanProcessor(traceExporter))
 
-    // Register the provider globally
-    provider.register({
-      // Disable existing registered providers (if any)
-      diag: undefined,
-    })
+    tracerProvider.register()
 
-    // Register auto-instrumentations
+    provider = tracerProvider
+
     registerInstrumentations({
       instrumentations: [
         new FetchInstrumentation({
           propagateTraceHeaderCorsUrls: [
             /^https?:\/\/localhost.*\/api\/.*/,
-            /^https?:\/\/.*\.metricsapp\.local.*\/api\/.*/,
+            /^https?:\/\/.*\.metricsapp\.local.*\/api\/.*/
           ],
-          clearTimingResources: true,
+          clearTimingResources: true
         }),
         new XMLHttpRequestInstrumentation({
           propagateTraceHeaderCorsUrls: [
             /^https?:\/\/localhost.*\/api\/.*/,
-            /^https?:\/\/.*\.metricsapp\.local.*\/api\/.*/,
-          ],
+            /^https?:\/\/.*\.metricsapp\.local.*\/api\/.*/
+          ]
         }),
         new UserInteractionInstrumentation({
-          eventNames: ['click', 'submit', 'keydown'],
+          eventNames: ['click', 'submit', 'keydown']
         }),
-        new DocumentLoadInstrumentation(),
-      ],
+        new DocumentLoadInstrumentation()
+      ]
     })
 
     isInitialized = true
-    console.log('✅ OpenTelemetry initialized successfully')
+    console.log('OpenTelemetry initialized for MetricsApp WebUI')
 
-    // Add basic error tracking
-    window.addEventListener('unhandledrejection', (event) => {
+    window.addEventListener('unhandledrejection', event => {
       recordError(event.reason, 'unhandled_promise_rejection')
     })
 
-    window.addEventListener('error', (event) => {
-      recordError(event.error, 'unhandled_error')
+    window.addEventListener('error', event => {
+      recordError(event.error ?? event.message, 'unhandled_error')
     })
-
   } catch (error) {
-    console.error('❌ Failed to initialize OpenTelemetry:', error)
+    console.error('Failed to initialize OpenTelemetry:', error)
   }
 }
 
-export function shutdownTelemetry() {
-  // Note: Web SDK doesn't have a direct shutdown method
-  // The provider will be cleaned up when the page unloads
+export async function shutdownTelemetry(): Promise<void> {
+  if (!isInitialized) {
+    return
+  }
+
   isInitialized = false
+
+  if (provider) {
+    try {
+      await provider.shutdown()
+    } catch (error) {
+      console.warn('Failed to shutdown OpenTelemetry provider', error)
+    } finally {
+      provider = undefined
+    }
+  }
+
   console.log('OpenTelemetry shut down')
 }
 
-// Manual span creation
-export async function createSpan<T>(
-  name: string, 
-  callback: (span: Span) => T | Promise<T>
+interface TraceAsyncOptions {
+  attributes?: Attributes
+  spanKind?: SpanKind
+}
+
+export async function traceAsync<T>(
+  name: string,
+  operation: (span: Span) => T | Promise<T>,
+  options: TraceAsyncOptions = {}
 ): Promise<T> {
   const tracer = trace.getTracer(SERVICE_NAME, SERVICE_VERSION)
-  
-  return tracer.startActiveSpan(name, async (span) => {
+
+  return tracer.startActiveSpan(name, { kind: options.spanKind ?? SpanKind.INTERNAL }, async span => {
     try {
-      const result = await callback(span)
+      if (options.attributes) {
+        span.setAttributes(options.attributes)
+      }
+
+      const result = await operation(span)
       span.setStatus({ code: SpanStatusCode.OK })
       return result
     } catch (error) {
-      span.setStatus({ 
-        code: SpanStatusCode.ERROR, 
+      span.setStatus({
+        code: SpanStatusCode.ERROR,
         message: error instanceof Error ? error.message : String(error)
       })
       span.recordException(error instanceof Error ? error : new Error(String(error)))
@@ -130,30 +145,56 @@ export async function createSpan<T>(
   })
 }
 
-// Error recording
-export function recordError(error: any, errorType: string = 'unknown') {
-  const tracer = trace.getTracer(SERVICE_NAME, SERVICE_VERSION)
-  const span = tracer.startSpan(`error.${errorType}`)
-  
-  span.setStatus({ 
-    code: SpanStatusCode.ERROR,
-    message: error instanceof Error ? error.message : String(error)
-  })
-  
-  span.setAttributes({
-    'error.type': errorType,
-    'error.message': error instanceof Error ? error.message : String(error),
-    'error.stack': error instanceof Error ? error.stack : undefined,
-  })
-  
-  if (error instanceof Error) {
-    span.recordException(error)
+export async function traceApiCall<T>(
+  url: string,
+  method: string,
+  apiCall: () => Promise<T>,
+  attributes: Attributes = {}
+): Promise<T> {
+  const lowerMethod = method.toLowerCase()
+  const baseAttributes: Attributes = {
+    'http.method': lowerMethod,
+    'http.url': url,
+    ...attributes
   }
-  
-  span.end()
+
+  const start = performance.now()
+
+  return traceAsync(
+    `http.${lowerMethod}`,
+    async span => {
+      span.setAttributes(baseAttributes)
+      try {
+        const result = await apiCall()
+        span.setAttribute('http.duration_ms', performance.now() - start)
+        span.setAttribute('http.success', true)
+        return result
+      } catch (error) {
+        span.setAttribute('http.duration_ms', performance.now() - start)
+        span.setAttribute('http.success', false)
+        span.setAttribute('http.error', error instanceof Error ? error.message : String(error))
+        throw error
+      }
+    },
+    { spanKind: SpanKind.CLIENT }
+  )
 }
 
-// Helper functions
+export function traceRouteChange(routeName: string, additionalAttributes: Attributes = {}) {
+  const tracer = trace.getTracer(SERVICE_NAME, SERVICE_VERSION)
+  const span = tracer.startSpan('route.change', { kind: SpanKind.INTERNAL })
+
+  span.setAttributes({
+    'route.name': routeName,
+    'navigation.type': 'spa',
+    ...additionalAttributes
+  })
+
+  setTimeout(() => {
+    span.end()
+  }, 100)
+}
+
 export function addSpanAttribute(key: string, value: string | number | boolean) {
   const activeSpan = trace.getActiveSpan()
   if (activeSpan) {
@@ -161,61 +202,44 @@ export function addSpanAttribute(key: string, value: string | number | boolean) 
   }
 }
 
-export function addSpanEvent(name: string, attributes?: Record<string, any>) {
+export function addSpanEvent(name: string, attributes?: Attributes) {
   const activeSpan = trace.getActiveSpan()
   if (activeSpan) {
     activeSpan.addEvent(name, attributes)
   }
 }
 
-// Route change tracing
-export function traceRouteChange(routeName: string, additionalAttributes?: Record<string, any>) {
+export function recordError(error: any, errorType: string = 'unknown') {
   const tracer = trace.getTracer(SERVICE_NAME, SERVICE_VERSION)
-  const span = tracer.startSpan('route.change')
-  
-  span.setAttributes({
-    'route.name': routeName,
-    'navigation.type': 'spa',
-    ...additionalAttributes,
+  const span = tracer.startSpan(`error.${errorType}`)
+
+  span.setStatus({
+    code: SpanStatusCode.ERROR,
+    message: error instanceof Error ? error.message : String(error)
   })
-  
-  setTimeout(() => {
-    span.end()
-  }, 100)
+
+  span.setAttributes({
+    'error.type': errorType,
+    'error.message': error instanceof Error ? error.message : String(error),
+    'error.stack': error instanceof Error ? error.stack : undefined
+  })
+
+  if (error instanceof Error) {
+    span.recordException(error)
+  }
+
+  span.end()
 }
 
-// API call tracing helper
-export async function traceApiCall<T>(
-  name: string, 
-  apiCall: () => Promise<T>, 
-  additionalAttributes?: Record<string, any>
-): Promise<T> {
-  return createSpan(`api.${name}`, async (span) => {
-    if (additionalAttributes) {
-      span.setAttributes(additionalAttributes)
-    }
-    
-    const startTime = performance.now()
-    try {
-      const result = await apiCall()
-      const duration = performance.now() - startTime
-      
-      span.setAttributes({
-        'api.duration_ms': duration,
-        'api.success': true,
-      })
-      
-      return result
-    } catch (error) {
-      const duration = performance.now() - startTime
-      
-      span.setAttributes({
-        'api.duration_ms': duration,
-        'api.success': false,
-        'api.error': error instanceof Error ? error.message : String(error),
-      })
-      
-      throw error
-    }
-  })
-} 
+export const tracedFetch = async (url: string, options?: RequestInit) => {
+  const method = options?.method ?? 'GET'
+  return traceApiCall(url, method, () => fetch(url, options))
+}
+
+
+
+
+
+
+
+

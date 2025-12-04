@@ -9,7 +9,7 @@
 - **Improved resource dependencies** and service discovery
 
 ### 2. OTLP API Endpoints
-- **Created OtlpController** (`/v1/traces`, `/v1/metrics`, `/v1/logs`)
+- **Created OtlpController** (`/api/v1/ingest/otlp/traces`, `/api/v1/ingest/otlp/metrics`, `/api/v1/ingest/otlp/logs`)
 - **Added OpenTelemetry protobuf support** with graceful fallback to JSON
 - **Implemented health check endpoint** (`/v1/health`)
 - **Integrated with existing EventDto pipeline** for backward compatibility
@@ -67,14 +67,14 @@ This will start:
 
 #### Send OTLP Traces (JSON)
 ```bash
-curl -X POST http://localhost:8080/v1/traces \
+curl -X POST http://localhost:8080/api/v1/ingest/otlp/traces \
   -H "Content-Type: application/json" \
   -d '{"resourceSpans": []}'
 ```
 
 #### Send OTLP Metrics (JSON)
 ```bash
-curl -X POST http://localhost:8080/v1/metrics \
+curl -X POST http://localhost:8080/api/v1/ingest/otlp/metrics \
   -H "Content-Type: application/json" \
   -d '{"resourceMetrics": []}'
 ```

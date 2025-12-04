@@ -192,7 +192,7 @@ const JaegerTraceViewer: React.FC = () => {
 
   const loadServices = async () => {
     try {
-      const response = await fetch('/api/v1/jaeger/services');
+      const response = await fetch('/api/v1/integrations/jaeger/services');
       if (response.ok) {
         const result = await response.json();
         setServices(result.data.data || []);
@@ -204,7 +204,7 @@ const JaegerTraceViewer: React.FC = () => {
 
   const loadOperations = async (serviceName: string) => {
     try {
-      const response = await fetch(`/api/v1/jaeger/services/${encodeURIComponent(serviceName)}/operations`);
+      const response = await fetch(`/api/v1/integrations/jaeger/services/${encodeURIComponent(serviceName)}/operations`);
       if (response.ok) {
         const result = await response.json();
         setOperations(result.data.data?.map((op: any) => op.operationName) || []);
@@ -235,7 +235,7 @@ const JaegerTraceViewer: React.FC = () => {
       if (filters.end) params.append('end', filters.end.toISOString());
       params.append('limit', filters.limit.toString());
 
-      const response = await fetch(`/api/v1/jaeger/traces?${params}`);
+      const response = await fetch(`/api/v1/integrations/jaeger/traces?${params}`);
       
       if (response.ok) {
         const result = await response.json();
@@ -304,7 +304,7 @@ const JaegerTraceViewer: React.FC = () => {
     setError(null);
     
     try {
-      const response = await fetch('/api/v1/jaeger/generate-sample-trace', {
+      const response = await fetch('/api/v1/integrations/jaeger/generate-sample-trace', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -329,7 +329,7 @@ const JaegerTraceViewer: React.FC = () => {
 
   const loadTraceDetails = async (traceId: string) => {
     try {
-      const response = await fetch(`/api/v1/jaeger/traces/${encodeURIComponent(traceId)}`);
+      const response = await fetch(`/api/v1/integrations/jaeger/traces/${encodeURIComponent(traceId)}`);
       if (response.ok) {
         const result = await response.json();
         let normalizedTrace: NormalizedTrace | null = null;
@@ -1248,3 +1248,4 @@ const JaegerTraceViewer: React.FC = () => {
 };
 
 export default JaegerTraceViewer;
+

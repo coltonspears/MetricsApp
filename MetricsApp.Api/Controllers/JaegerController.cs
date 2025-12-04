@@ -9,7 +9,8 @@ namespace MetricsApp.Api.Controllers;
 /// Provides unified access to Jaeger tracing data through MetricsApp API
 /// </summary>
 [ApiController]
-[Route("api/v1/[controller]")]
+[Route("api/v1/integrations/jaeger")]
+[ApiExplorerSettings(GroupName = "integrations")]
 public class JaegerController : ControllerBase
 {
     private readonly IHttpClientFactory _httpClientFactory;
@@ -333,7 +334,7 @@ public class JaegerController : ControllerBase
             
             // Post to our OTLP traces endpoint
             var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
-            var response = await httpClient.PostAsync("https://localhost:7201/v1/traces", content);
+            var response = await httpClient.PostAsync("https://localhost:7201/api/v1/ingest/otlp/traces", content);
             
             if (response.IsSuccessStatusCode)
             {
@@ -464,3 +465,4 @@ public class JaegerDependency
     public long CallCount { get; set; }
     public string Source { get; set; } = string.Empty;
 }
+

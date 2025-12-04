@@ -7,7 +7,7 @@ const https = require('https');
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 const testApiEndpoint = () => {
-  const url = 'https://localhost:7201/api/v1/metrics/Query?limit=5';
+  const url = 'https://localhost:7201/api/v1/telemetry/metrics?limit=5';
   
   console.log('Testing API endpoint:', url);
   console.log('---');
@@ -85,7 +85,7 @@ const testApiEndpoint = () => {
     console.log('❌ API request failed:', error.message);
     console.log('\n💡 Troubleshooting:');
     console.log('1. Make sure your MetricsApp API is running on https://localhost:7201');
-    console.log('2. Check if the endpoint path is correct: /api/v1/metrics/Query');
+    console.log('2. Check if the endpoint path is correct: /api/v1/telemetry/metrics');
     console.log('3. Verify the API accepts GET requests with query parameters');
   });
 };

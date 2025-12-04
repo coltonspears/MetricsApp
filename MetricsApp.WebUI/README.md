@@ -64,7 +64,7 @@ npm run preview
 ## API Integration
 
 ### Endpoint Configuration
-The application connects to your MetricsApp API at `https://localhost:7201/api/v1/metrics/Query`. The Vite development server includes a proxy configuration to handle CORS:
+The application connects to your MetricsApp API at `https://localhost:7201/api/v1/telemetry/metrics`. The Vite development server includes a proxy configuration to handle CORS:
 
 ```typescript
 // vite.config.ts
@@ -223,7 +223,7 @@ Network error: Unable to connect to the API
 **Solutions:**
 1. Ensure MetricsApp API is running on `https://localhost:7201`
 2. Check if the API accepts HTTPS requests
-3. Verify the `/api/v1/metrics/Query` endpoint is available
+3. Verify the `/api/v1/telemetry/metrics` endpoint is available
 4. Check browser console for CORS errors
 
 #### Build Errors

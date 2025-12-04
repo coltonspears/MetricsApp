@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Download, RefreshCw, Database, LineChart, Table, AlertCircle, Info, ExternalLink, HelpCircle, Clock, Play, Plus, X, ChevronDown, Code, Settings, ChevronRight, ChevronLeft } from 'lucide-react'
+import { Download, RefreshCw, Database, LineChart, Table, AlertCircle, Info, HelpCircle, Clock, Play, Plus, X, ChevronDown, Code, Settings, ChevronRight, ChevronLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { DataSourceApi, DataSourceConfiguration } from '../lib/datasource-api'
 import QueryBuilder from '../components/QueryBuilder'
 import DataVisualization from '../components/DataVisualization'
 import ExportModal from '../components/ExportModal'
+import PageHeader from '../components/PageHeader'
 
 interface QueryResult {
   id: string
@@ -106,7 +107,7 @@ const Explore = () => {
         id: 'ingested-data',
         name: 'Ingested Data',
         dataSourceType: 'ingested',
-        url: '/api/v1/metrics',
+        url: '/api/v1/telemetry/metrics',
         properties: {},
         isEnabled: true,
         createdAt: new Date().toISOString(),
@@ -174,7 +175,7 @@ const Explore = () => {
       let error: string | undefined
       try {
         if (datasource.category === 'ingested') {
-          const response = await fetch(`/api/v1/metrics/Query?startTime=${encodeURIComponent(timeRange.startTime)}&endTime=${encodeURIComponent(timeRange.endTime)}&limit=1000${query ? '&query=' + encodeURIComponent(query) : ''}`)
+          const response = await fetch(`/api/v1/telemetry/metrics?startTime=${encodeURIComponent(timeRange.startTime)}&endTime=${encodeURIComponent(timeRange.endTime)}&limit=1000${query ? '&query=' + encodeURIComponent(query) : ''}`)
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`)
           }
@@ -290,38 +291,42 @@ const Explore = () => {
   }
 
   const activeDatasource = activeDatasourceId ? datasources.find(ds => ds.id === activeDatasourceId) : null
+const timeRangeLabel = formatTimeRange(timeRange)
+const activeDatasourceLabel = activeDatasource ? `${activeDatasource.name} (${activeDatasource.dataSourceType})` : 'Select a data source'
+const queryModeLabel = queryMode === 'builder' ? 'Builder' : 'Code'
+const viewModeLabel = viewMode === 'chart' ? 'Chart' : 'Table'
 
+const renderMainContent = () => {
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-themed-interactive-primary"></div>
-        <span className="ml-4 text-themed-text-secondary">Loading data sources...</span>
+      <div className="flex-1 flex items-center justify-center min-h-[320px]">
+        <div className="flex items-center space-x-4">
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-b-transparent border-themed-interactive-primary" />
+          <span className="text-sm text-themed-text-secondary">Loading data sources...</span>
+        </div>
       </div>
     )
   }
 
   if (apiConnectionError) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-themed-text-primary">Data Exploration</h1>
-          <p className="mt-2 text-themed-text-secondary">Query and visualize your data sources</p>
-        </div>
-        <div className="bg-themed-alert-error bg-opacity-10 border border-themed-alert-error rounded-lg p-4">
-          <div className="flex">
-            <AlertCircle className="h-5 w-5 text-themed-status-error mr-2 mt-0.5" />
-            <div>
-              <h3 className="text-sm font-medium text-themed-status-error">Connection Error</h3>
-              <p className="mt-1 text-sm text-themed-text-secondary">{apiConnectionError}</p>
-              <button
-                onClick={loadDatasources}
-                className="mt-3 inline-flex items-center px-3 py-2 border border-themed-alert-error text-sm font-medium rounded-sm text-themed-status-error bg-themed-bg-surface hover:bg-themed-alert-error hover:text-themed-text-inverse transition-colors"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Retry
-              </button>
-            </div>
+      <div className="panel border-themed-alert-error">
+        <div className="panel-header">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-themed-status-error" />
+            <h3 className="panel-title text-themed-status-error">Connection Error</h3>
           </div>
+        </div>
+        <p className="text-sm text-themed-text-secondary">{apiConnectionError}</p>
+        <div className="page-actions mt-4">
+          <button
+            type="button"
+            onClick={loadDatasources}
+            className="btn-themed-secondary border-themed-alert-error text-themed-status-error"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </button>
         </div>
       </div>
     )
@@ -329,161 +334,161 @@ const Explore = () => {
 
   if (datasources.length === 0) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-themed-text-primary">Data Exploration</h1>
-          <p className="mt-2 text-themed-text-secondary">Query and visualize your data sources</p>
-        </div>
-        <div className="text-center py-12">
-          <Database className="mx-auto h-12 w-12 text-themed-text-muted" />
-          <h3 className="mt-2 text-sm font-medium text-themed-text-primary">No Data Sources</h3>
-          <p className="mt-1 text-sm text-themed-text-secondary">
-            No data sources are configured. Add a data source to start exploring your data.
-          </p>
-          <div className="mt-6">
-            <button
-              onClick={() => navigate('/connections/add')}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-sm shadow-sm text-themed-text-inverse bg-themed-interactive-primary hover:bg-themed-interactive-primary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Data Source
-            </button>
-          </div>
-        </div>
+      <div className="panel text-center space-y-4">
+        <Database className="mx-auto h-12 w-12 text-themed-text-muted" />
+        <h3 className="panel-title text-2xl">No Data Sources</h3>
+        <p className="text-sm text-themed-text-secondary">
+          No data sources are configured. Add a data source to start exploring your data.
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate('/connections/add')}
+          className="btn-themed-primary inline-flex items-center justify-center mx-auto"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Data Source
+        </button>
       </div>
     )
   }
 
   return (
-    <div className="flex h-[calc(100vh-64px)]">
-      {/* Sidebar */}
-      <div className={`bg-themed-bg-tertiary border-r border-themed-border-primary ${sidebarCollapsed ? 'w-12' : 'w-64'} flex flex-col`}>
-        <div className="flex items-center justify-between px-4 py-3 border-b border-themed-border-primary">
-          <span className={`font-bold text-lg text-themed-text-primary transition-opacity ${sidebarCollapsed ? 'opacity-0 w-0' : 'opacity-100 w-auto'}`}>Data Sources</span>
-          <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="text-themed-text-secondary hover:text-themed-text-primary">
+    <div className="flex flex-col xl:flex-row gap-6 flex-1 overflow-hidden">
+      <aside
+        className={`surface-muted flex flex-col h-full overflow-hidden transition-all duration-200 ${sidebarCollapsed ? 'w-20' : 'w-80'}`}
+        style={{ padding: sidebarCollapsed ? 'var(--spacing-sm)' : 'var(--spacing-md)' }}
+      >
+        <div className="flex items-center justify-between pb-3 border-b border-themed-border-primary">
+          <span
+            className={`text-xs font-semibold uppercase tracking-widest text-themed-text-secondary transition-opacity ${sidebarCollapsed ? 'opacity-0 pointer-events-none' : 'opacity-80'}`}
+          >
+            Data Sources
+          </span>
+          <button
+            type="button"
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="text-themed-text-secondary hover:text-themed-text-primary transition-colors"
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
             {sidebarCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div className="mt-3 flex-1 overflow-y-auto pr-1 space-y-3">
           {datasources.map(ds => (
-            <div key={ds.id} className={`border-b border-themed-border-primary ${activeDatasourceId === ds.id ? 'bg-themed-bg-elevated' : ''}`}>
+            <div
+              key={ds.id}
+              className={`rounded-md border border-transparent transition-colors ${
+                activeDatasourceId === ds.id ? 'border-themed-border-accent bg-themed-bg-elevated' : 'hover:bg-themed-interactive-secondary-hover/40'
+              }`}
+            >
               <button
-                className={`w-full text-left px-4 py-3 flex items-center space-x-2 hover:bg-themed-interactive-secondary-hover transition-colors ${activeDatasourceId === ds.id ? 'font-bold text-themed-interactive-primary' : 'text-themed-text-primary'}`}
+                type="button"
+                className="w-full text-left px-3 py-2 flex items-center gap-2 text-sm text-themed-text-primary"
                 onClick={() => setActiveDatasourceId(ds.id)}
               >
-                <Database className="h-4 w-4" />
-                <span className={`${sidebarCollapsed ? 'hidden' : ''}`}>{ds.name} <span className="text-xs text-themed-text-secondary ml-1">({ds.dataSourceType})</span></span>
+                <Database className="h-4 w-4 text-themed-text-secondary" />
+                <span className={`${sidebarCollapsed ? 'hidden' : 'inline-flex flex-col'} whitespace-nowrap`}>
+                  <span className="font-medium">{ds.name}</span>
+                  <span className="text-xs text-themed-text-muted">{ds.dataSourceType}</span>
+                </span>
               </button>
-              {/* Metrics list */}
               {activeDatasourceId === ds.id && !sidebarCollapsed && (
-                <div className="pl-8 pb-2">
-                  <h4 className="text-xs font-semibold text-themed-text-secondary mt-2 mb-1">Metrics</h4>
-                  {loadingMetrics ? (
-                    <div className="text-xs text-themed-text-secondary py-2">Loading metrics...</div>
-                  ) : availableMetrics.length > 0 ? (
-                    <ul className="space-y-1">
-                      {availableMetrics.map(metric => (
-                        <li key={metric.name}>
-                          <button
-                            className="text-left text-sm text-themed-text-primary hover:text-themed-interactive-primary"
-                            title={metric.description || metric.name}
-                            onClick={() => setQuery(metric.name)}
-                          >
-                            {metric.name} <span className="text-xs text-themed-text-secondary ml-1">({metric.type})</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="text-xs text-themed-text-secondary py-2">No metrics available.</div>
-                  )}
+                <div className="px-3 pb-3 space-y-4 text-xs text-themed-text-secondary">
+                  <div>
+                    <h4 className="font-semibold uppercase tracking-wide text-[0.65rem] text-themed-text-muted mb-2">Metrics</h4>
+                    {loadingMetrics ? (
+                      <div className="py-1">Loading metrics...</div>
+                    ) : availableMetrics.length > 0 ? (
+                      <ul className="space-y-1">
+                        {availableMetrics.map(metric => (
+                          <li key={metric.name}>
+                            <button
+                              type="button"
+                              className="w-full text-left text-sm text-themed-text-primary hover:text-themed-interactive-primary transition-colors"
+                              title={metric.description || metric.name}
+                              onClick={() => setQuery(metric.name)}
+                            >
+                              {metric.name}
+                              <span className="text-xs text-themed-text-muted ml-1">({metric.type})</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="py-1">No metrics available.</div>
+                    )}
+                  </div>
 
-                  <h4 className="text-xs font-semibold text-themed-text-secondary mt-4 mb-1">Fields</h4>
-                  {loadingFields ? (
-                    <div className="text-xs text-themed-text-secondary py-2">Loading fields...</div>
-                  ) : availableFields.length > 0 ? (
-                    <ul className="space-y-1">
-                      {availableFields.map(field => (
-                        <li key={field.name}>
-                          <button
-                            className="text-left text-sm text-themed-text-primary hover:text-themed-interactive-primary"
-                            title={field.description || field.name}
-                            onClick={() => setQuery(prev => `${prev} ${field.name}`)}
-                          >
-                            {field.name} <span className="text-xs text-themed-text-secondary ml-1">({field.type})</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="text-xs text-themed-text-secondary py-2">No fields available.</div>
-                  )}
+                  <div>
+                    <h4 className="font-semibold uppercase tracking-wide text-[0.65rem] text-themed-text-muted mb-2">Fields</h4>
+                    {loadingFields ? (
+                      <div className="py-1">Loading fields...</div>
+                    ) : availableFields.length > 0 ? (
+                      <ul className="space-y-1">
+                        {availableFields.map(field => (
+                          <li key={field.name}>
+                            <button
+                              type="button"
+                              className="w-full text-left text-sm text-themed-text-primary hover:text-themed-interactive-primary transition-colors"
+                              title={field.description || field.name}
+                              onClick={() => setQuery(prev => `${prev} ${field.name}`)}
+                            >
+                              {field.name}
+                              <span className="text-xs text-themed-text-muted ml-1">({field.type})</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="py-1">No fields available.</div>
+                    )}
+                  </div>
 
-                  <h4 className="text-xs font-semibold text-themed-text-secondary mt-4 mb-1">Tags</h4>
-                  {loadingTags ? (
-                    <div className="text-xs text-themed-text-secondary py-2">Loading tags...</div>
-                  ) : availableTags.length > 0 ? (
-                    <ul className="space-y-1">
-                      {availableTags.map(tag => (
-                        <li key={tag.name}>
-                          <button
-                            className="text-left text-sm text-themed-text-primary hover:text-themed-interactive-primary"
-                            title={tag.description || tag.name}
-                            onClick={() => setQuery(prev => `${prev} ${tag.name}`)}
-                          >
-                            {tag.name} <span className="text-xs text-themed-text-secondary ml-1">({tag.values.join(', ')})</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="text-xs text-themed-text-secondary py-2">No tags available.</div>
-                  )}
+                  <div>
+                    <h4 className="font-semibold uppercase tracking-wide text-[0.65rem] text-themed-text-muted mb-2">Tags</h4>
+                    {loadingTags ? (
+                      <div className="py-1">Loading tags...</div>
+                    ) : availableTags.length > 0 ? (
+                      <ul className="space-y-1">
+                        {availableTags.map(tag => (
+                          <li key={tag.name}>
+                            <button
+                              type="button"
+                              className="w-full text-left text-sm text-themed-text-primary hover:text-themed-interactive-primary transition-colors"
+                              title={tag.description || tag.name}
+                              onClick={() => setQuery(prev => `${prev} ${tag.name}`)}
+                            >
+                              {tag.name}
+                              <span className="text-xs text-themed-text-muted ml-1">
+                                ({tag.values.length} values)
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="py-1">No tags available.</div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
           ))}
         </div>
-      </div>
-      {/* Main Area */}
-      <div className="flex-1 flex flex-col space-y-0">
-        {/* Header */}
-        <div className="border-b border-themed-border-primary px-8 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-themed-text-primary">Data Exploration</h1>
-            <p className="mt-2 text-themed-text-secondary">Query and visualize data from your connected sources</p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => setViewMode(viewMode === 'chart' ? 'table' : 'chart')}
-              className="inline-flex items-center px-3 py-2 border border-themed-border-primary text-sm font-medium rounded-sm text-themed-text-primary bg-themed-bg-surface hover:bg-themed-interactive-secondary-hover transition-colors"
-            >
-              {viewMode === 'chart' ? <Table className="h-4 w-4 mr-2" /> : <LineChart className="h-4 w-4 mr-2" />}
-              {viewMode === 'chart' ? 'Table View' : 'Chart View'}
-            </button>
-            {queryResult && (
-              <button
-                onClick={() => setShowExportModal(true)}
-                className="inline-flex items-center px-3 py-2 border border-themed-border-primary text-sm font-medium rounded-sm text-themed-text-primary bg-themed-bg-surface hover:bg-themed-interactive-secondary-hover transition-colors"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </button>
-            )}
-          </div>
-        </div>
-        {/* Query Area */}
-        <div className="px-8 py-6 flex flex-col space-y-6">
-          <div className="flex items-center space-x-6">
-            <div>
-              <label htmlFor="datasource-select" className="block text-sm font-medium text-themed-text-secondary">
+      </aside>
+
+      <div className="flex-1 flex flex-col gap-6 overflow-hidden">
+        <div className="panel flex flex-col gap-6">
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="space-y-1">
+              <label htmlFor="datasource-select" className="block text-xs font-semibold uppercase tracking-wide text-themed-text-muted">
                 Data Source
               </label>
               <select
                 id="datasource-select"
                 value={activeDatasourceId || ''}
                 onChange={e => setActiveDatasourceId(e.target.value)}
-                className="mt-1 block w-48 px-3 py-2 border border-themed-border-primary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary bg-themed-bg-surface text-themed-text-primary sm:text-sm"
+                className="input-themed w-56"
               >
                 {datasources.map(ds => (
                   <option key={ds.id} value={ds.id}>
@@ -492,20 +497,22 @@ const Explore = () => {
                 ))}
               </select>
             </div>
-            <div className="relative">
-              <label className="block text-sm font-medium text-themed-text-secondary">
+
+            <div className="relative space-y-1">
+              <label className="block text-xs font-semibold uppercase tracking-wide text-themed-text-muted">
                 Time Range
               </label>
               <button
+                type="button"
                 onClick={() => setShowTimeRangeDropdown(!showTimeRangeDropdown)}
-                className="mt-1 inline-flex items-center px-3 py-2 border border-themed-border-primary rounded-sm shadow-sm bg-themed-bg-surface text-themed-text-primary hover:bg-themed-interactive-secondary-hover focus:outline-none focus:ring-themed-interactive-primary text-sm"
+                className="btn-themed-secondary"
               >
                 <Clock className="h-4 w-4 mr-2" />
-                {formatTimeRange(timeRange)}
+                {timeRangeLabel}
                 <ChevronDown className="h-4 w-4 ml-2" />
               </button>
               {showTimeRangeDropdown && (
-                <div className="absolute z-10 mt-1 w-64 bg-themed-bg-elevated shadow-lg border border-themed-border-primary rounded-sm py-1">
+                <div className="surface-muted absolute z-20 mt-2 w-64 shadow-lg border border-themed-border-primary rounded-lg p-0 overflow-hidden">
                   <div className="px-4 py-2 text-sm font-medium text-themed-text-secondary border-b border-themed-border-primary">
                     Quick Time Ranges
                   </div>
@@ -518,6 +525,7 @@ const Explore = () => {
                   ].map(range => (
                     <button
                       key={range.label}
+                      type="button"
                       onClick={() => setQuickTimeRange(range.hours)}
                       className="block w-full text-left px-4 py-2 text-sm text-themed-text-primary hover:bg-themed-interactive-secondary-hover transition-colors"
                     >
@@ -527,44 +535,49 @@ const Explore = () => {
                 </div>
               )}
             </div>
-            <div className="flex rounded-sm border border-themed-border-primary">
+
+            <div className="inline-flex items-center rounded-md border border-themed-border-primary overflow-hidden">
               <button
+                type="button"
                 onClick={() => setQueryMode('builder')}
                 className={`px-3 py-2 text-sm font-medium transition-colors ${
                   queryMode === 'builder'
                     ? 'bg-themed-interactive-primary text-themed-text-inverse'
-                    : 'bg-themed-bg-surface text-themed-text-primary hover:bg-themed-interactive-secondary-hover'
+                    : 'bg-transparent text-themed-text-primary hover:bg-themed-interactive-secondary-hover'
                 }`}
               >
                 <Settings className="h-4 w-4 mr-1" />
                 Builder
               </button>
               <button
+                type="button"
                 onClick={() => setQueryMode('code')}
                 className={`px-3 py-2 text-sm font-medium transition-colors ${
                   queryMode === 'code'
                     ? 'bg-themed-interactive-primary text-themed-text-inverse'
-                    : 'bg-themed-bg-surface text-themed-text-primary hover:bg-themed-interactive-secondary-hover'
+                    : 'bg-transparent text-themed-text-primary hover:bg-themed-interactive-secondary-hover'
                 }`}
               >
                 <Code className="h-4 w-4 mr-1" />
                 Code
               </button>
             </div>
+
             <button
+              type="button"
               onClick={executeQuery}
               disabled={isRunning || !query.trim()}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-sm shadow-sm text-themed-text-inverse bg-themed-interactive-primary hover:bg-themed-interactive-primary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="btn-themed-primary inline-flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isRunning ? (
-                <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-themed-text-inverse border-r-transparent"></div>
+                <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-themed-text-inverse border-r-transparent" />
               ) : (
                 <Play className="h-4 w-4 mr-2" />
               )}
               {isRunning ? 'Running...' : 'Run Query'}
             </button>
           </div>
-          {/* Query Builder/Editor */}
+
           {queryMode === 'builder' ? (
             <QueryBuilder
               datasources={datasources}
@@ -587,46 +600,61 @@ const Explore = () => {
               isRunning={isRunning}
             />
           ) : (
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="query-editor" className="block text-sm font-medium text-themed-text-secondary mb-2">
-                  Query
-                </label>
-                <textarea
-                  id="query-editor"
-                  rows={8}
-                  value={query}
-                  onChange={e => setQuery(e.target.value)}
-                  placeholder={`Enter your ${activeDatasource?.dataSourceType} query...`}
-                  className="block w-full px-3 py-2 border border-themed-border-primary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary bg-themed-bg-surface text-themed-text-primary font-mono text-sm"
-                />
-              </div>
+            <div className="space-y-3 w-full">
+              <label htmlFor="query-editor" className="block text-sm font-medium text-themed-text-secondary">
+                Query
+              </label>
+              <textarea
+                id="query-editor"
+                rows={8}
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder={`Enter your ${activeDatasource?.dataSourceType} query...`}
+                className="input-themed font-mono text-sm w-full min-h-[200px]"
+              />
             </div>
           )}
         </div>
-        {/* Query Results */}
-        <div className="px-8 pb-8 flex-1 flex flex-col">
-          {queryResult ? (
-            <div className="mt-2">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-themed-text-primary">Query Results</h3>
-                <div className="flex items-center space-x-4 text-sm text-themed-text-secondary">
-                  {queryResult.metadata && (
-                    <>
-                      <span>
-                        {queryResult.metadata.recordCount} records
-                      </span>
-                      <span>
-                        Execution time: {queryResult.metadata.executionTime}ms
-                      </span>
-                    </>
-                  )}
-                  <span>
-                    Last run: {new Date(queryResult.timestamp).toLocaleTimeString()}
-                  </span>
+
+        <div className="panel flex-1 flex flex-col overflow-hidden">
+          <div className="panel-header">
+            <div>
+              <h3 className="panel-title">Query Results</h3>
+              {queryResult?.metadata ? (
+                <div className="panel-subtitle flex flex-wrap gap-4 text-xs">
+                  <span>{queryResult.metadata.recordCount} records</span>
+                  <span>Execution time: {queryResult.metadata.executionTime}ms</span>
+                  <span>Last run: {new Date(queryResult.timestamp).toLocaleTimeString()}</span>
                 </div>
-              </div>
-              {queryResult.error ? (
+              ) : (
+                <p className="panel-subtitle">Run a query to see data visualizations and tables.</p>
+              )}
+            </div>
+            <div className="page-actions">
+              <button
+                type="button"
+                onClick={() => setViewMode(viewMode === 'chart' ? 'table' : 'chart')}
+                className="btn-themed-secondary"
+              >
+                {viewMode === 'chart' ? <Table className="h-4 w-4 mr-2" /> : <LineChart className="h-4 w-4 mr-2" />}
+                {viewMode === 'chart' ? 'Table View' : 'Chart View'}
+              </button>
+              {queryResult && (
+                <button
+                  type="button"
+                  onClick={() => setShowExportModal(true)}
+                  className="btn-themed-secondary"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto pr-1">
+            {queryResult ? (
+              queryResult.error ? (
                 <div className="bg-themed-alert-error bg-opacity-10 border border-themed-alert-error rounded-lg p-4">
                   <div className="flex">
                     <AlertCircle className="h-5 w-5 text-themed-status-error mr-2 mt-0.5" />
@@ -642,88 +670,148 @@ const Explore = () => {
                   datasourceType={activeDatasource?.dataSourceType || 'unknown'}
                   viewMode={viewMode}
                 />
-              )}
-            </div>
-          ) : (
-            <div className="mt-8 bg-themed-alert-info bg-opacity-10 border border-themed-alert-info rounded-lg p-4">
-              <div className="flex">
-                <Info className="h-5 w-5 text-themed-status-info mr-2 mt-0.5" />
-                <div>
-                  <h3 className="text-sm font-medium text-themed-status-info">Query Tips</h3>
-                  <div className="mt-2 text-sm text-themed-text-secondary">
-                    {activeDatasource?.dataSourceType === 'prometheus' && (
-                      <ul className="list-disc pl-5 space-y-1">
-                        <li>Use metric names like <code className="bg-themed-bg-surface px-1 rounded">up</code> or <code className="bg-themed-bg-surface px-1 rounded">http_requests_total</code></li>
-                        <li>Add filters with <code className="bg-themed-bg-surface px-1 rounded">&#123;label="value"&#125;</code></li>
-                        <li>Use functions like <code className="bg-themed-bg-surface px-1 rounded">rate()</code>, <code className="bg-themed-bg-surface px-1 rounded">sum()</code>, <code className="bg-themed-bg-surface px-1 rounded">avg()</code></li>
-                      </ul>
-                    )}
-                    {activeDatasource?.dataSourceType === 'sqlserver' && (
-                      <ul className="list-disc pl-5 space-y-1">
-                        <li>Use standard SQL syntax: <code className="bg-themed-bg-surface px-1 rounded">SELECT * FROM table</code></li>
-                        <li>Filter by time: <code className="bg-themed-bg-surface px-1 rounded">WHERE timestamp &gt;= DATEADD(hour, -1, GETDATE())</code></li>
-                        <li>Limit results: <code className="bg-themed-bg-surface px-1 rounded">SELECT TOP 100 *</code></li>
-                      </ul>
-                    )}
-                    {activeDatasource?.dataSourceType === 'ingested' && (
-                      <ul className="list-disc pl-5 space-y-1">
-                        <li>Leave query empty to fetch all metrics in the time range</li>
-                        <li>Use the Query Builder for guided metric selection</li>
-                        <li>Adjust the time range to control the data scope</li>
-                      </ul>
-                    )}
+              )
+            ) : (
+              <div className="surface-muted">
+                <div className="flex">
+                  <Info className="h-5 w-5 text-themed-status-info mr-2 mt-0.5" />
+                  <div>
+                    <h3 className="text-sm font-medium text-themed-status-info">Query Tips</h3>
+                    <div className="mt-2 text-sm text-themed-text-secondary space-y-2">
+                      {activeDatasource?.dataSourceType === 'prometheus' && (
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>Use metric names like <code className="bg-themed-bg-surface px-1 rounded">up</code> or <code className="bg-themed-bg-surface px-1 rounded">http_requests_total</code></li>
+                          <li>Add filters with <code className="bg-themed-bg-surface px-1 rounded">&#123;label=&quot;value&quot;&#125;</code></li>
+                          <li>Use functions like <code className="bg-themed-bg-surface px-1 rounded">rate()</code>, <code className="bg-themed-bg-surface px-1 rounded">sum()</code>, <code className="bg-themed-bg-surface px-1 rounded">avg()</code></li>
+                        </ul>
+                      )}
+                      {activeDatasource?.dataSourceType === 'sqlserver' && (
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>Use standard SQL syntax: <code className="bg-themed-bg-surface px-1 rounded">SELECT * FROM table</code></li>
+                          <li>Filter by time: <code className="bg-themed-bg-surface px-1 rounded">WHERE timestamp &gt;= DATEADD(hour, -1, GETDATE())</code></li>
+                          <li>Limit results: <code className="bg-themed-bg-surface px-1 rounded">SELECT TOP 100 *</code></li>
+                        </ul>
+                      )}
+                      {activeDatasource?.dataSourceType === 'ingested' && (
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>Leave query empty to fetch all metrics in the time range</li>
+                          <li>Use the Query Builder for guided metric selection</li>
+                          <li>Adjust the time range to control the data scope</li>
+                        </ul>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-        {/* Export Modal */}
-        {showExportModal && queryResult && (
-          <ExportModal
-            data={queryResult.results}
-            filename={`${activeDatasource?.name || 'export'}-${new Date().toISOString().split('T')[0]}`}
-            onClose={() => setShowExportModal(false)}
-          />
-        )}
-        {/* Debug Toggle */}
-        <button
-          onClick={() => setShowDebuggingInfo(!showDebuggingInfo)}
-          className="fixed bottom-4 right-4 p-2 bg-themed-bg-tertiary border border-themed-border-primary rounded-full shadow-lg text-themed-text-secondary hover:text-themed-text-primary transition-colors"
-          title="Toggle debugging information"
-        >
-          <HelpCircle className="h-5 w-5" />
-        </button>
-        {showDebuggingInfo && (
-          <div className="bg-themed-bg-tertiary rounded-lg border border-themed-border-primary p-6 fixed bottom-20 right-4 w-[32rem] max-h-[60vh] overflow-y-auto z-50">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-themed-text-primary">Debugging Information</h3>
-              <button
-                onClick={() => setShowDebuggingInfo(false)}
-                className="text-themed-text-muted hover:text-themed-text-primary"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <h4 className="text-sm font-medium text-themed-text-secondary">Available Data Sources</h4>
-                <pre className="mt-2 text-xs bg-themed-bg-surface p-3 rounded border overflow-x-auto text-themed-text-primary">
-                  {JSON.stringify(datasources, null, 2)}
-                </pre>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-themed-text-secondary">Current Query State</h4>
-                <pre className="mt-2 text-xs bg-themed-bg-surface p-3 rounded border overflow-x-auto text-themed-text-primary">
-                  {JSON.stringify({ activeDatasourceId, query, queryMode, timeRange, queryResult }, null, 2)}
-                </pre>
-              </div>
-            </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   )
 }
 
-export default Explore 
+return (
+  <div className="page-shell">
+    <PageHeader
+      title="Explore"
+      description="Query, transform, and visualize telemetry across your connected data sources."
+      meta={(
+        <span className="badge-muted">
+          <Database className="h-3 w-3" />
+          {activeDatasourceLabel}
+        </span>
+      )}
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="badge-muted">
+          <Settings className="h-3 w-3" />
+          Mode: {queryModeLabel}
+        </span>
+        <span className="badge-muted">
+          {viewMode === 'chart' ? <LineChart className="h-3 w-3" /> : <Table className="h-3 w-3" />}
+          View: {viewModeLabel}
+        </span>
+        <span className="badge-muted">
+          <Clock className="h-3 w-3" />
+          Range: {timeRangeLabel}
+        </span>
+      </div>
+    </PageHeader>
+
+    <div className="page-toolbar">
+      <div className="page-toolbar__group text-sm text-themed-text-secondary">
+        <Database className="h-4 w-4 text-themed-text-muted" />
+        <span>{activeDatasource ? activeDatasource.url : 'No endpoint configured'}</span>
+      </div>
+      <div className="page-toolbar__divider" />
+      <div className="page-toolbar__group text-sm text-themed-text-secondary">
+        <Code className="h-4 w-4 text-themed-text-muted" />
+        <span>Editor: {queryModeLabel}</span>
+      </div>
+      <div className="page-toolbar__divider" />
+      <div className="page-toolbar__group text-sm text-themed-text-secondary">
+        <LineChart className="h-4 w-4 text-themed-text-muted" />
+        <span>View: {viewModeLabel}</span>
+      </div>
+      <div className="page-toolbar__divider" />
+      <div className="page-toolbar__group text-sm text-themed-text-secondary">
+        <Clock className="h-4 w-4 text-themed-text-muted" />
+        <span>Window: {timeRangeLabel}</span>
+      </div>
+    </div>
+
+    {renderMainContent()}
+
+    {showExportModal && queryResult && (
+      <ExportModal
+        data={queryResult.results}
+        filename={`${activeDatasource?.name || 'export'}-${new Date().toISOString().split('T')[0]}`}
+        onClose={() => setShowExportModal(false)}
+      />
+    )}
+
+    <button
+      type="button"
+      onClick={() => setShowDebuggingInfo(!showDebuggingInfo)}
+      className="fixed bottom-4 right-4 p-2 bg-themed-bg-tertiary border border-themed-border-primary rounded-full shadow-lg text-themed-text-secondary hover:text-themed-text-primary transition-colors"
+      title="Toggle debugging information"
+    >
+      <HelpCircle className="h-5 w-5" />
+    </button>
+
+    {showDebuggingInfo && (
+      <div className="bg-themed-bg-tertiary rounded-lg border border-themed-border-primary p-6 fixed bottom-20 right-4 w-[32rem] max-h-[60vh] overflow-y-auto z-50">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium text-themed-text-primary">Debugging Information</h3>
+          <button
+            type="button"
+            onClick={() => setShowDebuggingInfo(false)}
+            className="text-themed-text-muted hover:text-themed-text-primary"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <h4 className="text-sm font-medium text-themed-text-secondary">Available Data Sources</h4>
+            <pre className="mt-2 text-xs bg-themed-bg-surface p-3 rounded border overflow-x-auto text-themed-text-primary">
+              {JSON.stringify(datasources, null, 2)}
+            </pre>
+          </div>
+          <div>
+            <h4 className="text-sm font-medium text-themed-text-secondary">Current Query State</h4>
+            <pre className="mt-2 text-xs bg-themed-bg-surface p-3 rounded border overflow-x-auto text-themed-text-primary">
+              {JSON.stringify({ activeDatasourceId, query, queryMode, timeRange, queryResult }, null, 2)}
+            </pre>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+)
+}
+
+export default Explore
+
+

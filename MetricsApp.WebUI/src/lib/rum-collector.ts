@@ -1,13 +1,14 @@
-// Real User Monitoring (RUM) Data Collector
-// Captures user interactions, performance metrics, and errors
+import { recordError, traceApiCall } from './telemetry'
+
+export type RumEventType = 'pageview' | 'interaction' | 'error' | 'performance' | 'custom'
 
 export interface RumEvent {
   id: string
   sessionId: string
   userId?: string
   timestamp: number
-  type: 'pageview' | 'interaction' | 'error' | 'performance' | 'custom'
-  data: Record<string, any>
+  type: RumEventType
+  data: Record<string, unknown>
   userAgent: string
   url: string
   referrer: string
@@ -16,9 +17,9 @@ export interface RumEvent {
     height: number
   }
   connection?: {
-    effectiveType: string
-    downlink: number
-    rtt: number
+    effectiveType?: string
+    downlink?: number
+    rtt?: number
   }
   location?: {
     country?: string
@@ -27,368 +28,145 @@ export interface RumEvent {
   }
 }
 
-export interface PerformanceMetrics {
-  // Core Web Vitals
-  lcp?: number // Largest Contentful Paint
-  fid?: number // First Input Delay
-  cls?: number // Cumulative Layout Shift
-  fcp?: number // First Contentful Paint
-  ttfb?: number // Time to First Byte
-  
-  // Navigation Timing
-  domContentLoaded?: number
-  loadComplete?: number
-  
-  // Resource Timing
-  resources?: ResourceTiming[]
-  
-  // Custom metrics
-  customMetrics?: Record<string, number>
+export interface RumCollectorConfig {
+  endpoint?: string
+  batchSize?: number
+  flushIntervalMs?: number
+  maxQueueSize?: number
+  autoStart?: boolean
+  credentials?: RequestCredentials
+  useSendBeacon?: boolean
 }
 
-export interface ResourceTiming {
-  name: string
-  type: string
-  duration: number
-  size: number
-  startTime: number
-}
-
-export interface UserInteraction {
+export interface RumInteractionEvent {
   type: 'click' | 'scroll' | 'input' | 'navigation'
   target: string
   timestamp: number
-  data?: Record<string, any>
+  data?: Record<string, unknown>
 }
 
-export interface ErrorEvent {
+export interface RumErrorPayload {
   message: string
   stack?: string
   filename?: string
   lineno?: number
   colno?: number
-  type: 'javascript' | 'network' | 'resource' | 'custom'
-  severity: 'low' | 'medium' | 'high' | 'critical'
+  category?: 'javascript' | 'network' | 'resource' | 'custom'
+  severity?: 'low' | 'medium' | 'high' | 'critical'
 }
 
-class RumCollector {
-  private sessionId: string
+const DEFAULT_CONFIG: Required<Omit<RumCollectorConfig, 'autoStart'>> & { autoStart: boolean } = {
+  endpoint: '/api/v1/rum/events',
+  batchSize: 10,
+  flushIntervalMs: 5000,
+  maxQueueSize: 1000,
+  credentials: 'include',
+  useSendBeacon: true,
+  autoStart: true
+}
+
+const navigationTimingKeys = [
+  'domComplete',
+  'domContentLoadedEventEnd',
+  'domContentLoadedEventStart',
+  'domInteractive',
+  'loadEventEnd',
+  'loadEventStart',
+  'redirectCount',
+  'transferSize'
+] as const
+
+type LayoutShiftEntry = PerformanceEntry & {
+  value: number
+  hadRecentInput: boolean
+}
+
+const performanceMarks = {
+  lcp: 'largest-contentful-paint',
+  fid: 'first-input',
+  cls: 'layout-shift'
+} as const
+
+let globalCollector: RumCollector | undefined
+
+type FlushTimer = ReturnType<typeof setInterval>
+
+type EventListenerDisposer = () => void
+
+export class RumCollector {
+  private config: typeof DEFAULT_CONFIG
+  private readonly sessionId: string
+  private flushTimer?: FlushTimer
+  private readonly disposers: EventListenerDisposer[] = []
+  private readonly observers: PerformanceObserver[] = []
+  private queue: RumEvent[] = []
   private userId?: string
-  private events: RumEvent[] = []
-  private isEnabled: boolean = true
-  private apiEndpoint: string = '/api/v1/rum/events'
-  private batchSize: number = 10
-  private flushInterval: number = 5000 // 5 seconds
-  private flushTimer?: number
+  private enabled = false
 
-  constructor() {
+  constructor(config: RumCollectorConfig = {}) {
+    this.config = { ...DEFAULT_CONFIG, ...config }
     this.sessionId = this.generateSessionId()
-    this.initializeCollector()
+
+    if (typeof window !== 'undefined' && this.config.autoStart) {
+      this.enable()
+    }
   }
 
-  private generateSessionId(): string {
-    return `rum_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-  }
-
-  private initializeCollector(): void {
-    if (typeof window === 'undefined') return
-
-    // Capture page load performance
-    this.capturePageLoadMetrics()
-    
-    // Set up error tracking
-    this.setupErrorTracking()
-    
-    // Set up user interaction tracking
-    this.setupInteractionTracking()
-    
-    // Set up Core Web Vitals
-    this.setupWebVitals()
-    
-    // Set up periodic flushing
-    this.startPeriodicFlush()
-    
-    // Flush on page unload
-    window.addEventListener('beforeunload', () => this.flush())
-    window.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') {
-        this.flush()
-      }
-    })
-  }
-
-  private capturePageLoadMetrics(): void {
-    if (!window.performance) return
-
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
-        const paint = performance.getEntriesByType('paint')
-        
-        const metrics: PerformanceMetrics = {
-          domContentLoaded: navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart,
-          loadComplete: navigation.loadEventEnd - navigation.loadEventStart,
-          ttfb: navigation.responseStart - navigation.requestStart,
-          fcp: paint.find(p => p.name === 'first-contentful-paint')?.startTime,
-          resources: this.getResourceTimings()
-        }
-
-        this.trackEvent('performance', {
-          eventType: 'page_load',
-          metrics
-        })
-      }, 0)
-    })
-  }
-
-  private getResourceTimings(): ResourceTiming[] {
-    if (!window.performance) return []
-
-    return performance.getEntriesByType('resource').map((resource: any) => ({
-      name: resource.name,
-      type: this.getResourceType(resource.name),
-      duration: resource.duration,
-      size: resource.transferSize || 0,
-      startTime: resource.startTime
-    }))
-  }
-
-  private getResourceType(url: string): string {
-    if (url.match(/\.(js|mjs)$/)) return 'script'
-    if (url.match(/\.(css)$/)) return 'stylesheet'
-    if (url.match(/\.(png|jpg|jpeg|gif|svg|webp)$/)) return 'image'
-    if (url.match(/\.(woff|woff2|ttf|eot)$/)) return 'font'
-    if (url.includes('/api/')) return 'api'
-    return 'other'
-  }
-
-  private setupErrorTracking(): void {
-    // JavaScript errors
-    window.addEventListener('error', (event) => {
-      this.trackError({
-        message: event.message,
-        stack: event.error?.stack,
-        filename: event.filename,
-        lineno: event.lineno,
-        colno: event.colno,
-        type: 'javascript',
-        severity: 'high'
-      })
-    })
-
-    // Unhandled promise rejections
-    window.addEventListener('unhandledrejection', (event) => {
-      this.trackError({
-        message: `Unhandled Promise Rejection: ${event.reason}`,
-        stack: event.reason?.stack,
-        type: 'javascript',
-        severity: 'high'
-      })
-    })
-
-    // Network errors (fetch/XHR)
-    this.interceptNetworkRequests()
-  }
-
-  private interceptNetworkRequests(): void {
-    // Skip network interception in development if RUM_DISABLE_NETWORK_TRACKING is set
-    if (process.env.NODE_ENV === 'development' && window.localStorage.getItem('RUM_DISABLE_NETWORK_TRACKING') === 'true') {
-      console.log('RUM network tracking disabled via localStorage')
+  public enable(): void {
+    if (this.enabled || typeof window === 'undefined') {
       return
     }
-    
-    // Intercept fetch
-    const originalFetch = window.fetch
-    window.fetch = async (...args) => {
-      const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || 'unknown'
-      
-      // Skip tracking for RUM endpoint to avoid infinite loops
-      if (url.includes('/api/v1/rum/events')) {
-        return originalFetch(...args)
-      }
-      
-      const startTime = performance.now()
-      try {
-        const response = await originalFetch(...args)
-        const duration = performance.now() - startTime
-        
-        // Only track if not RUM endpoint and request completed
-        if (!url.includes('/api/v1/rum/events')) {
-          this.trackEvent('performance', {
-            eventType: 'network_request',
-            url: url,
-            method: args[1]?.method || 'GET',
-            status: response.status,
-            duration,
-            success: response.ok
-          })
 
-          if (!response.ok) {
-            this.trackError({
-              message: `Network request failed: ${response.status} ${response.statusText}`,
-              type: 'network',
-              severity: response.status >= 500 ? 'high' : 'medium'
-            })
-          }
-        }
+    this.enabled = true
+    this.attachGlobalListeners()
+    this.captureInitialMetrics()
+    this.startFlushTimer()
+  }
 
-        return response
-      } catch (error) {
-        const duration = performance.now() - startTime
-        
-        // Only track errors if not RUM endpoint
-        if (!url.includes('/api/v1/rum/events')) {
-          this.trackError({
-            message: `Network request failed: ${error}`,
-            type: 'network',
-            severity: 'high'
-          })
-          
-          this.trackEvent('performance', {
-            eventType: 'network_request',
-            url: url,
-            method: args[1]?.method || 'GET',
-            duration,
-            success: false,
-            error: error instanceof Error ? error.message : String(error)
-          })
-        }
-        
-        throw error
-      }
+  public disable(): void {
+    if (!this.enabled) {
+      return
+    }
+
+    this.enabled = false
+
+    if (this.flushTimer) {
+      clearInterval(this.flushTimer)
+      this.flushTimer = undefined
+    }
+
+    this.observers.forEach(observer => observer.disconnect())
+    this.observers.length = 0
+
+    while (this.disposers.length > 0) {
+      const dispose = this.disposers.pop()
+      dispose?.()
     }
   }
 
-  private setupInteractionTracking(): void {
-    // Click tracking
-    document.addEventListener('click', (event) => {
-      const target = event.target as HTMLElement
-      this.trackInteraction({
-        type: 'click',
-        target: this.getElementSelector(target),
-        timestamp: Date.now(),
-        data: {
-          x: event.clientX,
-          y: event.clientY,
-          button: event.button
-        }
-      })
-    })
-
-    // Scroll tracking (throttled)
-    let scrollTimeout: number
-    document.addEventListener('scroll', () => {
-      clearTimeout(scrollTimeout)
-      scrollTimeout = setTimeout(() => {
-        this.trackInteraction({
-          type: 'scroll',
-          target: 'window',
-          timestamp: Date.now(),
-          data: {
-            scrollY: window.scrollY,
-            scrollX: window.scrollX,
-            scrollHeight: document.documentElement.scrollHeight,
-            viewportHeight: window.innerHeight
-          }
-        })
-      }, 100)
-    })
-
-    // Form input tracking
-    document.addEventListener('input', (event) => {
-      const target = event.target as HTMLElement
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-        this.trackInteraction({
-          type: 'input',
-          target: this.getElementSelector(target),
-          timestamp: Date.now(),
-          data: {
-            inputType: (target as HTMLInputElement).type,
-            valueLength: (target as HTMLInputElement).value.length
-          }
-        })
-      }
-    })
+  public configure(config: RumCollectorConfig): void {
+    Object.assign(this.config, config)
   }
 
-  private setupWebVitals(): void {
-    // This would integrate with web-vitals library in a real implementation
-    // For now, we'll implement basic versions
-    
-    // LCP (Largest Contentful Paint)
-    if ('PerformanceObserver' in window) {
-      try {
-        const lcpObserver = new PerformanceObserver((list) => {
-          const entries = list.getEntries()
-          const lastEntry = entries[entries.length - 1]
-          
-          this.trackEvent('performance', {
-            eventType: 'web_vital',
-            metric: 'lcp',
-            value: lastEntry.startTime,
-            rating: this.getLCPRating(lastEntry.startTime)
-          })
-        })
-        lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] })
-      } catch (e) {
-        console.warn('LCP observation not supported')
-      }
-
-      // FID (First Input Delay)
-      try {
-        const fidObserver = new PerformanceObserver((list) => {
-          const entries = list.getEntries()
-          entries.forEach((entry: any) => {
-            this.trackEvent('performance', {
-              eventType: 'web_vital',
-              metric: 'fid',
-              value: entry.processingStart - entry.startTime,
-              rating: this.getFIDRating(entry.processingStart - entry.startTime)
-            })
-          })
-        })
-        fidObserver.observe({ entryTypes: ['first-input'] })
-      } catch (e) {
-        console.warn('FID observation not supported')
-      }
-    }
-  }
-
-  private getLCPRating(value: number): 'good' | 'needs-improvement' | 'poor' {
-    if (value <= 2500) return 'good'
-    if (value <= 4000) return 'needs-improvement'
-    return 'poor'
-  }
-
-  private getFIDRating(value: number): 'good' | 'needs-improvement' | 'poor' {
-    if (value <= 100) return 'good'
-    if (value <= 300) return 'needs-improvement'
-    return 'poor'
-  }
-
-  private getElementSelector(element: HTMLElement): string {
-    if (element.id) return `#${element.id}`
-    if (element.className) return `.${element.className.split(' ')[0]}`
-    return element.tagName.toLowerCase()
-  }
-
-  private startPeriodicFlush(): void {
-    this.flushTimer = setInterval(() => {
-      if (this.events.length > 0) {
-        this.flush()
-      }
-    }, this.flushInterval)
-  }
-
-  public setUserId(userId: string): void {
+  public setUserId(userId?: string): void {
     this.userId = userId
   }
 
-  public trackEvent(type: RumEvent['type'], data: Record<string, any>): void {
-    if (!this.isEnabled) return
+  public getSessionId(): string {
+    return this.sessionId
+  }
+
+  public getFetchCredentials(): RequestCredentials {
+    return this.config.credentials
+  }
+
+  public trackEvent(type: RumEventType, data: Record<string, unknown>): void {
+    if (!this.enabled || typeof window === 'undefined') {
+      return
+    }
 
     const event: RumEvent = {
-      id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: this.createEventId(),
       sessionId: this.sessionId,
       userId: this.userId,
       timestamp: Date.now(),
@@ -400,33 +178,27 @@ class RumCollector {
       viewport: {
         width: window.innerWidth,
         height: window.innerHeight
-      }
+      },
+      connection: this.getConnectionInfo()
     }
 
-    // Add connection info if available
-    if ('connection' in navigator) {
-      const conn = (navigator as any).connection
-      event.connection = {
-        effectiveType: conn.effectiveType,
-        downlink: conn.downlink,
-        rtt: conn.rtt
-      }
+    if (this.queue.length >= this.config.maxQueueSize) {
+      this.queue.shift()
     }
 
-    this.events.push(event)
+    this.queue.push(event)
 
-    // Auto-flush if batch size reached
-    if (this.events.length >= this.batchSize) {
-      this.flush()
+    if (this.queue.length >= this.config.batchSize) {
+      void this.flush()
     }
   }
 
-  public trackError(error: ErrorEvent): void {
-    this.trackEvent('error', error)
+  public trackInteraction(interaction: RumInteractionEvent): void {
+    this.trackEvent('interaction', { ...interaction })
   }
 
-  public trackInteraction(interaction: UserInteraction): void {
-    this.trackEvent('interaction', interaction)
+  public trackError(error: RumErrorPayload): void {
+    this.trackEvent('error', { ...error })
   }
 
   public trackCustomMetric(name: string, value: number, tags?: Record<string, string>): void {
@@ -438,74 +210,346 @@ class RumCollector {
   }
 
   public async flush(): Promise<void> {
-    if (this.events.length === 0) return
+    if (!this.enabled || this.queue.length === 0 || typeof window === 'undefined') {
+      return
+    }
 
-    const eventsToSend = [...this.events]
-    this.events = []
+    const eventsToSend = this.queue
+    this.queue = []
+
+    const payload = {
+      events: eventsToSend,
+      sessionId: this.sessionId,
+      timestamp: Date.now()
+    }
+
+    const body = JSON.stringify(payload)
+
+    if (this.config.useSendBeacon && typeof navigator.sendBeacon === 'function') {
+      const success = navigator.sendBeacon(this.config.endpoint, new Blob([body], { type: 'application/json' }))
+      if (success) {
+        return
+      }
+    }
 
     try {
-      await fetch(this.apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          events: eventsToSend,
-          sessionId: this.sessionId,
-          timestamp: Date.now()
+      await traceApiCall(this.config.endpoint, 'POST', () => {
+        return fetch(this.config.endpoint, {
+          method: 'POST',
+          credentials: this.config.credentials,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body
         })
       })
     } catch (error) {
-      console.warn('Failed to send RUM events:', error)
-      // Re-add events to queue for retry (with limit to prevent memory issues)
-      this.events = [...eventsToSend.slice(-50), ...this.events]
+      recordError(error, 'rum.flush')
+      // Requeue the events to try again later, but keep the queue bounded
+      this.queue = [...eventsToSend, ...this.queue].slice(-this.config.maxQueueSize)
     }
   }
 
-  public enable(): void {
-    this.isEnabled = true
+  private attachGlobalListeners(): void {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        void this.flush()
+      }
+    }
+
+    const onBeforeUnload = () => {
+      void this.flush()
+    }
+
+    const onError = (event: globalThis.ErrorEvent) => {
+      this.trackError({
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno ?? undefined,
+        colno: event.colno ?? undefined,
+        category: 'javascript',
+        severity: 'high',
+        stack: event.error instanceof Error ? event.error.stack : undefined
+      })
+    }
+
+    const onUnhandledRejection = (event: PromiseRejectionEvent) => {
+      this.trackError({
+        message: String(event.reason),
+        category: 'custom',
+        severity: 'high'
+      })
+    }
+
+    const disposeVisibility = this.addDocumentListener('visibilitychange', onVisibilityChange)
+    const disposeBeforeUnload = this.addWindowListener('beforeunload', onBeforeUnload)
+    const disposeError = this.addWindowListener('error', onError)
+    const disposePromise = this.addWindowListener('unhandledrejection', onUnhandledRejection)
+
+    this.disposers.push(disposeVisibility, disposeBeforeUnload, disposeError, disposePromise)
   }
 
-  public disable(): void {
-    this.isEnabled = false
+  private addWindowListener<K extends keyof WindowEventMap>(event: K, handler: (event: WindowEventMap[K]) => void): EventListenerDisposer {
+    window.addEventListener(event, handler as EventListener)
+    return () => window.removeEventListener(event, handler as EventListener)
+  }
+
+  private addDocumentListener<K extends keyof DocumentEventMap>(event: K, handler: (event: DocumentEventMap[K]) => void): EventListenerDisposer {
+    document.addEventListener(event, handler as EventListener)
+    return () => document.removeEventListener(event, handler as EventListener)
+  }
+
+  private captureInitialMetrics(): void {
+    this.captureNavigationTiming()
+    this.observeLargestContentfulPaint()
+    this.observeFirstInputDelay()
+    this.observeCumulativeLayoutShift()
+  }
+
+  private captureNavigationTiming(): void {
+    if (!('performance' in window)) {
+      return
+    }
+
+    const navigationEntries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[]
+    const navigation = navigationEntries[0]
+
+    if (!navigation) {
+      return
+    }
+
+    const timing: Record<string, number> = {}
+
+    for (const key of navigationTimingKeys) {
+      const value = navigation[key]
+      if (typeof value === 'number' && !Number.isNaN(value) && value !== 0) {
+        timing[key] = value
+      }
+    }
+
+    this.trackEvent('performance', {
+      category: 'navigation',
+      timing,
+      type: 'navigation'
+    })
+  }
+
+  private observeLargestContentfulPaint(): void {
+    if (!('PerformanceObserver' in window)) {
+      return
+    }
+
+    try {
+      const observer = new PerformanceObserver(list => {
+        const entries = list.getEntries()
+        const lastEntry = entries[entries.length - 1] as LargestContentfulPaint | undefined
+
+        if (!lastEntry) {
+          return
+        }
+
+        this.trackEvent('performance', {
+          category: performanceMarks.lcp,
+          value: lastEntry.renderTime || lastEntry.loadTime,
+          size: lastEntry.size
+        })
+      })
+
+      observer.observe({ type: performanceMarks.lcp, buffered: true })
+      this.observers.push(observer)
+    } catch (error) {
+      console.debug('[RUM] Unable to observe LCP', error)
+    }
+  }
+
+  private observeFirstInputDelay(): void {
+    if (!('PerformanceObserver' in window)) {
+      return
+    }
+
+    try {
+      const observer = new PerformanceObserver(list => {
+        const entries = list.getEntries() as PerformanceEventTiming[]
+        const entry = entries[0]
+
+        if (!entry) {
+          return
+        }
+
+        this.trackEvent('performance', {
+          category: performanceMarks.fid,
+          value: entry.processingStart - entry.startTime,
+          targetName: entry.name
+        })
+
+        observer.disconnect()
+      })
+
+      observer.observe({ type: performanceMarks.fid, buffered: true })
+      this.observers.push(observer)
+    } catch (error) {
+      console.debug('[RUM] Unable to observe FID', error)
+    }
+  }
+
+  private observeCumulativeLayoutShift(): void {
+    if (!('PerformanceObserver' in window)) {
+      return
+    }
+
+    try {
+      let clsValue = 0
+
+      const observer = new PerformanceObserver(list => {
+        for (const entry of list.getEntries() as LayoutShiftEntry[]) {
+          if (!entry.hadRecentInput) {
+            clsValue += entry.value
+          }
+        }
+
+        this.trackEvent('performance', {
+          category: performanceMarks.cls,
+          value: Number(clsValue.toFixed(4))
+        })
+      })
+
+      observer.observe({ type: performanceMarks.cls, buffered: true })
+      this.observers.push(observer)
+    } catch (error) {
+      console.debug('[RUM] Unable to observe CLS', error)
+    }
+  }
+
+  private getConnectionInfo(): RumEvent['connection'] {
+    const nav = navigator as Navigator & { connection?: { effectiveType?: string; downlink?: number; rtt?: number } }
+    const connection = nav.connection
+
+    if (!connection) {
+      return undefined
+    }
+
+    return {
+      effectiveType: connection.effectiveType,
+      downlink: connection.downlink,
+      rtt: connection.rtt
+    }
+  }
+
+  private startFlushTimer(): void {
     if (this.flushTimer) {
       clearInterval(this.flushTimer)
     }
+
+    this.flushTimer = setInterval(() => {
+      void this.flush()
+    }, this.config.flushIntervalMs)
   }
 
-  public getSessionId(): string {
-    return this.sessionId
+  private generateSessionId(): string {
+    return `rum_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+  }
+
+  private createEventId(): string {
+    return `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
   }
 }
 
-// Global RUM instance
-export const rumCollector = new RumCollector()
+const ensureCollector = () => {
+  if (!globalCollector) {
+    globalCollector = new RumCollector()
+  }
+  return globalCollector
+}
 
-// Convenience functions
-export const trackPageView = (page: string, additionalData?: Record<string, any>) => {
+export const rumCollector = ensureCollector()
+
+export const trackPageView = (page: string, additionalData: Record<string, unknown> = {}) => {
   rumCollector.trackEvent('pageview', {
     page,
     ...additionalData
   })
 }
 
-export const trackUserAction = (action: string, data?: Record<string, any>) => {
+export const trackUserAction = (action: string, data: Record<string, unknown> = {}) => {
   rumCollector.trackEvent('interaction', {
     action,
     ...data
   })
 }
 
-export const trackError = (error: Error | string, context?: Record<string, any>) => {
+export const trackError = (error: Error | string, context: Partial<RumErrorPayload> = {}) => {
   rumCollector.trackError({
     message: error instanceof Error ? error.message : error,
     stack: error instanceof Error ? error.stack : undefined,
-    type: 'custom',
-    severity: 'medium',
+    category: context.category ?? 'custom',
+    severity: context.severity ?? 'medium',
     ...context
   })
+
+  if (error instanceof Error) {
+    recordError(error, 'rum.error')
+  }
 }
 
 export const trackCustomMetric = (name: string, value: number, tags?: Record<string, string>) => {
   rumCollector.trackCustomMetric(name, value, tags)
-} 
+}
+
+export const createRumFetch = (collector: RumCollector = rumCollector) => {
+  return async function rumFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+    const requestInit: RequestInit = {
+      credentials: collector.getFetchCredentials(),
+      ...init
+    }
+
+    let method = (requestInit.method ?? 'GET').toUpperCase()
+    let url: string
+
+    if (typeof input === 'string') {
+      url = input
+    } else if (input instanceof URL) {
+      url = input.toString()
+    } else {
+      const request = input as Request
+      url = request.url
+      if (!requestInit.method) {
+        method = request.method?.toUpperCase() ?? 'GET'
+      }
+
+      if (!requestInit.headers && request.headers) {
+        requestInit.headers = request.headers
+      }
+    }
+
+    const start = performance.now()
+
+    try {
+      const response = await traceApiCall(url, method, () => fetch(input, requestInit))
+
+      collector.trackEvent('performance', {
+        category: 'http',
+        url,
+        method,
+        status: response.status,
+        durationMs: performance.now() - start
+      })
+
+      return response
+    } catch (error) {
+      collector.trackError({
+        message: error instanceof Error ? error.message : String(error),
+        category: 'network',
+        severity: 'high'
+      })
+
+      throw error
+    }
+  }
+}
+
+export const rumFetch = createRumFetch()
+

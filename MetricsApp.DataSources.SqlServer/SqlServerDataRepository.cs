@@ -209,7 +209,6 @@ public class SqlServerDataRepository : IDataRepository
         metricsSchema.AttributeKeys = distinctAttributeKeys.ToList();
         metricsSchema.ResourceKeys = distinctResourceKeys.ToList();
         
-        _logger.LogWarning("GetMetricSchemaAsync is not fully implemented for SqlServerDataRepository.");
         return Task.FromResult(metricsSchema);
     }
 

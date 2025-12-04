@@ -1,3 +1,6 @@
+using System;
+using System.IO;
+using System.Linq;
 using MetricsApp.DataSources.Prometheus;
 using MetricsApp.DataSources.SqlServer;
 using MetricsApp.Worker.Workers;
@@ -10,17 +13,21 @@ using MetricsApp.Agent.Core.Abstractions;
 using MetricsApp.Api.Services;
 using MetricsApp.Parser.OpenTelemetry.Extensions;
 using Scalar.AspNetCore;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options => 
+builder.Services
+    .AddControllers(options =>
+    {
+        options.Conventions.Add(new ApiRoutePrefixConvention("api/v1"));
+    })
+    .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
@@ -28,16 +35,24 @@ builder.Services.AddControllers()
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-// Add HttpClient for Jaeger proxy
 builder.Services.AddHttpClient();
 
-// Add CORS
 builder.Services.AddCors(options =>
 {
+    var allowedOrigins = builder.Configuration
+        .GetSection("Cors:AllowedOrigins")
+        .Get<string[]>()
+        ?? new[]
+        {
+            "http://localhost:5173",
+            "https://localhost:5173",
+            "http://localhost:3533",
+            "https://localhost:3533"
+        };
+
     options.AddPolicy("AllowWebUI", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "https://localhost:5173", "http://localhost:3533", "https://localhost:3533")
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -51,33 +66,17 @@ builder.Services.AddLogging(logging =>
     logging.AddDebug();
 });
 
-
-
-
+// Telemetry ingestion pipeline
 builder.Services.AddInMemoryQueue();
 builder.Services.AddInMemoryCaching();
 builder.Services.AddInMemoryRepository();
-builder.Services.AddTransient<IDataRepository, SqlServerDataRepository>();
+builder.Services.AddSingleton<IDataRepository, SqlServerDataRepository>();
 builder.Services.AddWindowsPerfCounterParser();
 builder.Services.AddOpenTelemetryParsers();
 
-// Note: OpenTelemetry is already configured by AddServiceDefaults() from Aspire
-// The OTEL_EXPORTER_OTLP_ENDPOINT environment variable will be automatically used
-// No additional OTLP exporter configuration needed - Aspire handles this
-
-// // Configure Agent Core services
-// builder.Services.Configure<AgentOptions>(builder.Configuration.GetSection("MetricsAgent"));
-//
-// // Register Windows Performance Counter Collector
-// if (OperatingSystem.IsWindows())
-// {
-//     builder.Services.AddWindowsPerfCounterCollector(builder.Configuration);
-//     builder.Services.AddHostedService<CollectorBackgroundService>();
-// }
-
-// Register data sources
+// Data source integrations
 builder.Services.AddDataSources();
-builder.Services.AddSqlServerDataSource(); 
+builder.Services.AddSqlServerDataSource();
 builder.Services.AddSqliteDataSource();
 builder.Services.AddMySqlDataSource();
 builder.Services.AddPostgreSQLDataSource();
@@ -90,35 +89,17 @@ builder.Services.AddPrometheusDataSource(httpClient =>
 
 builder.Services.AddHostedService<IngestionWorker>();
 
-// Register the plugin manager
+// Plugin system
 builder.Services.AddPlugins(builder.Configuration, Path.Combine(AppContext.BaseDirectory, "Plugins"));
-
 
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
 
-// // Seed the repository with sample data sources on startup
-// using (var scope = app.Services.CreateScope())
-// {
-//     var repository = scope.ServiceProvider.GetRequiredService<IConfigurationRepository>();
-//     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-//     
-//     try
-//     {
-//         await repository.SeedSampleDataSourcesAsync(logger);
-//     }
-//     catch (Exception ex)
-//     {
-//         logger.LogError(ex, "Failed to seed sample data sources");
-//     }
-// }
-
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    
+
     app.MapScalarApiReference(options =>
     {
         options
@@ -128,11 +109,52 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// Enable CORS
 app.UseCors("AllowWebUI");
-
 app.UseHttpsRedirection();
 
 app.MapControllers();
 
 app.Run();
+
+sealed class ApiRoutePrefixConvention : IApplicationModelConvention
+{
+    private readonly AttributeRouteModel _prefix;
+
+    public ApiRoutePrefixConvention(string prefix)
+    {
+        if (string.IsNullOrWhiteSpace(prefix))
+        {
+            throw new ArgumentException("Route prefix cannot be empty.", nameof(prefix));
+        }
+
+        _prefix = new AttributeRouteModel(new RouteAttribute(prefix.Trim('/')));
+    }
+
+    public void Apply(ApplicationModel application)
+    {
+        foreach (var controller in application.Controllers)
+        {
+            foreach (var selector in controller.Selectors.Where(selector => selector.AttributeRouteModel != null))
+            {
+                var template = selector.AttributeRouteModel!.Template;
+                if (!string.IsNullOrEmpty(template) &&
+                    template.StartsWith(_prefix.Template!, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                selector.AttributeRouteModel = AttributeRouteModel.CombineAttributeRouteModel(
+                    _prefix,
+                    selector.AttributeRouteModel);
+            }
+
+            if (controller.Selectors.All(selector => selector.AttributeRouteModel == null))
+            {
+                controller.Selectors.Add(new SelectorModel
+                {
+                    AttributeRouteModel = _prefix
+                });
+            }
+        }
+    }
+}

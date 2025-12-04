@@ -56,7 +56,7 @@ const Search = () => {
       if (filters.endTime) queryParams.append('endTime', filters.endTime)
       queryParams.append('limit', filters.limit.toString())
 
-      const response = await fetch(`/api/v1/metrics/Query?${queryParams}`)
+      const response = await fetch(`/api/v1/telemetry/metrics?${queryParams}`)
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)

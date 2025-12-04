@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts'
-import { Activity, Server, Clock, TrendingUp, Database, AlertCircle, Settings, BarChart3 } from 'lucide-react'
+import { Activity, Server, Clock, TrendingUp, Database, AlertCircle, Settings, BarChart3, Sparkles, Filter } from 'lucide-react'
 import { MetricsApi } from '../lib/api'
 import { DashboardConfigManager, DashboardUtils, type DashboardConfig } from '../lib/dashboard-config'
 import DashboardConfigPanel from '../components/DashboardConfigPanel'
+import PageHeader from '../components/PageHeader'
 
 interface MetricSummary {
   totalMetrics: number
@@ -18,6 +19,39 @@ interface ChartData {
   timestamp?: string
 }
 
+type StatIcon = typeof Activity
+
+const formatTimeRange = (range: string): string => {
+  const unit = range.slice(-1)
+  const rawValue = parseInt(range.slice(0, -1), 10)
+
+  if (!Number.isFinite(rawValue) || rawValue <= 0) {
+    return range
+  }
+
+  let unitLabel = ''
+
+  if (unit === 'm') {
+    unitLabel = 'minute'
+  } else if (unit === 'h') {
+    unitLabel = 'hour'
+  } else if (unit === 'd') {
+    unitLabel = 'day'
+  } else {
+    return range
+  }
+
+  const plural = rawValue === 1 ? unitLabel : `${unitLabel}s`
+  return `Last ${rawValue} ${plural}`
+}
+
+const capitalize = (value: string): string => {
+  if (!value) {
+    return value
+  }
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
 const Dashboard = () => {
   const [summary, setSummary] = useState<MetricSummary>({
     totalMetrics: 0,
@@ -25,7 +59,7 @@ const Dashboard = () => {
     uniqueMetricTypes: 0,
     lastMetricTime: 'Loading...'
   })
-  
+
   const [timelineData, setTimelineData] = useState<ChartData[]>([])
   const [environmentData, setEnvironmentData] = useState<ChartData[]>([])
   const [metricTypeData, setMetricTypeData] = useState<ChartData[]>([])
@@ -38,12 +72,12 @@ const Dashboard = () => {
   const loadDashboardData = async () => {
     try {
       setError(null)
-      
+
       // Get time range based on config
       const timeRangeMs = DashboardUtils.getTimeRangeInMs(config.charts.timeline.timeRange)
       const endTime = new Date()
       const startTime = new Date(endTime.getTime() - timeRangeMs)
-      
+
       const metricsData = await MetricsApi.queryMetrics({
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
@@ -66,7 +100,7 @@ const Dashboard = () => {
       }
 
       // Filter by allowed environments if configured
-      const filteredData = config.filters.allowedEnvironments 
+      const filteredData = config.filters.allowedEnvironments
         ? metricsData.filter(m => config.filters.allowedEnvironments!.includes(m.environment))
         : metricsData
 
@@ -82,7 +116,7 @@ const Dashboard = () => {
         totalMetrics: filteredData.length,
         uniqueServers,
         uniqueMetricTypes,
-        lastMetricTime: latestTimestamp > new Date(0) 
+        lastMetricTime: latestTimestamp > new Date(0)
           ? `${Math.round((Date.now() - latestTimestamp.getTime()) / 60000)} minutes ago`
           : 'Unknown'
       })
@@ -94,7 +128,7 @@ const Dashboard = () => {
         const timeKey = `${time.getHours().toString().padStart(2, '0')}:${Math.floor(time.getMinutes() / 10) * 10}`
         timelineMap.set(timeKey, (timelineMap.get(timeKey) || 0) + 1)
       })
-      
+
       const sortedTimeline = Array.from(timelineMap.entries())
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([name, value]) => ({ name, value }))
@@ -112,18 +146,18 @@ const Dashboard = () => {
       filteredData.forEach(metric => {
         // Simplify metric names for display
         const simpleName = metric.metricName.split('.').pop() || metric.metricName
-        
+
         // Filter by allowed metric types if configured
-        if (config.filters.allowedMetricTypes && 
+        if (config.filters.allowedMetricTypes &&
             !config.filters.allowedMetricTypes.some(allowed => metric.metricName.includes(allowed))) {
           return
         }
-        
+
         metricTypeMap.set(simpleName, (metricTypeMap.get(simpleName) || 0) + 1)
       })
-      
+
       const topMetricTypes = Array.from(metricTypeMap.entries())
-        .sort(([,a], [,b]) => b - a)
+        .sort(([, a], [, b]) => b - a)
         .slice(0, config.charts.metricTypes.limit)
         .map(([name, value]) => ({ name, value }))
       setMetricTypeData(topMetricTypes)
@@ -133,11 +167,11 @@ const Dashboard = () => {
       filteredData.forEach(metric => {
         serverMap.set(metric.source, (serverMap.get(metric.source) || 0) + 1)
       })
-      
+
       const sortedServers = Array.from(serverMap.entries())
-        .sort(config.charts.servers.sortBy === 'name' 
+        .sort(config.charts.servers.sortBy === 'name'
           ? ([a], [b]) => a.localeCompare(b)
-          : ([,a], [,b]) => b - a
+          : ([, a], [, b]) => b - a
         )
         .slice(0, config.charts.servers.limit)
         .map(([name, value]) => ({ name, value }))
@@ -146,7 +180,7 @@ const Dashboard = () => {
     } catch (err) {
       console.error('Dashboard data loading failed:', err)
       setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
-      
+
       // Set empty data on error
       setSummary({
         totalMetrics: 0,
@@ -167,7 +201,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     loadDashboardData()
-    
+
     // Set up auto-refresh if enabled
     if (config.kpis.enabled && config.kpis.refreshInterval > 0) {
       const interval = setInterval(loadDashboardData, config.kpis.refreshInterval)
@@ -175,199 +209,250 @@ const Dashboard = () => {
     }
   }, [config.kpis.enabled, config.kpis.refreshInterval, config.charts.timeline.timeRange])
 
+  const renderEmptyState = (IconComponent: StatIcon, message: string) => (
+    <div className="flex items-center justify-center h-[300px] text-themed-text-muted">
+      <div className="text-center space-y-3">
+        <IconComponent className="h-12 w-12 mx-auto opacity-50" />
+        <p>{message}</p>
+      </div>
+    </div>
+  )
+
   // Get colors based on theme
   const COLORS = DashboardUtils.getChartColors(config.tenant.theme)
 
+  const formattedTimeRange = formatTimeRange(config.charts.timeline.timeRange)
+  const allowedEnvironments = config.filters.allowedEnvironments ?? []
+  const environmentBadgeLabel = allowedEnvironments.length ? allowedEnvironments.join(', ') : 'All environments'
+  const environmentSummary = allowedEnvironments.length ? `Environments: ${environmentBadgeLabel}` : 'Environments: All'
+  const metricFilterSummary = config.filters.allowedMetricTypes && config.filters.allowedMetricTypes.length > 0
+    ? `${config.filters.allowedMetricTypes.length} metric filter${config.filters.allowedMetricTypes.length > 1 ? 's' : ''}`
+    : 'Metric families: All'
+  const autoRefreshLabel = config.kpis.refreshInterval > 0 ? `${Math.round(config.kpis.refreshInterval / 1000)}s` : 'Off'
+  const timelineAggregation = capitalize(config.charts.timeline.aggregation ?? 'count')
+
+  const statCards: Array<{
+    id: string
+    icon: StatIcon
+    iconClass: string
+    label: string
+    value: string
+    meta?: string
+  }> = [
+    {
+      id: 'total-metrics',
+      icon: Activity,
+      iconClass: 'text-themed-status-success',
+      label: 'Total Metrics',
+      value: summary.totalMetrics.toLocaleString(),
+      meta: `Time window: ${formattedTimeRange}`
+    },
+    {
+      id: 'active-sources',
+      icon: Server,
+      iconClass: 'text-themed-status-info',
+      label: 'Active Sources',
+      value: summary.uniqueServers.toLocaleString(),
+      meta: environmentSummary
+    },
+    {
+      id: 'metric-families',
+      icon: BarChart3,
+      iconClass: 'text-themed-status-warning',
+      label: 'Metric Families',
+      value: summary.uniqueMetricTypes.toLocaleString(),
+      meta: metricFilterSummary
+    },
+    {
+      id: 'last-update',
+      icon: Clock,
+      iconClass: 'text-themed-status-info',
+      label: 'Last Update',
+      value: summary.lastMetricTime,
+      meta: `Auto refresh: ${autoRefreshLabel}`
+    }
+  ]
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-themed-interactive-primary"></div>
-        <span className="ml-4 text-themed-text-secondary">Loading dashboard...</span>
+      <div className="page-shell">
+        <div className="flex-1 flex items-center justify-center min-h-[320px]">
+          <div className="flex items-center space-x-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-2 border-b-transparent border-themed-interactive-primary" />
+            <span className="text-themed-text-secondary text-sm">Loading dashboard...</span>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="border-b border-themed-border-primary pb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-themed-text-primary">
-              {config.tenant.name}
-            </h1>
-            <p className="mt-2 text-themed-text-secondary">
-              Real-time monitoring and analytics for your infrastructure metrics
-            </p>
-            {config.tenant.theme !== 'default' && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-themed-alert-info bg-opacity-20 text-themed-status-info mt-2">
-                {config.tenant.theme} theme
-              </span>
-            )}
-          </div>
-          <div className="flex items-center space-x-3">
-            <span className="text-sm text-themed-text-muted">
-              Auto-refresh: {config.kpis.refreshInterval / 1000}s
-            </span>
+    <div className="page-shell">
+      <PageHeader
+        title={config.tenant.name}
+        description="Real-time monitoring and analytics for your infrastructure metrics"
+        meta={(
+          <span className="badge-muted">
+            <Sparkles className="h-3 w-3" />
+            Tenant: {config.tenant.id}
+          </span>
+        )}
+        actions={(
+          <div className="page-actions">
             <button
+              type="button"
               onClick={() => setConfigPanelOpen(true)}
-              className="inline-flex items-center px-4 py-2 border border-themed-border-primary text-sm font-medium rounded-lg text-themed-text-primary bg-themed-bg-surface hover:bg-themed-interactive-secondary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors"
+              className="btn-themed-secondary"
             >
               <Settings className="h-4 w-4 mr-2" />
               Configure
             </button>
             <button
+              type="button"
               onClick={loadDashboardData}
               disabled={loading}
-              className="inline-flex items-center px-4 py-2 border border-themed-border-primary text-sm font-medium rounded-lg text-themed-text-primary bg-themed-bg-surface hover:bg-themed-interactive-secondary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors disabled:opacity-50"
+              className="btn-themed-primary disabled:opacity-60"
             >
               <TrendingUp className="h-4 w-4 mr-2" />
               Refresh
             </button>
           </div>
+        )}
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="badge-muted">
+            <Clock className="h-3 w-3" />
+            {summary.lastMetricTime === 'No data available' ? 'Awaiting data' : `Last ingest ${summary.lastMetricTime}`}
+          </span>
+          <span className="badge-muted">
+            <BarChart3 className="h-3 w-3" />
+            {formattedTimeRange}
+          </span>
+          <span className="badge-muted">
+            <Database className="h-3 w-3" />
+            {environmentBadgeLabel}
+          </span>
+          {config.tenant.theme && config.tenant.theme !== 'default' ? (
+            <span className="badge-muted">
+              <Sparkles className="h-3 w-3" />
+              Theme: {capitalize(config.tenant.theme)}
+            </span>
+          ) : null}
         </div>
+      </PageHeader>
+
+      <div className="page-toolbar">
+        <div className="page-toolbar__group text-sm text-themed-text-secondary">
+          <Clock className="h-4 w-4 text-themed-text-muted" />
+          <span>Auto refresh: {autoRefreshLabel}</span>
+        </div>
+        <div className="page-toolbar__divider" />
+        <div className="page-toolbar__group text-sm text-themed-text-secondary">
+          <TrendingUp className="h-4 w-4 text-themed-text-muted" />
+          <span>Aggregation: {timelineAggregation}</span>
+        </div>
+        <div className="page-toolbar__divider" />
+        <div className="page-toolbar__group text-sm text-themed-text-secondary">
+          <Filter className="h-4 w-4 text-themed-text-muted" />
+          <span>{metricFilterSummary}</span>
+        </div>
+        {allowedEnvironments.length ? (
+          <>
+            <div className="page-toolbar__divider" />
+            <div className="page-toolbar__group text-sm text-themed-text-secondary">
+              <Database className="h-4 w-4 text-themed-text-muted" />
+              <span>{environmentBadgeLabel}</span>
+            </div>
+          </>
+        ) : null}
       </div>
 
-      {/* Error Display */}
       {error && (
-        <div className="bg-themed-alert-error bg-opacity-10 border border-themed-alert-error rounded-lg p-4">
-          <div className="flex">
-            <AlertCircle className="h-5 w-5 text-themed-status-error mr-2 mt-0.5" />
-            <div>
-              <h3 className="text-sm font-medium text-themed-status-error">Dashboard Error</h3>
-              <p className="mt-1 text-sm text-themed-text-secondary">{error}</p>
-              <p className="mt-1 text-xs text-themed-text-muted">
-                Ensure your MetricsApp API is running on localhost:7201
-              </p>
+        <div className="panel border-themed-alert-error">
+          <div className="panel-header">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-themed-status-error" />
+              <h3 className="panel-title text-themed-status-error">Dashboard Error</h3>
             </div>
+          </div>
+          <p className="text-sm text-themed-text-secondary">{error}</p>
+          <div className="panel-footer">
+            Ensure your MetricsApp API is running on localhost:7201.
           </div>
         </div>
       )}
 
-      {/* KPI Cards */}
       {config.kpis.enabled && (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="bg-themed-bg-tertiary overflow-hidden shadow-lg rounded-lg border border-themed-border-primary">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="p-3 border-themed-alert-success bg-opacity-20 rounded-lg">
-                    <Activity className="h-6 w-6 text-themed-status-success" />
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-themed-text-secondary truncate">Total Metrics</dt>
-                    <dd className="text-2xl font-bold text-themed-text-primary">{summary.totalMetrics.toLocaleString()}</dd>
-                  </dl>
-                </div>
+        <div className="stat-grid stat-grid--quartet">
+          {statCards.map(card => {
+            const Icon = card.icon
+            return (
+              <div key={card.id} className="stat-card">
+                <span className="stat-card__icon">
+                  <Icon className={`h-5 w-5 ${card.iconClass}`} />
+                </span>
+                <div className="stat-card__label">{card.label}</div>
+                <div className="stat-card__value">{card.value}</div>
+                {card.meta ? <div className="stat-card__meta">{card.meta}</div> : null}
               </div>
-            </div>
-          </div>
-
-          <div className="bg-themed-bg-tertiary overflow-hidden shadow-lg rounded-lg border border-themed-border-primary">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="p-3 bg-themed-alert-info bg-opacity-20 rounded-lg">
-                    <Server className="h-6 w-6 text-themed-status-info" />
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-themed-text-secondary truncate">Active Servers</dt>
-                    <dd className="text-2xl font-bold text-themed-text-primary">{summary.uniqueServers}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-themed-bg-tertiary overflow-hidden shadow-lg rounded-lg border border-themed-border-primary">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="p-3 border-themed-alert-error bg-opacity-20 rounded-lg">
-                    <Database className="h-6 w-6 text-themed-status-warning" />
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-themed-text-secondary truncate">Metric Types</dt>
-                    <dd className="text-2xl font-bold text-themed-text-primary">{summary.uniqueMetricTypes}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-themed-bg-tertiary overflow-hidden shadow-lg rounded-lg border border-themed-border-primary">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="p-3 bg-themed-interactive-secondary rounded-lg">
-                    <Clock className="h-6 w-6 text-themed-interactive-primary" />
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-themed-text-secondary truncate">Last Update</dt>
-                    <dd className="text-2xl font-bold text-themed-text-primary">{summary.lastMetricTime}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
+            )
+          })}
         </div>
       )}
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Timeline Chart */}
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-2">
         {config.charts.timeline.enabled && (
-          <div className="bg-themed-bg-tertiary p-6 rounded-lg shadow-lg border border-themed-border-primary">
-            <div className="flex items-center mb-6">
-              <TrendingUp className="h-5 w-5 text-themed-interactive-primary mr-2" />
-              <h3 className="text-lg font-semibold text-themed-text-primary">Metrics Timeline</h3>
-              <span className="ml-2 text-sm text-themed-text-muted">({config.charts.timeline.timeRange})</span>
+          <div className="panel xl:col-span-2">
+            <div className="panel-header">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="h-5 w-5 text-themed-interactive-primary" />
+                <div>
+                  <h3 className="panel-title">Metrics Timeline</h3>
+                  <p className="panel-subtitle">{formattedTimeRange}</p>
+                </div>
+              </div>
+              <span className="badge-muted">
+                <BarChart3 className="h-3 w-3" />
+                {timelineData.length} points
+              </span>
             </div>
             {timelineData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={320}>
                 <LineChart data={timelineData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-primary)" />
                   <XAxis dataKey="name" stroke="var(--text-secondary)" />
                   <YAxis stroke="var(--text-secondary)" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'var(--bg-elevated)', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--bg-elevated)',
                       border: '1px solid var(--border-primary)',
                       borderRadius: '8px',
                       color: 'var(--text-primary)'
-                    }} 
+                    }}
                   />
                   <Line type="monotone" dataKey="value" stroke={COLORS[0]} strokeWidth={3} dot={{ fill: COLORS[0], strokeWidth: 2, r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-themed-text-muted">
-                <div className="text-center">
-                  <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No timeline data available</p>
-                </div>
-              </div>
+              renderEmptyState(BarChart3, 'No timeline data available')
             )}
+            <div className="panel-footer">Grouped in 10 minute buckets from the selected time window.</div>
           </div>
         )}
 
-        {/* Environment Distribution */}
         {config.charts.environment.enabled && (
-          <div className="bg-themed-bg-tertiary p-6 rounded-lg shadow-lg border border-themed-border-primary">
-            <div className="flex items-center mb-6">
-              <Database className="h-5 w-5 text-themed-status-info mr-2" />
-              <h3 className="text-lg font-semibold text-themed-text-primary">Environment Distribution</h3>
+          <div className="panel">
+            <div className="panel-header">
+              <div className="flex items-center gap-3">
+                <Database className="h-5 w-5 text-themed-status-info" />
+                <div>
+                  <h3 className="panel-title">Environment Distribution</h3>
+                  <p className="panel-subtitle">{environmentBadgeLabel}</p>
+                </div>
+              </div>
             </div>
             {environmentData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={320}>
                 <PieChart>
                   <Pie
                     data={environmentData}
@@ -375,107 +460,101 @@ const Dashboard = () => {
                     cy="50%"
                     labelLine={false}
                     label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
+                    outerRadius={90}
                     dataKey="value"
                   >
                     {environmentData.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'var(--bg-elevated)', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--bg-elevated)',
                       border: '1px solid var(--border-primary)',
                       borderRadius: '8px',
                       color: 'var(--text-primary)'
-                    }} 
+                    }}
                   />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-themed-text-muted">
-                <div className="text-center">
-                  <Database className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No environment data available</p>
-                </div>
-              </div>
+              renderEmptyState(Database, 'No environment data available')
             )}
+            <div className="panel-footer">{config.charts.environment.showPercentages ? 'Percentages calculated from current query window.' : 'Absolute counts across the selected window.'}</div>
           </div>
         )}
 
-        {/* Metric Types */}
         {config.charts.metricTypes.enabled && (
-          <div className="bg-themed-bg-tertiary p-6 rounded-lg shadow-lg border border-themed-border-primary">
-            <div className="flex items-center mb-6">
-              <Activity className="h-5 w-5 text-themed-status-warning mr-2" />
-              <h3 className="text-lg font-semibold text-themed-text-primary">Top Metric Types</h3>
+          <div className="panel">
+            <div className="panel-header">
+              <div className="flex items-center gap-3">
+                <Activity className="h-5 w-5 text-themed-status-warning" />
+                <div>
+                  <h3 className="panel-title">Top Metric Types</h3>
+                  <p className="panel-subtitle">Top {config.charts.metricTypes.limit}</p>
+                </div>
+              </div>
             </div>
             {metricTypeData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={metricTypeData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-primary)" />
                   <XAxis dataKey="name" stroke="var(--text-secondary)" />
                   <YAxis stroke="var(--text-secondary)" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'var(--bg-elevated)', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--bg-elevated)',
                       border: '1px solid var(--border-primary)',
                       borderRadius: '8px',
                       color: 'var(--text-primary)'
-                    }} 
+                    }}
                   />
                   <Bar dataKey="value" fill="var(--interactive-primary)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-themed-text-muted">
-                <div className="text-center">
-                  <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No metric type data available</p>
-                </div>
-              </div>
+              renderEmptyState(Activity, 'No metric type data available')
             )}
+            <div className="panel-footer">Metric families ordered by volume within the current window.</div>
           </div>
         )}
 
-        {/* Server Distribution */}
         {config.charts.servers.enabled && (
-          <div className="bg-themed-bg-tertiary p-6 rounded-lg shadow-lg border border-themed-border-primary">
-            <div className="flex items-center mb-6">
-              <Server className="h-5 w-5 text-themed-status-success mr-2" />
-              <h3 className="text-lg font-semibold text-themed-text-primary">Server Distribution</h3>
+          <div className="panel">
+            <div className="panel-header">
+              <div className="flex items-center gap-3">
+                <Server className="h-5 w-5 text-themed-status-success" />
+                <div>
+                  <h3 className="panel-title">Server Distribution</h3>
+                  <p className="panel-subtitle">Top {config.charts.servers.limit}</p>
+                </div>
+              </div>
             </div>
             {serverData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={serverData} layout="horizontal">
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-primary)" />
                   <XAxis type="number" stroke="var(--text-secondary)" />
-                  <YAxis dataKey="name" type="category" stroke="var(--text-secondary)" width={100} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'var(--bg-elevated)', 
+                  <YAxis dataKey="name" type="category" stroke="var(--text-secondary)" width={120} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--bg-elevated)',
                       border: '1px solid var(--border-primary)',
                       borderRadius: '8px',
                       color: 'var(--text-primary)'
-                    }} 
+                    }}
                   />
                   <Bar dataKey="value" fill="var(--interactive-primary)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-themed-text-muted">
-                <div className="text-center">
-                  <Server className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No server data available</p>
-                </div>
-              </div>
+              renderEmptyState(Server, 'No server data available')
             )}
+            <div className="panel-footer">Sorted by {config.charts.servers.sortBy === 'name' ? 'name' : 'ingest volume'} within the active window.</div>
           </div>
         )}
       </div>
 
-      {/* Dashboard Configuration Panel */}
       <DashboardConfigPanel
         isOpen={configPanelOpen}
         onClose={() => setConfigPanelOpen(false)}
@@ -486,4 +565,4 @@ const Dashboard = () => {
   )
 }
 
-export default Dashboard 
+export default Dashboard

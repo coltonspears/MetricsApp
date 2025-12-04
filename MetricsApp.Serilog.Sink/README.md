@@ -182,7 +182,7 @@ services.AddMetricsAppLogging(config =>
 - Best for OpenTelemetry-compliant logging
 - Automatic trace correlation
 
-### Jaeger Endpoint (`/api/v1/jaeger/traces`)
+### Jaeger Endpoint (`/api/v1/integrations/jaeger/traces`)
 - Designed for trace-like log events
 - Useful when logs are part of distributed traces
 
@@ -287,3 +287,4 @@ See the `/Examples` folder for complete sample applications:
 ## 📄 License
 
 This project is licensed under the MIT License.
+

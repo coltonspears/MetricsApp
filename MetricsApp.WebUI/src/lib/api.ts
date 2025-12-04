@@ -61,47 +61,58 @@ export class MetricsApi {
 
   static async queryMetrics(params: MetricQueryParams): Promise<MetricResult[]> {
     const queryParams = new URLSearchParams()
-    
+
     if (params.query) queryParams.append('query', params.query)
     if (params.startTime) queryParams.append('startTime', params.startTime)
     if (params.endTime) queryParams.append('endTime', params.endTime)
     if (params.limit) queryParams.append('limit', params.limit.toString())
 
-    const endpoint = `/metrics/Query${queryParams.toString() ? `?${queryParams}` : ''}`
-    
+    const endpoint = `/telemetry/metrics${queryParams.toString() ? `?${queryParams}` : ''}`
+
     try {
       const data = await this.request<any>(endpoint)
-      console.log('API Response:', data) // Debug log
-      
+
       // Handle different possible response structures
       let metricsArray: any[] = []
-      
-      if (data && data.status === 'success' && data.data && Array.isArray(data.data.result)) {
-        // Handle the specific MetricsApp API format
-        const results = data.data.result
-        
-        // Flatten the time-series data into individual metric records
+
+      // Primary format: TelemetryController returns { status: 'success', data: { metrics: [...], timeRange: {...} } }
+      if (data && data.status === 'success' && data.data && Array.isArray(data.data.metrics)) {
+        const metrics = data.data.metrics
+
+        // Flatten metrics with samples into individual metric records
         metricsArray = []
-        results.forEach((metric: any, metricIndex: number) => {
-          const metricInfo = metric.metricInfo || {}
-          const metricName = metricInfo.name || 'unknown'
-          const hostName = metricInfo.resource?.['host.name'] || 'unknown'
-          const values = metric.values || []
-          
-          // Create a record for each time-value pair
-          values.forEach((valuePoint: any, valueIndex: number) => {
-            const timestamp = valuePoint.item1 ? new Date(valuePoint.item1 * 1000).toISOString() : new Date().toISOString()
-            const value = valuePoint.item2 || '0'
-            
+        metrics.forEach((metric: any, metricIndex: number) => {
+          const metricName = metric.name || 'unknown'
+          const samples = metric.samples || []
+
+          if (samples.length === 0) {
+            // Metric with no samples - still include it
             metricsArray.push({
-              id: `${metricIndex}-${valueIndex}`,
-              timestamp: timestamp,
+              id: `${metricIndex}-0`,
+              timestamp: new Date().toISOString(),
               metricName: metricName,
-              value: value,
-              source: hostName,
-              environment: 'Production' // Default since not in the response
+              value: '0',
+              source: 'unknown',
+              environment: 'Production'
             })
-          })
+          } else {
+            // Create a record for each sample
+            samples.forEach((sample: any, sampleIndex: number) => {
+              const timestamp = sample.timestamp
+                ? new Date(sample.timestamp * 1000).toISOString()
+                : new Date().toISOString()
+              const labels = sample.labels || {}
+
+              metricsArray.push({
+                id: `${metricIndex}-${sampleIndex}`,
+                timestamp: timestamp,
+                metricName: metricName,
+                value: (sample.value ?? 0).toString(),
+                source: labels['resource.host.name'] || labels['host'] || 'unknown',
+                environment: labels['environment'] || labels['env'] || 'Production'
+              })
+            })
+          }
         })
       } else if (Array.isArray(data)) {
         // Direct array response (fallback)
@@ -123,7 +134,7 @@ export class MetricsApi {
         console.warn('Unexpected API response format:', data)
         metricsArray = []
       }
-      
+
       // Transform the API response to match our interface
       return metricsArray.map((item: any, index: number) => ({
         id: item.id || item.Id || index.toString(),
@@ -146,12 +157,19 @@ export class MetricsApi {
     lastMetricTime: string
   }> {
     try {
-      const data = await this.request<any>('/metrics/summary')
+      const data = await this.request<any>('/telemetry/stats')
+
+      // TelemetryStatsResponse format: { metrics: { count, lastReceived }, logs: {...}, traces: {...}, timestamp }
+      const metricsCount = data?.metrics?.count ?? 0
+      const logsCount = data?.logs?.count ?? 0
+      const tracesCount = data?.traces?.count ?? 0
+      const lastReceived = data?.metrics?.lastReceived || data?.logs?.lastReceived || data?.traces?.lastReceived
+
       return {
-        totalMetrics: data.totalMetrics || 0,
-        uniqueServers: data.uniqueServers || 0,
-        uniqueMetricTypes: data.uniqueMetricTypes || 0,
-        lastMetricTime: data.lastMetricTime || 'Never'
+        totalMetrics: metricsCount + logsCount + tracesCount,
+        uniqueServers: 0, // Not available from stats endpoint
+        uniqueMetricTypes: 0, // Not available from stats endpoint
+        lastMetricTime: lastReceived ? new Date(lastReceived).toLocaleString() : 'Never'
       }
     } catch (error) {
       console.error('Failed to fetch metrics summary:', error)

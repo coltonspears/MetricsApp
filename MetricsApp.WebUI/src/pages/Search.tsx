@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Search as SearchIcon, Calendar, Download,  AlertCircle, } from 'lucide-react'
+import { Search as SearchIcon, Calendar, Download, AlertCircle, Clock, Database, RefreshCw } from 'lucide-react'
+import PageHeader from '../components/PageHeader'
 
 interface SearchFilters {
   query: string
@@ -17,11 +18,9 @@ interface MetricResult {
   environment: string
 }
 
-// Helper function to get default time range (last 24 hours)
 const getDefaultTimeRange = () => {
   const now = new Date()
   const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-  
   return {
     startTime: yesterday.toISOString().slice(0, 16),
     endTime: now.toISOString().slice(0, 16)
@@ -30,25 +29,25 @@ const getDefaultTimeRange = () => {
 
 const Search = () => {
   const defaultTimeRange = getDefaultTimeRange()
-  
+
   const [filters, setFilters] = useState<SearchFilters>({
     query: '',
     startTime: defaultTimeRange.startTime,
     endTime: defaultTimeRange.endTime,
     limit: 100
   })
-  
+
   const [results, setResults] = useState<MetricResult[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const handleSearch = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+    if (e) e.preventDefault()
     setLoading(true)
     setSearched(true)
     setError(null)
-    
+
     try {
       const queryParams = new URLSearchParams()
       if (filters.query) queryParams.append('query', filters.query)
@@ -57,66 +56,56 @@ const Search = () => {
       queryParams.append('limit', filters.limit.toString())
 
       const response = await fetch(`/api/v1/telemetry/metrics?${queryParams}`)
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
-      
+
       const data = await response.json()
-      console.log('API Response:', data) // Debug log to see the actual response structure
-      
-      // Handle different possible response structures
       let metricsArray: any[] = []
-      
-      if (data && data.status === 'success' && data.data && Array.isArray(data.data.result)) {
-        // Handle the specific MetricsApp API format
-        const results = data.data.result
-        
-        // Flatten the time-series data into individual metric records
+
+      if (data && data.status === 'success' && data.data && Array.isArray(data.data.metrics)) {
+        const metrics = data.data.metrics
         metricsArray = []
-        results.forEach((metric: any, metricIndex: number) => {
-          const metricInfo = metric.metricInfo || {}
-          const metricName = metricInfo.name || 'unknown'
-          const hostName = metricInfo.resource?.['host.name'] || 'unknown'
-          const values = metric.values || []
-          
-          // Create a record for each time-value pair
-          values.forEach((valuePoint: any, valueIndex: number) => {
-            const timestamp = valuePoint.item1 ? new Date(valuePoint.item1 * 1000).toISOString() : new Date().toISOString()
-            const value = valuePoint.item2 || '0'
-            
+        metrics.forEach((metric: any, metricIndex: number) => {
+          const metricName = metric.name || 'unknown'
+          const samples = metric.samples || []
+          if (samples.length === 0) {
             metricsArray.push({
-              id: `${metricIndex}-${valueIndex}`,
-              timestamp: timestamp,
+              id: `${metricIndex}-0`,
+              timestamp: new Date().toISOString(),
               metricName: metricName,
-              value: value,
-              source: hostName,
-              environment: 'Production' // Default since not in the response
+              value: '0',
+              source: 'unknown',
+              environment: 'Production'
             })
-          })
+          } else {
+            samples.forEach((sample: any, sampleIndex: number) => {
+              const timestamp = sample.timestamp
+                ? new Date(sample.timestamp * 1000).toISOString()
+                : new Date().toISOString()
+              const labels = sample.labels || {}
+              metricsArray.push({
+                id: `${metricIndex}-${sampleIndex}`,
+                timestamp: timestamp,
+                metricName: metricName,
+                value: (sample.value ?? 0).toString(),
+                source: labels['resource.host.name'] || labels['host'] || 'unknown',
+                environment: labels['environment'] || labels['env'] || 'Production'
+              })
+            })
+          }
         })
       } else if (Array.isArray(data)) {
-        // Direct array response (fallback)
         metricsArray = data
       } else if (data && Array.isArray(data.data)) {
-        // Wrapped in data property (fallback)
         metricsArray = data.data
       } else if (data && Array.isArray(data.results)) {
-        // Wrapped in results property (fallback)
         metricsArray = data.results
       } else if (data && Array.isArray(data.metrics)) {
-        // Wrapped in metrics property (fallback)
         metricsArray = data.metrics
-      } else if (data && typeof data === 'object') {
-        // Single object response - wrap in array (fallback)
-        metricsArray = [data]
-      } else {
-        // Unexpected response format
-        console.warn('Unexpected API response format:', data)
-        metricsArray = []
       }
-      
-      // Transform the API response to match our interface
+
       const transformedResults: MetricResult[] = metricsArray.map((item: any, index: number) => ({
         id: item.id || item.Id || index.toString(),
         timestamp: item.timestamp || item.Timestamp || item.time || new Date().toISOString(),
@@ -125,53 +114,12 @@ const Search = () => {
         source: item.source || item.Source || item.host || item.Host || 'unknown',
         environment: item.environment || item.Environment || item.env || item.Env || 'unknown'
       }))
-      
+
       setResults(transformedResults)
     } catch (err) {
       console.error('Search error:', err)
-      if (err instanceof TypeError && err.message.includes('fetch')) {
-        setError('Network error: Unable to connect to the API. Please ensure the MetricsApp service is running on localhost:7201.')
-        
-        // Show mock data for testing when API is not available
-        const mockResults: MetricResult[] = [
-          {
-            id: '1',
-            timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 minutes ago
-            metricName: 'cpu.usage',
-            value: '85.2',
-            source: 'PROD-WEB-01',
-            environment: 'Production'
-          },
-          {
-            id: '2',
-            timestamp: new Date(Date.now() - 1000 * 60 * 10).toISOString(), // 10 minutes ago
-            metricName: 'memory.usage',
-            value: '72.8',
-            source: 'PROD-DB-01',
-            environment: 'Production'
-          },
-          {
-            id: '3',
-            timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 minutes ago
-            metricName: 'disk.free',
-            value: '15.3',
-            source: 'STAGE-API-01',
-            environment: 'Staging'
-          },
-          {
-            id: '4',
-            timestamp: new Date(Date.now() - 1000 * 60 * 20).toISOString(), // 20 minutes ago
-            metricName: 'response.time',
-            value: '245',
-            source: 'DEV-WEB-01',
-            environment: 'Development'
-          }
-        ]
-        setResults(mockResults)
-      } else {
-        setError(err instanceof Error ? err.message : 'Failed to fetch metrics')
-        setResults([])
-      }
+      setError(err instanceof Error ? err.message : 'Failed to fetch metrics')
+      setResults([])
     } finally {
       setLoading(false)
     }
@@ -182,7 +130,7 @@ const Search = () => {
       ['Timestamp', 'Metric Name', 'Value', 'Source', 'Environment'],
       ...results.map((r: MetricResult) => [r.timestamp, r.metricName, r.value, r.source, r.environment])
     ].map(row => row.join(',')).join('\n')
-    
+
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -192,33 +140,111 @@ const Search = () => {
     URL.revokeObjectURL(url)
   }
 
-  const setQuickTimeRange = (hours: number) => {
-    const now = new Date()
-    const start = new Date(now.getTime() - hours * 60 * 60 * 1000)
-    
+  const handleClear = () => {
     setFilters({
-      ...filters,
-      startTime: start.toISOString().slice(0, 16),
-      endTime: now.toISOString().slice(0, 16)
+      query: '',
+      startTime: defaultTimeRange.startTime,
+      endTime: defaultTimeRange.endTime,
+      limit: 100
     })
+    setResults([])
+    setSearched(false)
+    setError(null)
+  }
+
+  const formatTimeRange = () => {
+    const start = new Date(filters.startTime)
+    const end = new Date(filters.endTime)
+    const diffMs = end.getTime() - start.getTime()
+    const diffHours = Math.round(diffMs / (1000 * 60 * 60))
+    if (diffHours < 24) return `${diffHours}h`
+    return `${Math.round(diffHours / 24)}d`
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="border-b border-themed-border-primary pb-4">
-        <h1 className="text-3xl font-bold text-themed-text-primary">Search & Reporting</h1>
-        <p className="mt-2 text-themed-text-secondary">Query and analyze your metrics data in real-time</p>
+    <div className="page-shell">
+      <PageHeader
+        title="Search"
+        description="Query and analyze your metrics data in real-time"
+        meta={
+          <span className="badge-muted">
+            <Database className="h-3 w-3" />
+            Telemetry API
+          </span>
+        }
+        actions={
+          <div className="page-actions">
+            <button
+              type="button"
+              onClick={handleClear}
+              className="btn-themed-secondary"
+            >
+              Clear
+            </button>
+            <button
+              type="submit"
+              form="search-form"
+              disabled={loading || !filters.query}
+              className="btn-themed-primary disabled:opacity-50"
+            >
+              {loading ? (
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <SearchIcon className="h-4 w-4 mr-2" />
+              )}
+              Search
+            </button>
+          </div>
+        }
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="badge-muted">
+            <Clock className="h-3 w-3" />
+            Range: {formatTimeRange()}
+          </span>
+          <span className="badge-muted">
+            Limit: {filters.limit}
+          </span>
+          {searched && (
+            <span className="badge-muted">
+              {results.length} results
+            </span>
+          )}
+        </div>
+      </PageHeader>
+
+      <div className="page-toolbar">
+        <div className="page-toolbar__group text-sm text-themed-text-secondary">
+          <SearchIcon className="h-4 w-4 text-themed-text-muted" />
+          <span>{filters.query || 'No query entered'}</span>
+        </div>
+        <div className="page-toolbar__divider" />
+        <div className="page-toolbar__group text-sm text-themed-text-secondary">
+          <Clock className="h-4 w-4 text-themed-text-muted" />
+          <span>{formatTimeRange()} window</span>
+        </div>
       </div>
 
-      {/* Search Form */}
-      <div className="bg-themed-bg-tertiary shadow-lg rounded-lg border border-themed-border-primary">
-        <div className="px-6 py-4 border-b border-themed-border-primary">
-          <h2 className="text-lg font-semibold text-themed-text-primary">Search Criteria</h2>
+      {error && (
+        <div className="panel border-themed-alert-error">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-themed-status-error flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="panel-title text-themed-status-error">Search Error</h3>
+              <p className="text-sm text-themed-text-secondary mt-1">{error}</p>
+            </div>
+          </div>
         </div>
-        <form onSubmit={(e) => { e.preventDefault(); handleSearch(e); }} className="p-6 space-y-6">
-          <div>
-            <label htmlFor="query" className="block text-sm font-medium text-themed-text-primary mb-2">
+      )}
+
+      <div className="panel">
+        <div className="panel-header">
+          <h3 className="panel-title">Search Criteria</h3>
+        </div>
+
+        <form id="search-form" onSubmit={handleSearch} className="space-y-6">
+          <div className="space-y-2">
+            <label htmlFor="query" className="block text-sm font-medium text-themed-text-primary">
               Query
             </label>
             <div className="relative">
@@ -227,18 +253,16 @@ const Search = () => {
                 id="query"
                 value={filters.query}
                 onChange={(e) => setFilters({ ...filters, query: e.target.value })}
-                className="bg-[var(--bg-surface)] border-[var(--border-primary)] text-[var(--text-primary)] rounded-[var(--radius-md)] block w-full pl-10 pr-3 py-3 focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary font-mono text-sm"
+                className="input-themed w-full pl-10 font-mono"
                 placeholder="Enter your search query..."
               />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <SearchIcon className="h-5 w-5 text-themed-text-muted" />
-              </div>
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-themed-text-muted" />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="startTime" className="block text-sm font-medium text-themed-text-primary mb-2">
+            <div className="space-y-2">
+              <label htmlFor="startTime" className="block text-sm font-medium text-themed-text-primary">
                 Start Time
               </label>
               <div className="relative">
@@ -247,17 +271,15 @@ const Search = () => {
                   id="startTime"
                   value={filters.startTime}
                   onChange={(e) => setFilters({ ...filters, startTime: e.target.value })}
-                  className="bg-[var(--bg-surface)] border-[var(--border-primary)] text-[var(--text-primary)] rounded-[var(--radius-md)] block w-full pl-10 pr-3 py-3 focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
+                  className="input-themed w-full pl-10"
                 />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Calendar className="h-5 w-5 text-themed-text-muted" />
-                </div>
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-themed-text-muted" />
               </div>
             </div>
 
-            <div>
-              <label htmlFor="endTime" className="block text-sm font-medium text-themed-text-primary mb-2">
-                End Time  
+            <div className="space-y-2">
+              <label htmlFor="endTime" className="block text-sm font-medium text-themed-text-primary">
+                End Time
               </label>
               <div className="relative">
                 <input
@@ -265,24 +287,22 @@ const Search = () => {
                   id="endTime"
                   value={filters.endTime}
                   onChange={(e) => setFilters({ ...filters, endTime: e.target.value })}
-                  className="bg-[var(--bg-surface)] border-[var(--border-primary)] text-[var(--text-primary)] rounded-[var(--radius-md)] block w-full pl-10 pr-3 py-3 focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
+                  className="input-themed w-full pl-10"
                 />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Calendar className="h-5 w-5 text-themed-text-muted" />
-                </div>
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-themed-text-muted" />
               </div>
             </div>
           </div>
 
-          <div>
-            <label htmlFor="limit" className="block text-sm font-medium text-themed-text-primary mb-2">
+          <div className="space-y-2">
+            <label htmlFor="limit" className="block text-sm font-medium text-themed-text-primary">
               Result Limit
             </label>
             <select
               id="limit"
               value={filters.limit}
               onChange={(e) => setFilters({ ...filters, limit: parseInt(e.target.value) })}
-              className="bg-[var(--bg-surface)] border-[var(--border-primary)] text-[var(--text-primary)] rounded-[var(--radius-md)] block w-full px-3 py-3 focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
+              className="input-themed w-full md:w-48"
             >
               <option value={10}>10 results</option>
               <option value={25}>25 results</option>
@@ -291,159 +311,52 @@ const Search = () => {
               <option value={500}>500 results</option>
             </select>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-themed-text-primary mb-2">
-              Export Options
-            </label>
-            <div className="flex flex-wrap gap-3">
-              {['JSON', 'CSV', 'Excel'].map((format) => (
-                <label key={format} className="inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={true}
-                    onChange={() => {}}
-                    className="rounded border-themed-border-primary text-themed-interactive-primary focus:ring-themed-interactive-primary"
-                  />
-                  <span className="ml-2 text-sm text-themed-text-secondary">{format}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={() => {
-                setFilters({
-                  query: '',
-                  startTime: defaultTimeRange.startTime,
-                  endTime: defaultTimeRange.endTime,
-                  limit: 100
-                })
-                setResults([])
-                setError(null)
-              }}
-              className="btn-themed-primary"
-            >
-              Clear
-            </button>
-            <button
-              type="submit"
-              disabled={loading || !filters.query}
-              className="btn-themed-primary"
-            >
-              {loading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              ) : (
-                <SearchIcon className="h-4 w-4 mr-2" />
-              )}
-              Search
-            </button>
-          </div>
         </form>
       </div>
 
-      {/* Debug Section - Remove this in production */}
-      {import.meta.env.DEV && error && (
-        <div className="bg-[var(--alert-error-bg)] border border-[var(--alert-error-border)] rounded-lg p-4">
-          <div className="flex">
-            <AlertCircle className="h-5 w-5 text-[var(--alert-error-text)] mr-2 mt-0.5" />
-            <div>
-              <h3 className="text-sm font-medium text-[var(--alert-error-text)]">Debug Information</h3>
-              <p className="mt-1 text-sm text-[var(--alert-error-text)]">
-                Check the browser console (F12) for the actual API response structure. 
-                The application will try to handle different response formats automatically.
-              </p>
-              <details className="mt-2">
-                <summary className="text-sm font-medium text-[var(--alert-error-text)] cursor-pointer">
-                  Expected API Response Formats
-                </summary>
-                <pre className="mt-2 text-xs text-[var(--alert-error-text)] bg-[var(--alert-error-bg)] p-2 rounded overflow-x-auto">
-{`// Direct array:
-[{id: "1", timestamp: "...", metricName: "...", value: "...", source: "...", environment: "..."}]
-
-// Wrapped in data property:
-{data: [{id: "1", ...}]}
-
-// Wrapped in results property:
-{results: [{id: "1", ...}]}
-
-// Single object:
-{id: "1", timestamp: "...", metricName: "...", value: "...", source: "...", environment: "..."}`}
-                </pre>
-              </details>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Error Display */}
-      {error && (
-        <div className="bg-[var(--alert-error-bg)] border border-[var(--alert-error-border)] rounded-lg p-4">
-          <div className="flex">
-            <AlertCircle className="h-5 w-5 text-[var(--alert-error-text)] mr-2 mt-0.5" />
-            <div>
-              <h3 className="text-sm font-medium text-[var(--alert-error-text)]">Search Error</h3>
-              <p className="mt-1 text-sm text-[var(--alert-error-text)]">
-                {error}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Results */}
       {searched && (
-        <div className="bg-themed-bg-tertiary shadow-lg rounded-lg border border-themed-border-primary">
-          <div className="px-6 py-4 border-b border-themed-border-primary">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-themed-text-primary">
-                Search Results 
-                <span className="ml-2 text-sm font-normal text-themed-text-secondary">
-                  ({results.length} events)
-                </span>
-              </h3>
-              {results.length > 0 && (
-                <button
-                  onClick={handleExport}
-                  className="btn-themed-primary"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export CSV
-                </button>
-              )}
+        <div className="panel">
+          <div className="panel-header">
+            <div>
+              <h3 className="panel-title">Search Results</h3>
+              <p className="panel-subtitle">{results.length} events found</p>
             </div>
+            {results.length > 0 && (
+              <button onClick={handleExport} className="btn-themed-secondary">
+                <Download className="h-4 w-4 mr-2" />
+                Export CSV
+              </button>
+            )}
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-themed-interactive-primary"></div>
+              <RefreshCw className="h-8 w-8 animate-spin text-themed-interactive-primary" />
               <span className="ml-3 text-themed-text-secondary">Searching metrics...</span>
             </div>
           ) : results.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-themed-border-primary">
-                <thead className="bg-themed-bg-surface">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-primary uppercase tracking-wider">
+            <div className="overflow-x-auto -mx-6">
+              <table className="min-w-full">
+                <thead>
+                  <tr className="border-b border-themed-border-primary">
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-themed-text-secondary uppercase tracking-wider">
                       Timestamp
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-primary uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-themed-text-secondary uppercase tracking-wider">
                       Metric Name
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-primary uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-themed-text-secondary uppercase tracking-wider">
                       Value
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-primary uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-themed-text-secondary uppercase tracking-wider">
                       Source
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-primary uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-themed-text-secondary uppercase tracking-wider">
                       Environment
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-themed-bg-surface divide-y divide-themed-border-primary">
+                <tbody className="divide-y divide-themed-border-primary">
                   {results.map((result) => (
                     <tr key={result.id} className="hover:bg-themed-interactive-secondary-hover transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-themed-text-primary font-mono">
@@ -459,12 +372,12 @@ const Search = () => {
                         {result.source}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          result.environment === 'Production' 
-                            ? 'bg-themed-alert-error bg-opacity-10 text-themed-status-error'
+                        <span className={`badge-muted ${
+                          result.environment === 'Production'
+                            ? 'border-themed-status-error text-themed-status-error'
                             : result.environment === 'Staging'
-                            ? 'border-themed-alert-error bg-opacity-10 text-themed-status-warning'
-                            : 'border-themed-alert-success bg-opacity-10 text-themed-status-success'
+                            ? 'border-themed-status-warning text-themed-status-warning'
+                            : 'border-themed-status-success text-themed-status-success'
                         }`}>
                           {result.environment}
                         </span>
@@ -489,4 +402,4 @@ const Search = () => {
   )
 }
 
-export default Search 
+export default Search

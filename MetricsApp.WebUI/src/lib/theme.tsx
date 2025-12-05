@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import { Theme, themes, getThemeById, getThemeVars, professionalTheme } from './themes'
+import { createContext, useContext, useEffect, useState } from 'react'
+import { Theme, themes, getThemeById, getThemeVars } from './themes'
 
 interface ThemeContextType {
   currentTheme: Theme

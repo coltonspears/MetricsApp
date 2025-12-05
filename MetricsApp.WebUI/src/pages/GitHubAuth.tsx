@@ -96,4 +96,6 @@ const GitHubAuth = () => {
       </div>
     </div>
   )
-} 
+}
+
+export default GitHubAuth 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { AlertTriangle, CheckCircle, XCircle, Clock, Bell, Filter } from 'lucide-react'
+import { AlertTriangle, CheckCircle, XCircle, Clock, Bell, RefreshCw, Filter } from 'lucide-react'
+import PageHeader from '../components/PageHeader'
 
 interface Alert {
   id: string
@@ -19,7 +20,8 @@ const Alerts = () => {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'active' | 'acknowledged' | 'resolved'>('all')
 
-  useEffect(() => {
+  const loadAlerts = () => {
+    setLoading(true)
     // Simulate API call
     setTimeout(() => {
       const mockAlerts: Alert[] = [
@@ -76,6 +78,10 @@ const Alerts = () => {
       setAlerts(mockAlerts)
       setLoading(false)
     }, 1000)
+  }
+
+  useEffect(() => {
+    loadAlerts()
   }, [])
 
   const filteredAlerts = alerts.filter(alert => 
@@ -85,11 +91,11 @@ const Alerts = () => {
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'critical':
-        return 'bg-themed-alert-error bg-opacity-10 text-themed-status-error border-themed-alert-error'
+        return 'bg-red-500/10 text-themed-status-error border-themed-status-error'
       case 'warning':
-        return 'border-themed-alert-error bg-opacity-10 text-themed-status-warning border-themed-status-warning'
+        return 'bg-yellow-500/10 text-themed-status-warning border-themed-status-warning'
       case 'info':
-        return 'bg-themed-alert-info bg-opacity-10 text-themed-status-info border-themed-alert-info'
+        return 'bg-blue-500/10 text-themed-status-info border-themed-status-info'
       default:
         return 'bg-themed-bg-surface text-themed-text-primary border-themed-border-primary'
     }
@@ -124,135 +130,132 @@ const Alerts = () => {
     ))
   }
 
+  const activeCount = alerts.filter(a => a.status === 'active').length
+  const acknowledgedCount = alerts.filter(a => a.status === 'acknowledged').length
+  const resolvedCount = alerts.filter(a => a.status === 'resolved').length
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-themed-interactive-primary"></div>
-        <span className="ml-4 text-themed-text-secondary">Loading alerts...</span>
+      <div className="page-shell">
+        <div className="flex-1 flex items-center justify-center min-h-[320px]">
+          <div className="flex items-center space-x-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-2 border-b-transparent border-themed-interactive-primary" />
+            <span className="text-themed-text-secondary text-sm">Loading alerts...</span>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="border-b border-themed-border-primary pb-4">
-        <h1 className="text-3xl font-bold text-themed-text-primary">Alert Management</h1>
-        <p className="mt-2 text-themed-text-secondary">Monitor and manage system alerts and notifications</p>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-4">
-        <div className="bg-themed-bg-tertiary overflow-hidden shadow-lg rounded-lg border border-themed-border-primary">
-          <div className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="p-3 bg-themed-alert-error bg-opacity-20 rounded-lg">
-                  <AlertTriangle className="h-6 w-6 text-themed-status-error" />
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-themed-text-secondary truncate">Active</dt>
-                  <dd className="text-2xl font-bold text-themed-text-primary">
-                    {alerts.filter(a => a.status === 'active').length}
-                  </dd>
-                </dl>
-              </div>
-            </div>
+    <div className="page-shell">
+      <PageHeader
+        title="Alert Management"
+        description="Monitor and manage system alerts and notifications"
+        meta={
+          <span className="badge-muted">
+            <Bell className="h-3 w-3" />
+            {alerts.length} total alerts
+          </span>
+        }
+        actions={
+          <div className="page-actions">
+            <button onClick={loadAlerts} disabled={loading} className="btn-themed-secondary disabled:opacity-50">
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+            <button className="btn-themed-primary">
+              <Bell className="h-4 w-4 mr-2" />
+              Create Alert Rule
+            </button>
           </div>
+        }
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="badge-muted">
+            <AlertTriangle className="h-3 w-3" />
+            {activeCount} active
+          </span>
+          <span className="badge-muted">
+            <Clock className="h-3 w-3" />
+            {acknowledgedCount} acknowledged
+          </span>
+          <span className="badge-muted">
+            <CheckCircle className="h-3 w-3" />
+            {resolvedCount} resolved
+          </span>
         </div>
+      </PageHeader>
 
-        <div className="bg-themed-bg-tertiary overflow-hidden shadow-lg rounded-lg border border-themed-border-primary">
-          <div className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="p-3 border-themed-alert-error bg-opacity-20 rounded-lg">
-                  <Clock className="h-6 w-6 text-themed-status-warning" />
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-themed-text-secondary truncate">Acknowledged</dt>
-                  <dd className="text-2xl font-bold text-themed-text-primary">
-                    {alerts.filter(a => a.status === 'acknowledged').length}
-                  </dd>
-                </dl>
-              </div>
-            </div>
+      {/* Summary Stats */}
+      <div className="stat-grid stat-grid--quartet">
+        <div className="stat-card">
+          <div className="stat-card__icon">
+            <AlertTriangle className="h-5 w-5 text-themed-status-error" />
           </div>
+          <div className="stat-card__label">Active</div>
+          <div className="stat-card__value">{activeCount}</div>
+          <div className="stat-card__meta">Requires attention</div>
         </div>
-
-        <div className="bg-themed-bg-tertiary overflow-hidden shadow-lg rounded-lg border border-themed-border-primary">
-          <div className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="p-3 border-themed-alert-success bg-opacity-20 rounded-lg">
-                  <CheckCircle className="h-6 w-6 text-themed-status-success" />
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-themed-text-secondary truncate">Resolved</dt>
-                  <dd className="text-2xl font-bold text-themed-text-primary">
-                    {alerts.filter(a => a.status === 'resolved').length}
-                  </dd>
-                </dl>
-              </div>
-            </div>
+        <div className="stat-card">
+          <div className="stat-card__icon">
+            <Clock className="h-5 w-5 text-themed-status-warning" />
           </div>
+          <div className="stat-card__label">Acknowledged</div>
+          <div className="stat-card__value">{acknowledgedCount}</div>
+          <div className="stat-card__meta">Being investigated</div>
         </div>
-
-        <div className="bg-themed-bg-tertiary overflow-hidden shadow-lg rounded-lg border border-themed-border-primary">
-          <div className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="p-3 bg-themed-interactive-secondary rounded-lg">
-                  <Bell className="h-6 w-6 text-themed-interactive-primary" />
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-themed-text-secondary truncate">Total</dt>
-                  <dd className="text-2xl font-bold text-themed-text-primary">
-                    {alerts.length}
-                  </dd>
-                </dl>
-              </div>
-            </div>
+        <div className="stat-card">
+          <div className="stat-card__icon">
+            <CheckCircle className="h-5 w-5 text-themed-status-success" />
           </div>
+          <div className="stat-card__label">Resolved</div>
+          <div className="stat-card__value">{resolvedCount}</div>
+          <div className="stat-card__meta">Issues fixed</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card__icon">
+            <Bell className="h-5 w-5 text-themed-interactive-primary" />
+          </div>
+          <div className="stat-card__label">Total</div>
+          <div className="stat-card__value">{alerts.length}</div>
+          <div className="stat-card__meta">All alerts</div>
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="border-b border-themed-border-secondary">
-        <nav className="-mb-px flex space-x-8">
+      {/* Filter Toolbar */}
+      <div className="page-toolbar">
+        <div className="page-toolbar__group">
+          <Filter className="h-4 w-4 text-themed-text-muted" />
+          <span className="text-sm text-themed-text-secondary">Filter:</span>
+        </div>
+        <div className="page-toolbar__group">
           {(['all', 'active', 'acknowledged', 'resolved'] as const).map((status) => (
             <button
               key={status}
               onClick={() => setFilter(status)}
-              className={`py-2 px-1 border-b-2 font-medium text-sm capitalize transition-colors ${
+              className={`px-3 py-1.5 text-sm font-medium capitalize transition-colors ${
                 filter === status
-                  ? 'border-themed-interactive-primary text-themed-interactive-primary'
-                  : 'border-transparent text-themed-text-secondary hover:text-themed-text-primary hover:border-themed-border-secondary'
+                  ? 'btn-themed-primary'
+                  : 'btn-themed-secondary'
               }`}
             >
               {status}
-              <span className="ml-2 bg-themed-bg-surface text-themed-text-secondary px-2 py-1 rounded-full text-xs">
+              <span className="ml-2 px-1.5 py-0.5 text-xs rounded-full bg-black/10">
                 {status === 'all' ? alerts.length : alerts.filter(a => a.status === status).length}
               </span>
             </button>
           ))}
-        </nav>
+        </div>
       </div>
 
       {/* Alerts List */}
       <div className="space-y-4">
         {filteredAlerts.length === 0 ? (
-          <div className="text-center py-12">
-            <Bell className="mx-auto h-12 w-12 text-themed-text-muted" />
-            <h3 className="mt-2 text-sm font-medium text-themed-text-primary">No alerts</h3>
-            <p className="mt-1 text-sm text-themed-text-secondary">
+          <div className="panel flex flex-col items-center justify-center py-16">
+            <Bell className="h-16 w-16 text-themed-text-muted mb-4 opacity-50" />
+            <h3 className="text-xl font-medium text-themed-text-primary mb-2">No alerts</h3>
+            <p className="text-themed-text-secondary">
               {filter === 'all' ? 'No alerts found.' : `No ${filter} alerts found.`}
             </p>
           </div>
@@ -260,16 +263,16 @@ const Alerts = () => {
           filteredAlerts.map((alert) => (
             <div
               key={alert.id}
-              className="bg-themed-bg-tertiary border border-themed-border-primary rounded-lg p-6 transition-colors hover:bg-themed-bg-elevated"
+              className="panel transition-colors hover:border-themed-border-accent"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0">
+                  <div className="flex-shrink-0 mt-1">
                     {getStatusIcon(alert.status)}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">
-                      <h3 className="text-lg font-medium text-themed-text-primary">
+                      <h3 className="text-lg font-semibold text-themed-text-primary">
                         {alert.title}
                       </h3>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getSeverityColor(alert.severity)}`}>
@@ -279,32 +282,35 @@ const Alerts = () => {
                     <p className="mt-1 text-sm text-themed-text-secondary">
                       {alert.description}
                     </p>
-                    <div className="mt-2 flex items-center space-x-4 text-sm text-themed-text-muted">
-                      <span>Source: {alert.source}</span>
-                      <span>Metric: {alert.metricName}</span>
-                      <span>Current: {alert.currentValue}</span>
-                      <span>Threshold: {alert.threshold}</span>
-                      <span>
-                        {new Date(alert.timestamp).toLocaleDateString()} {new Date(alert.timestamp).toLocaleTimeString()}
+                    <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-themed-text-muted">
+                      <span className="badge-muted">Source: {alert.source}</span>
+                      <span className="badge-muted">Metric: {alert.metricName}</span>
+                      <span className="badge-muted">Current: {alert.currentValue}</span>
+                      <span className="badge-muted">Threshold: {alert.threshold}</span>
+                      <span className="badge-muted">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {new Date(alert.timestamp).toLocaleString()}
                       </span>
                     </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 ml-4">
                   {alert.status === 'active' && (
                     <button
                       onClick={() => handleAcknowledge(alert.id)}
-                      className="inline-flex items-center px-3 py-2 border border-themed-status-warning text-sm font-medium rounded-sm text-themed-status-warning bg-themed-bg-surface hover:border-themed-alert-error hover:text-themed-text-inverse transition-colors"
+                      className="btn-themed-secondary"
                     >
+                      <Clock className="h-4 w-4 mr-2" />
                       Acknowledge
                     </button>
                   )}
                   {(alert.status === 'active' || alert.status === 'acknowledged') && (
                     <button
                       onClick={() => handleResolve(alert.id)}
-                      className="inline-flex items-center px-3 py-2 border border-themed-status-success text-sm font-medium rounded-sm text-themed-status-success bg-themed-bg-surface hover:border-themed-alert-success hover:text-themed-text-inverse transition-colors"
+                      className="btn-themed-primary"
                     >
+                      <CheckCircle className="h-4 w-4 mr-2" />
                       Resolve
                     </button>
                   )}
@@ -318,4 +324,4 @@ const Alerts = () => {
   )
 }
 
-export default Alerts 
+export default Alerts

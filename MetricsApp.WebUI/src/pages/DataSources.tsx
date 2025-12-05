@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Search, Filter, ArrowUpDown, Database, Plus, Settings, TestTube, BarChart3, Eye, AlertCircle, Loader2, CheckCircle, XCircle, Grid3X3, List } from 'lucide-react'
+import { Search, Filter, ArrowUpDown, Database, Plus, Settings, TestTube, BarChart3, Eye, AlertCircle, Loader2, CheckCircle, XCircle, Grid3X3, List, RefreshCw } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { 
   DataSourceConfiguration, 
@@ -8,8 +8,8 @@ import {
   ApiError 
 } from '../lib/datasource-api'
 import DataSourceIcon from '../components/DataSourceIcon'
+import PageHeader from '../components/PageHeader'
 
-// TODO: Update this to use the actual categories from the backend
 const getDataSourceCategory = (dataSourceType: string): string => {
   const categoryMap: Record<string, string> = {
     'prometheus': 'Monitoring',
@@ -33,7 +33,6 @@ const sortOptions = [
   { value: 'created', label: 'Created' }
 ]
 
-// Add view type after the sortOptions
 type ViewMode = 'card' | 'row'
 
 export default function DataSources() {
@@ -51,7 +50,6 @@ export default function DataSources() {
   const [testingDataSources, setTestingDataSources] = useState<Set<string>>(new Set())
   const [testResults, setTestResults] = useState<Record<string, DataSourceTestResult>>({})
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
-    // Persist view mode - default to card view
     const saved = localStorage.getItem('dataSourcesViewMode')
     return (saved as ViewMode) || 'card'
   })
@@ -61,10 +59,8 @@ export default function DataSources() {
   }, [])
 
   useEffect(() => {
-    // Handle success message from navigation state
     if (location.state?.message && location.state?.type === 'success') {
       setSuccessMessage(location.state.message)
-      // Clear the state to prevent showing the message again on refresh
       window.history.replaceState({}, document.title)
     }
   }, [location.state])
@@ -73,7 +69,6 @@ export default function DataSources() {
     filterAndSortDataSources()
   }, [dataSources, searchTerm, selectedCategory, sortBy, sortOrder])
 
-  // Persist view mode
   useEffect(() => {
     localStorage.setItem('dataSourcesViewMode', viewMode)
   }, [viewMode])
@@ -105,7 +100,6 @@ export default function DataSources() {
       return matchesSearch && matchesCategory
     })
 
-    // Sort the filtered results
     filtered.sort((a, b) => {
       let aValue: string | number
       let bValue: string | number
@@ -127,7 +121,7 @@ export default function DataSources() {
           aValue = new Date(a.createdAt).getTime()
           bValue = new Date(b.createdAt).getTime()
           break
-        default: // name
+        default:
           aValue = a.name
           bValue = b.name
           break
@@ -185,14 +179,10 @@ export default function DataSources() {
   }
 
   const handleBuildDashboard = (dataSource: DataSourceConfiguration) => {
-    // TODO: Navigate to dashboard builder with this data source
-    console.log('Build dashboard for:', dataSource.name)
     navigate(`/dashboards/new?datasource=${dataSource.id}`)
   }
 
   const handleExplore = (dataSource: DataSourceConfiguration) => {
-    // TODO: Navigate to data exploration page
-    console.log('Explore data source:', dataSource.name)
     navigate(`/explore?datasource=${dataSource.id}`)
   }
 
@@ -204,85 +194,103 @@ export default function DataSources() {
     })
   }
 
+  const enabledCount = dataSources.filter(d => d.isEnabled).length
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-themed-interactive-primary"></div>
-        <span className="ml-4 text-themed-text-secondary">Loading data sources...</span>
+      <div className="page-shell">
+        <div className="flex-1 flex items-center justify-center min-h-[320px]">
+          <div className="flex items-center space-x-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-2 border-b-transparent border-themed-interactive-primary" />
+            <span className="text-themed-text-secondary text-sm">Loading data sources...</span>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="border-b border-themed-border-primary pb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-themed-text-primary">Data Sources</h1>
-            <p className="mt-2 text-themed-text-secondary">
-              Manage your data connections and integrations
-            </p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center bg-themed-bg-surface rounded-sm border border-themed-border-primary">
+    <div className="page-shell">
+      <PageHeader
+        title="Data Sources"
+        description="Manage your data connections and integrations"
+        meta={
+          <span className="badge-muted">
+            <Database className="h-3 w-3" />
+            {dataSources.length} connections
+          </span>
+        }
+        actions={
+          <div className="page-actions">
+            <div className="flex items-center rounded-md border border-themed-border-primary overflow-hidden">
               <button
                 onClick={() => setViewMode('card')}
-                className={`p-2 ${
+                className={`p-2 transition-colors ${
                   viewMode === 'card'
                     ? 'bg-themed-interactive-primary text-themed-text-inverse'
                     : 'text-themed-text-secondary hover:text-themed-text-primary'
                 }`}
+                style={viewMode === 'card' ? { backgroundColor: 'var(--interactive-primary)', color: 'var(--text-inverse)' } : {}}
               >
                 <Grid3X3 className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setViewMode('row')}
-                className={`p-2 ${
+                className={`p-2 transition-colors ${
                   viewMode === 'row'
                     ? 'bg-themed-interactive-primary text-themed-text-inverse'
                     : 'text-themed-text-secondary hover:text-themed-text-primary'
                 }`}
+                style={viewMode === 'row' ? { backgroundColor: 'var(--interactive-primary)', color: 'var(--text-inverse)' } : {}}
               >
                 <List className="h-4 w-4" />
               </button>
             </div>
+            <button onClick={loadDataSources} disabled={isLoading} className="btn-themed-secondary disabled:opacity-50">
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
             <button
               onClick={() => navigate('/connections/add')}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-sm shadow-sm text-themed-text-inverse bg-themed-interactive-primary hover:bg-themed-interactive-primary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors"
+              className="btn-themed-primary"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Data Source
             </button>
           </div>
+        }
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="badge-muted">
+            <CheckCircle className="h-3 w-3" />
+            {enabledCount} enabled
+          </span>
+          <span className="badge-muted">
+            <XCircle className="h-3 w-3" />
+            {dataSources.length - enabledCount} disabled
+          </span>
         </div>
-      </div>
+      </PageHeader>
 
       {/* Success Message */}
       {successMessage && (
-        <div className="border-themed-alert-success bg-opacity-10 border border-themed-status-success rounded-lg p-4">
-          <div className="flex">
-            <CheckCircle className="h-5 w-5 text-themed-status-success mr-2 mt-0.5" />
-            <div>
-              <h3 className="text-sm font-medium text-themed-status-success">Success</h3>
-              <p className="mt-1 text-sm text-themed-text-secondary">{successMessage}</p>
-            </div>
+        <div className="panel border-themed-status-success bg-green-500/5">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-5 w-5 text-themed-status-success" />
+            <span className="font-medium text-themed-status-success">{successMessage}</span>
           </div>
         </div>
       )}
 
       {/* Error Message */}
       {error && (
-        <div className="bg-themed-alert-error bg-opacity-10 border border-themed-alert-error rounded-lg p-4">
-          <div className="flex">
-            <AlertCircle className="h-5 w-5 text-themed-status-error mr-2 mt-0.5" />
+        <div className="panel border-themed-status-error bg-red-500/5">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-themed-status-error flex-shrink-0 mt-0.5" />
             <div>
-              <h3 className="text-sm font-medium text-themed-status-error">Error</h3>
-              <p className="mt-1 text-sm text-themed-text-secondary">{error}</p>
-              <button
-                onClick={loadDataSources}
-                className="mt-3 inline-flex items-center px-3 py-2 border border-themed-alert-error text-sm font-medium rounded-sm text-themed-status-error bg-themed-bg-surface hover:bg-themed-alert-error hover:text-themed-text-inverse transition-colors"
-              >
+              <h3 className="font-medium text-themed-status-error">Error</h3>
+              <p className="text-sm text-themed-text-secondary mt-1">{error}</p>
+              <button onClick={loadDataSources} className="btn-themed-secondary mt-3">
                 <Loader2 className="h-4 w-4 mr-2" />
                 Retry
               </button>
@@ -291,103 +299,79 @@ export default function DataSources() {
         </div>
       )}
 
-      {/* Filters and Search */}
-      <div className="bg-themed-bg-tertiary rounded-lg border border-themed-border-primary p-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Search */}
-          <div className="relative">
+      {/* Filters Toolbar */}
+      <div className="page-toolbar">
+        <div className="page-toolbar__group flex-1">
+          <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-themed-text-muted" />
             <input
               type="text"
               placeholder="Search data sources..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 border border-themed-border-primary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary bg-themed-bg-surface text-themed-text-primary placeholder-themed-text-muted sm:text-sm"
+              className="input-themed w-full pl-10"
             />
           </div>
-
-          {/* Category Filter */}
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-themed-text-muted" />
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="block w-full pl-10 pr-8 py-2 border border-themed-border-primary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary bg-themed-bg-surface text-themed-text-primary sm:text-sm"
-            >
-              {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Sort */}
-          <div className="relative">
-            <ArrowUpDown className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-themed-text-muted" />
-            <select
-              value={sortBy}
-              onChange={(e) => handleSort(e.target.value)}
-              className="block w-full pl-10 pr-8 py-2 border border-themed-border-primary rounded-sm shadow-sm focus:outline-none focus:ring-themed-interactive-primary focus:border-themed-interactive-primary bg-themed-bg-surface text-themed-text-primary sm:text-sm"
-            >
-              {sortOptions.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Results Count */}
-          <div className="flex items-center justify-end">
-            <span className="text-sm text-themed-text-secondary">
-              {filteredDataSources.length} of {dataSources.length} data sources
-            </span>
-          </div>
+        </div>
+        <div className="page-toolbar__divider" />
+        <div className="page-toolbar__group">
+          <Filter className="h-4 w-4 text-themed-text-muted" />
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="input-themed"
+          >
+            {categories.map(category => (
+              <option key={category} value={category}>{category}</option>
+            ))}
+          </select>
+        </div>
+        <div className="page-toolbar__divider" />
+        <div className="page-toolbar__group">
+          <ArrowUpDown className="h-4 w-4 text-themed-text-muted" />
+          <select
+            value={sortBy}
+            onChange={(e) => handleSort(e.target.value)}
+            className="input-themed"
+          >
+            {sortOptions.map(option => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        </div>
+        <div className="page-toolbar__divider" />
+        <div className="page-toolbar__group text-sm text-themed-text-secondary">
+          {filteredDataSources.length} of {dataSources.length} data sources
         </div>
       </div>
 
       {/* Data Sources Grid/List */}
       {filteredDataSources.length === 0 ? (
-        <div className="text-center py-12">
-          <Database className="mx-auto h-12 w-12 text-themed-text-muted" />
-          <h3 className="mt-2 text-sm font-medium text-themed-text-primary">No data sources found</h3>
-          <p className="mt-1 text-sm text-themed-text-secondary">
+        <div className="panel flex flex-col items-center justify-center py-16">
+          <Database className="h-16 w-16 text-themed-text-muted mb-4 opacity-50" />
+          <h3 className="text-xl font-medium text-themed-text-primary mb-2">No data sources found</h3>
+          <p className="text-themed-text-secondary mb-6">
             {searchTerm || selectedCategory !== 'All' 
               ? 'Try adjusting your search or filters.' 
               : 'Get started by adding your first data source.'}
           </p>
           {(!searchTerm && selectedCategory === 'All') && (
-            <div className="mt-6">
-              <button
-                onClick={() => navigate('/connections/add')}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-sm shadow-sm text-themed-text-inverse bg-themed-interactive-primary hover:bg-themed-interactive-primary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Data Source
-              </button>
-            </div>
+            <button onClick={() => navigate('/connections/add')} className="btn-themed-primary">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Data Source
+            </button>
           )}
         </div>
       ) : viewMode === 'card' ? (
-        renderCardView()
-      ) : (
-        renderRowView()
-      )}
-    </div>
-  )
-
-  function renderCardView() {
-    return (
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredDataSources.map((dataSource) => (
-          <div
-            key={dataSource.id}
-            className="bg-themed-bg-tertiary overflow-hidden shadow-lg rounded-lg border border-themed-border-primary hover:shadow-xl transition-shadow"
-          >
-            <div className="p-6">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredDataSources.map((dataSource) => (
+            <div key={dataSource.id} className="panel transition-colors hover:border-themed-border-accent">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <DataSourceIcon dataSourceType={dataSource.dataSourceType} className="h-8 w-8" />
                 </div>
                 <div className="ml-4 flex-1">
-                  <h3 className="text-lg font-medium text-themed-text-primary">
+                  <h3 className="text-lg font-semibold text-themed-text-primary">
                     {dataSource.name}
                   </h3>
                   <p className="text-sm text-themed-text-secondary">
@@ -395,47 +379,36 @@ export default function DataSources() {
                   </p>
                 </div>
                 <div className="flex-shrink-0">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  <span className={`badge-muted ${
                     dataSource.isEnabled 
-                      ? 'border-themed-alert-success bg-opacity-20 text-themed-status-success'
-                      : 'bg-themed-text-muted bg-opacity-20 text-themed-text-muted'
+                      ? 'text-themed-status-success'
+                      : 'text-themed-text-muted'
                   }`}>
                     {dataSource.isEnabled ? 'Enabled' : 'Disabled'}
                   </span>
                 </div>
               </div>
 
-              <div className="mt-4">
-                <p className="text-sm text-themed-text-secondary line-clamp-2">
-                  {dataSource.url}
-                </p>
+              <div className="mt-4 text-sm text-themed-text-muted font-mono truncate">
+                {dataSource.url}
               </div>
 
-              <div className="mt-4 text-xs text-themed-text-muted">
-                <p>URL: <span className="font-mono">{dataSource.url}</span></p>
-                <p>Created: {formatDate(dataSource.createdAt)}</p>
+              <div className="mt-2 text-xs text-themed-text-muted">
+                Created: {formatDate(dataSource.createdAt)}
               </div>
 
               {/* Test Result */}
               {testResults[dataSource.id] && (
                 <div className="mt-4">
                   {testResults[dataSource.id].isSuccess ? (
-                    <div className="border-themed-alert-success bg-opacity-10 border border-themed-status-success rounded-sm p-2">
-                      <div className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-themed-status-success mr-2" />
-                        <span className="text-xs text-themed-status-success">
-                          Connection successful ({testResults[dataSource.id].responseTimeMs}ms)
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-2 text-sm text-themed-status-success bg-green-500/5 p-2 rounded-md">
+                      <CheckCircle className="h-4 w-4" />
+                      <span>Connection successful ({testResults[dataSource.id].responseTimeMs}ms)</span>
                     </div>
                   ) : (
-                    <div className="bg-themed-alert-error bg-opacity-10 border border-themed-alert-error rounded-sm p-2">
-                      <div className="flex items-center">
-                        <XCircle className="h-4 w-4 text-themed-status-error mr-2" />
-                        <span className="text-xs text-themed-status-error">
-                          {testResults[dataSource.id].errorMessage}
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-2 text-sm text-themed-status-error bg-red-500/5 p-2 rounded-md">
+                      <XCircle className="h-4 w-4" />
+                      <span>{testResults[dataSource.id].errorMessage}</span>
                     </div>
                   )}
                 </div>
@@ -443,17 +416,14 @@ export default function DataSources() {
 
               <div className="mt-6 flex items-center justify-between">
                 <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleEdit(dataSource)}
-                    className="inline-flex items-center px-3 py-2 border border-themed-border-primary text-sm font-medium rounded-sm text-themed-text-primary bg-themed-bg-surface hover:bg-themed-interactive-secondary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors"
-                  >
+                  <button onClick={() => handleEdit(dataSource)} className="btn-themed-secondary">
                     <Settings className="h-4 w-4 mr-1" />
                     Edit
                   </button>
                   <button
                     onClick={() => handleTest(dataSource)}
                     disabled={testingDataSources.has(dataSource.id)}
-                    className="inline-flex items-center px-3 py-2 border border-themed-border-primary text-sm font-medium rounded-sm text-themed-text-primary bg-themed-bg-surface hover:bg-themed-interactive-secondary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary disabled:opacity-50 transition-colors"
+                    className="btn-themed-secondary disabled:opacity-50"
                   >
                     {testingDataSources.has(dataSource.id) ? (
                       <Loader2 className="h-4 w-4 mr-1 animate-spin" />
@@ -465,126 +435,116 @@ export default function DataSources() {
                 </div>
                 
                 <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleExplore(dataSource)}
-                    className="inline-flex items-center px-3 py-2 border border-themed-interactive-primary text-sm font-medium rounded-sm text-themed-interactive-primary bg-themed-bg-surface hover:bg-themed-interactive-primary hover:text-themed-text-inverse focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors"
-                  >
+                  <button onClick={() => handleExplore(dataSource)} className="btn-themed-secondary">
                     <Eye className="h-4 w-4 mr-1" />
                     Explore
                   </button>
-                  <button
-                    onClick={() => handleBuildDashboard(dataSource)}
-                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-sm shadow-sm text-themed-text-inverse bg-themed-interactive-primary hover:bg-themed-interactive-primary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary transition-colors"
-                  >
+                  <button onClick={() => handleBuildDashboard(dataSource)} className="btn-themed-primary">
                     <BarChart3 className="h-4 w-4 mr-1" />
                     Dashboard
                   </button>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  function renderRowView() {
-    return (
-      <div className="bg-themed-bg-tertiary shadow-lg rounded-lg border border-themed-border-primary overflow-hidden">
-        <table className="min-w-full divide-y divide-themed-border-primary">
-          <thead className="bg-themed-bg-surface">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-secondary uppercase tracking-wider">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-secondary uppercase tracking-wider">
-                Type
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-secondary uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-themed-text-secondary uppercase tracking-wider">
-                Created
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-themed-text-secondary uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-themed-bg-tertiary divide-y divide-themed-border-primary">
-            {filteredDataSources.map((dataSource) => (
-              <tr key={dataSource.id} className="hover:bg-themed-bg-elevated transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <DataSourceIcon dataSourceType={dataSource.dataSourceType} className="h-6 w-6 mr-3" />
-                    <div>
-                      <div className="text-sm font-medium text-themed-text-primary">
-                        {dataSource.name}
-                      </div>
-                      <div className="text-sm text-themed-text-secondary">
-                        {dataSource.url}
+          ))}
+        </div>
+      ) : (
+        <div className="panel overflow-hidden p-0">
+          <table className="min-w-full divide-y divide-themed-border-primary">
+            <thead style={{ backgroundColor: 'var(--bg-surface)' }}>
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-themed-text-secondary uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-themed-text-secondary uppercase tracking-wider">
+                  Type
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-themed-text-secondary uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-themed-text-secondary uppercase tracking-wider">
+                  Created
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-semibold text-themed-text-secondary uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-themed-border-primary">
+              {filteredDataSources.map((dataSource) => (
+                <tr key={dataSource.id} className="hover:bg-themed-bg-elevated transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <DataSourceIcon dataSourceType={dataSource.dataSourceType} className="h-6 w-6 mr-3" />
+                      <div>
+                        <div className="text-sm font-medium text-themed-text-primary">
+                          {dataSource.name}
+                        </div>
+                        <div className="text-sm text-themed-text-secondary font-mono truncate max-w-xs">
+                          {dataSource.url}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-themed-text-primary">{dataSource.dataSourceType}</div>
-                  <div className="text-sm text-themed-text-secondary">{getDataSourceCategory(dataSource.dataSourceType)}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    dataSource.isEnabled 
-                      ? 'border-themed-alert-success bg-opacity-20 text-themed-status-success'
-                      : 'bg-themed-text-muted bg-opacity-20 text-themed-text-muted'
-                  }`}>
-                    {dataSource.isEnabled ? 'Enabled' : 'Disabled'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-themed-text-secondary">
-                  {formatDate(dataSource.createdAt)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center justify-end space-x-2">
-                    <button
-                      onClick={() => handleTest(dataSource)}
-                      disabled={testingDataSources.has(dataSource.id)}
-                      className="text-themed-text-secondary hover:text-themed-text-primary disabled:opacity-50"
-                      title="Test connection"
-                    >
-                      {testingDataSources.has(dataSource.id) ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <TestTube className="h-4 w-4" />
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleEdit(dataSource)}
-                      className="text-themed-text-secondary hover:text-themed-text-primary"
-                      title="Edit data source"
-                    >
-                      <Settings className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleExplore(dataSource)}
-                      className="text-themed-interactive-primary hover:text-themed-interactive-primary-hover"
-                      title="Explore data"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleBuildDashboard(dataSource)}
-                      className="text-themed-interactive-primary hover:text-themed-interactive-primary-hover"
-                      title="Build dashboard"
-                    >
-                      <BarChart3 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    )
-  }
-} 
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-themed-text-primary">{dataSource.dataSourceType}</div>
+                    <div className="text-sm text-themed-text-secondary">{getDataSourceCategory(dataSource.dataSourceType)}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`badge-muted ${
+                      dataSource.isEnabled 
+                        ? 'text-themed-status-success'
+                        : 'text-themed-text-muted'
+                    }`}>
+                      {dataSource.isEnabled ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-themed-text-secondary">
+                    {formatDate(dataSource.createdAt)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                      <button
+                        onClick={() => handleTest(dataSource)}
+                        disabled={testingDataSources.has(dataSource.id)}
+                        className="p-2 text-themed-text-secondary hover:text-themed-text-primary disabled:opacity-50 transition-colors"
+                        title="Test connection"
+                      >
+                        {testingDataSources.has(dataSource.id) ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <TestTube className="h-4 w-4" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleEdit(dataSource)}
+                        className="p-2 text-themed-text-secondary hover:text-themed-text-primary transition-colors"
+                        title="Edit data source"
+                      >
+                        <Settings className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleExplore(dataSource)}
+                        className="p-2 text-themed-interactive-primary hover:opacity-80 transition-opacity"
+                        title="Explore data"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleBuildDashboard(dataSource)}
+                        className="p-2 text-themed-interactive-primary hover:opacity-80 transition-opacity"
+                        title="Build dashboard"
+                      >
+                        <BarChart3 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}

@@ -812,24 +812,30 @@ const JaegerTraceViewer: React.FC = () => {
     <div className="h-full flex flex-col" style={{ backgroundColor: 'var(--bg-primary)' }}>
       {/* Header */}
       <div 
-        className="flex items-center justify-between p-4 border-b"
+        className="flex items-center justify-between px-4 py-3 border-b"
         style={{ 
           borderColor: 'var(--border-primary)',
-          backgroundColor: 'var(--bg-surface)'
+          backgroundColor: 'var(--bg-secondary)'
         }}
       >
-        <h1 
-          className="text-2xl font-bold"
-          style={{ 
-            color: 'var(--text-primary)',
-            fontFamily: 'var(--font-sans)'
-          }}
-        >
-          Trace Search
-        </h1>
-        <div className="flex items-center space-x-2">
-          <button className="btn-themed-secondary flex items-center space-x-1">
-            <Download size={16} />
+        <div className="flex items-center gap-3">
+          <Activity size={20} style={{ color: 'var(--interactive-primary)' }} />
+          <h1 
+            className="text-lg font-medium"
+            style={{ 
+              color: 'var(--text-primary)',
+              fontFamily: 'var(--font-sans)'
+            }}
+          >
+            Trace Explorer
+          </h1>
+          <span className="badge-muted">
+            {traces.length} traces
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button className="btn-themed-secondary">
+            <Download size={14} />
             <span>Export</span>
           </button>
         </div>
@@ -837,152 +843,110 @@ const JaegerTraceViewer: React.FC = () => {
 
       {/* Search Filters */}
       <div 
-        className="p-4 border-b"
-        style={{
-          backgroundColor: 'var(--bg-elevated)',
-          borderColor: 'var(--border-primary)'
-        }}
+        className="page-toolbar"
+        style={{ margin: 0, borderRadius: 0, borderLeft: 'none', borderRight: 'none' }}
       >
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="page-toolbar__group">
           <select
             value={filters.service || ''}
             onChange={(e) => setFilters(prev => ({ ...prev, service: e.target.value || undefined }))}
-            className="px-3 py-2 border text-sm"
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              borderColor: 'var(--border-primary)',
-              color: 'var(--text-primary)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: 'var(--text-sm)'
-            }}
+            className="input-themed"
+            style={{ minWidth: '160px' }}
           >
-            <option value="">{services.length === 0 ? 'Loading services...' : 'Select a service'}</option>
+            <option value="">{services.length === 0 ? 'Loading...' : 'Service'}</option>
             {services.map(service => (
               <option key={service} value={service}>{service}</option>
             ))}
           </select>
+        </div>
 
+        <div className="page-toolbar__group">
           <select
             value={filters.operation || ''}
             onChange={(e) => setFilters(prev => ({ ...prev, operation: e.target.value || undefined }))}
-            className="px-3 py-2 border text-sm"
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              borderColor: 'var(--border-primary)',
-              color: 'var(--text-primary)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: 'var(--text-sm)',
-              opacity: !filters.service ? 0.5 : 1
-            }}
+            className="input-themed"
+            style={{ minWidth: '140px', opacity: !filters.service ? 0.5 : 1 }}
             disabled={!filters.service}
           >
-            <option value="">All Operations</option>
+            <option value="">Operation</option>
             {operations.map(operation => (
               <option key={operation} value={operation}>{operation}</option>
             ))}
           </select>
+        </div>
 
+        <div className="page-toolbar__divider" />
+
+        <div className="page-toolbar__group">
           <input
             type="text"
             placeholder="Tags (key:value)"
             value={filters.tags || ''}
             onChange={(e) => setFilters(prev => ({ ...prev, tags: e.target.value || undefined }))}
-            className="px-3 py-2 border text-sm"
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              borderColor: 'var(--border-primary)',
-              color: 'var(--text-primary)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: 'var(--text-sm)'
-            }}
+            className="input-themed"
+            style={{ width: '140px' }}
           />
+        </div>
 
+        <div className="page-toolbar__group">
           <input
             type="text"
-            placeholder="Min Duration"
+            placeholder="Min"
             value={filters.minDuration || ''}
             onChange={(e) => setFilters(prev => ({ ...prev, minDuration: e.target.value || undefined }))}
-            className="px-3 py-2 border text-sm"
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              borderColor: 'var(--border-primary)',
-              color: 'var(--text-primary)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: 'var(--text-sm)'
-            }}
+            className="input-themed"
+            style={{ width: '70px' }}
           />
-
+          <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>to</span>
           <input
             type="text"
-            placeholder="Max Duration"
+            placeholder="Max"
             value={filters.maxDuration || ''}
             onChange={(e) => setFilters(prev => ({ ...prev, maxDuration: e.target.value || undefined }))}
-            className="px-3 py-2 border text-sm"
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              borderColor: 'var(--border-primary)',
-              color: 'var(--text-primary)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: 'var(--text-sm)'
-            }}
+            className="input-themed"
+            style={{ width: '70px' }}
           />
+        </div>
 
+        <div className="page-toolbar__group">
           <select
             value={filters.limit}
             onChange={(e) => setFilters(prev => ({ ...prev, limit: parseInt(e.target.value) }))}
-            className="px-3 py-2 border text-sm"
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              borderColor: 'var(--border-primary)',
-              color: 'var(--text-primary)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: 'var(--text-sm)'
-            }}
+            className="input-themed"
           >
-            <option value={20}>20 traces</option>
-            <option value={50}>50 traces</option>
-            <option value={100}>100 traces</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
           </select>
         </div>
 
-        <div className="flex items-center space-x-4 mt-4">
+        <div className="page-toolbar__divider" />
+
+        <div className="page-toolbar__group">
           <button
             onClick={searchTraces}
             disabled={loading || !filters.service}
-            className="btn-themed-primary flex items-center space-x-2"
-            style={{
-              opacity: (loading || !filters.service) ? 0.5 : 1,
-              cursor: (loading || !filters.service) ? 'not-allowed' : 'pointer'
-            }}
+            className="btn-themed-primary"
           >
-            <Search size={16} />
-            <span>{loading ? 'Searching...' : 'Find Traces'}</span>
+            <Search size={14} />
+            <span>{loading ? 'Searching...' : 'Search'}</span>
           </button>
-          
-          {!filters.service && (
-            <span 
-              style={{ 
-                fontSize: 'var(--text-xs)',
-                color: 'var(--text-tertiary)'
-              }}
-            >
-              Select a service to search for traces
-            </span>
-          )}
           
           <button
             onClick={generateSampleTrace}
             disabled={loading}
-            className="btn-themed-secondary flex items-center space-x-2"
-            style={{
-              opacity: loading ? 0.5 : 1,
-              cursor: loading ? 'not-allowed' : 'pointer'
-            }}
+            className="btn-themed-secondary"
           >
-            <Activity size={16} />
-            <span>Generate Sample Trace</span>
+            <Activity size={14} />
+            <span>Generate Sample</span>
           </button>
         </div>
+        
+        {!filters.service && services.length > 0 && (
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+            Select a service to search
+          </span>
+        )}
       </div>
 
       {/* Error Display */}
@@ -1004,38 +968,33 @@ const JaegerTraceViewer: React.FC = () => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex overflow-hidden">
         {/* Traces List */}
         <div 
-          className="w-1/2 border-r"
+          className="w-1/2 border-r flex flex-col"
           style={{ borderColor: 'var(--border-primary)' }}
         >
           <div 
-            className="p-4 border-b"
+            className="px-3 py-2 border-b flex items-center justify-between"
             style={{
-              backgroundColor: 'var(--bg-elevated)',
+              backgroundColor: 'var(--bg-tertiary)',
               borderColor: 'var(--border-primary)'
             }}
           >
-              <div className="flex items-center justify-between">
-                <h2 
-                  className="font-semibold"
-                  style={{ 
-                    color: 'var(--text-primary)',
-                    fontFamily: 'var(--font-sans)'
-                  }}
-                >
-                  {traces.length} Trace{traces.length !== 1 ? 's' : ''} Found
-                </h2>
-                {services.length === 0 && (
-                  <span 
-                    className="text-xs animate-pulse"
-                    style={{ color: 'var(--text-tertiary)' }}
-                  >
-                    Loading services...
-                  </span>
-                )}
-              </div>
+            <span 
+              className="text-xs font-medium uppercase tracking-wider"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              Results
+            </span>
+            {services.length === 0 && (
+              <span 
+                className="text-xs animate-pulse"
+                style={{ color: 'var(--text-tertiary)' }}
+              >
+                Loading services...
+              </span>
+            )}
           </div>
           
           <div className="overflow-auto h-full">
@@ -1182,34 +1141,32 @@ const JaegerTraceViewer: React.FC = () => {
         </div>
 
         {/* Trace Details */}
-        <div className="w-1/2">
+        <div className="w-1/2 flex flex-col">
           {selectedTrace ? (
             <div className="h-full flex flex-col">
               <div 
-                className="p-4 border-b"
+                className="px-3 py-2 border-b flex items-center justify-between"
                 style={{
-                  backgroundColor: 'var(--bg-elevated)',
+                  backgroundColor: 'var(--bg-tertiary)',
                   borderColor: 'var(--border-primary)'
                 }}
               >
-                <h2 
-                  className="font-semibold"
-                  style={{ 
-                    color: 'var(--text-primary)',
-                    fontFamily: 'var(--font-sans)'
-                  }}
+                <span 
+                  className="text-xs font-medium uppercase tracking-wider"
+                  style={{ color: 'var(--text-muted)' }}
                 >
-                  Trace Timeline
-                </h2>
-                <div 
-                  className="mt-1"
-                  style={{ 
-                    fontSize: 'var(--text-sm)',
-                    color: 'var(--text-secondary)'
-                  }}
-                >
-                  {selectedTrace.spans.length} span{selectedTrace.spans.length !== 1 ? 's' : ''} • 
-                  <span style={{ fontFamily: 'var(--font-mono)' }}>{formatDuration(traceDuration)}</span>
+                  Timeline
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="badge-muted">
+                    {selectedTrace.spans.length} spans
+                  </span>
+                  <span 
+                    className="font-mono text-xs"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    {formatDuration(traceDuration)}
+                  </span>
                 </div>
               </div>
               

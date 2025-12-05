@@ -1,4 +1,3 @@
-import type { BasicTracerProvider } from '@opentelemetry/sdk-trace-base'
 import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base'
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
@@ -43,12 +42,13 @@ export function initializeTelemetry() {
       })
     )
 
-    const TracerProvider = WebTracerProvider as unknown as new (config?: { resource: ReturnType<typeof defaultResource> }) => WebTracerProvider
-    const tracerProvider = new TracerProvider({
+    const tracerProvider = new WebTracerProvider({
       resource
     })
 
-    (tracerProvider as BasicTracerProvider).addSpanProcessor(new SimpleSpanProcessor(traceExporter))
+    // TypeScript types for WebTracerProvider may not include addSpanProcessor directly
+    // but it exists on the prototype from BasicTracerProvider
+    ;(tracerProvider as any).addSpanProcessor(new SimpleSpanProcessor(traceExporter))
 
     tracerProvider.register()
 

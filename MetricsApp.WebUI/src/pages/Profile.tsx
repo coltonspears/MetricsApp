@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { User, Save, Mail, Calendar, MapPin } from 'lucide-react'
+import { User, Mail, MapPin, Briefcase, Save, Camera, Clock, Shield, Key } from 'lucide-react'
+import PageHeader from '../components/PageHeader'
 
 const Profile = () => {
   const [formData, setFormData] = useState({
@@ -12,59 +13,114 @@ const Profile = () => {
     phone: '',
     timezone: 'America/Los_Angeles'
   })
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log('Profile Update:', formData)
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }))
+  const handleSave = async () => {
+    setSaving(true)
+    // Simulate API call
+    setTimeout(() => {
+      setSaving(false)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    }, 1000)
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="border-b border-themed-border-primary pb-4">
-        <div className="flex items-center space-x-4">
-          <User className="h-8 w-8 text-themed-interactive-primary" />
-          <h1 className="text-3xl font-bold text-themed-text-primary">Profile</h1>
+    <div className="page-shell">
+      <PageHeader
+        title="Profile"
+        description="Manage your account settings and personal information"
+        meta={
+          <span className="badge-muted">
+            <User className="h-3 w-3" />
+            {formData.firstName} {formData.lastName}
+          </span>
+        }
+        actions={
+          <div className="page-actions">
+            <button className="btn-themed-secondary">
+              <Key className="h-4 w-4 mr-2" />
+              Change Password
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="btn-themed-primary disabled:opacity-50"
+            >
+              {saving ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-transparent border-current mr-2" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        }
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="badge-muted">
+            <Mail className="h-3 w-3" />
+            {formData.email}
+          </span>
+          <span className="badge-muted">
+            <MapPin className="h-3 w-3" />
+            {formData.location}
+          </span>
+          <span className="badge-muted">
+            <Clock className="h-3 w-3" />
+            {formData.timezone}
+          </span>
         </div>
-        <div className="mt-2">
-          <p className="text-themed-text-secondary">
-            Manage your account settings and personal information
-          </p>
-        </div>
-      </div>
+      </PageHeader>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {saved && (
+        <div className="panel border-themed-status-success bg-green-500/5">
+          <div className="flex items-center gap-2 text-themed-status-success">
+            <Shield className="h-5 w-5" />
+            <span className="font-medium">Profile saved successfully!</span>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Card */}
-        <div className="bg-themed-bg-tertiary rounded-lg shadow border border-themed-border-primary p-6">
-          <div className="text-center">
-            <div className="w-32 h-32 bg-themed-interactive-primary rounded-full flex items-center justify-center text-themed-text-inverse text-4xl font-bold mx-auto mb-4">
+        <div className="panel flex flex-col items-center text-center">
+          <div className="relative mb-6">
+            <div className="w-32 h-32 rounded-full flex items-center justify-center text-4xl font-bold"
+              style={{ backgroundColor: 'var(--interactive-primary)', color: 'var(--text-inverse)' }}>
               {formData.firstName?.[0]}{formData.lastName?.[0]}
             </div>
-            <h3 className="text-lg font-medium text-themed-text-primary">
-              {formData.firstName} {formData.lastName}
-            </h3>
-            <p className="text-themed-text-secondary">{formData.title}</p>
-            <button className="mt-4 px-4 py-2 text-sm font-medium text-themed-interactive-primary border border-themed-interactive-primary rounded-sm hover:bg-themed-interactive-primary hover:text-themed-text-inverse">
-              Change Avatar
+            <button className="absolute bottom-0 right-0 p-2 rounded-full border-2"
+              style={{ 
+                backgroundColor: 'var(--bg-secondary)', 
+                borderColor: 'var(--border-primary)',
+                color: 'var(--text-secondary)'
+              }}>
+              <Camera className="h-4 w-4" />
             </button>
+          </div>
+          <h3 className="text-xl font-semibold text-themed-text-primary">
+            {formData.firstName} {formData.lastName}
+          </h3>
+          <p className="text-themed-text-secondary mt-1">{formData.title}</p>
+          <div className="flex items-center mt-2 text-sm text-themed-text-muted">
+            <MapPin className="h-4 w-4 mr-1" />
+            {formData.location}
+          </div>
+          <div className="w-full mt-6 pt-6 border-t border-themed-border-primary">
+            <p className="text-sm text-themed-text-secondary">{formData.bio}</p>
           </div>
         </div>
 
         {/* Profile Form */}
-        <div className="lg:col-span-2">
-          <div className="bg-themed-bg-tertiary rounded-lg shadow border border-themed-border-primary">
-            <div className="px-6 py-4 border-b border-themed-border-primary">
-              <h3 className="text-lg font-medium text-themed-text-primary">Personal Information</h3>
+        <div className="lg:col-span-2 space-y-6">
+          <div className="panel">
+            <div className="panel-header">
+              <h3 className="panel-title">Personal Information</h3>
             </div>
-            <div className="p-6 space-y-6">
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label htmlFor="firstName" className="block text-sm font-medium text-themed-text-secondary mb-2">
                     First Name
@@ -74,7 +130,7 @@ const Profile = () => {
                     id="firstName"
                     value={formData.firstName}
                     onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                    className="w-full px-3 py-2 border border-themed-border-primary rounded-sm shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
+                    className="input-themed w-full"
                   />
                 </div>
                 <div>
@@ -86,7 +142,7 @@ const Profile = () => {
                     id="lastName"
                     value={formData.lastName}
                     onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                    className="w-full px-3 py-2 border border-themed-border-primary rounded-sm shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
+                    className="input-themed w-full"
                   />
                 </div>
               </div>
@@ -95,55 +151,95 @@ const Profile = () => {
                 <label htmlFor="email" className="block text-sm font-medium text-themed-text-secondary mb-2">
                   Email Address
                 </label>
-                <input
-                  type="email"
-                  id="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="w-full px-3 py-2 border border-themed-border-primary rounded-sm shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
-                />
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-themed-text-muted" />
+                  <input
+                    type="email"
+                    id="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    className="input-themed w-full pl-10"
+                  />
+                </div>
               </div>
 
               <div>
                 <label htmlFor="title" className="block text-sm font-medium text-themed-text-secondary mb-2">
                   Job Title
                 </label>
-                <input
-                  type="text"
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  className="w-full px-3 py-2 border border-themed-border-primary rounded-sm shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
-                />
+                <div className="relative">
+                  <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-themed-text-muted" />
+                  <input
+                    type="text"
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({...formData, title: e.target.value})}
+                    className="input-themed w-full pl-10"
+                  />
+                </div>
               </div>
 
               <div>
                 <label htmlFor="location" className="block text-sm font-medium text-themed-text-secondary mb-2">
                   Location
                 </label>
-                <input
-                  type="text"
-                  id="location"
-                  value={formData.location}
-                  onChange={(e) => setFormData({...formData, location: e.target.value})}
-                  className="w-full px-3 py-2 border border-themed-border-primary rounded-sm shadow-sm bg-themed-bg-surface text-themed-text-primary focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary focus:border-themed-interactive-primary"
-                />
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-themed-text-muted" />
+                  <input
+                    type="text"
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => setFormData({...formData, location: e.target.value})}
+                    className="input-themed w-full pl-10"
+                  />
+                </div>
               </div>
 
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  className="px-4 py-2 text-sm font-medium text-themed-text-primary bg-themed-bg-surface border border-themed-border-primary rounded-sm hover:bg-themed-interactive-secondary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-sm font-medium text-themed-text-inverse bg-themed-interactive-primary border border-transparent rounded-sm hover:bg-themed-interactive-primary-hover focus:outline-none focus:ring-2 focus:ring-themed-interactive-primary"
-                >
-                  Save Changes
-                </button>
+              <div>
+                <label htmlFor="bio" className="block text-sm font-medium text-themed-text-secondary mb-2">
+                  Bio
+                </label>
+                <textarea
+                  id="bio"
+                  rows={3}
+                  value={formData.bio}
+                  onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                  className="input-themed w-full resize-none"
+                />
               </div>
+            </div>
+          </div>
+
+          <div className="panel">
+            <div className="panel-header">
+              <h3 className="panel-title">Preferences</h3>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="timezone" className="block text-sm font-medium text-themed-text-secondary mb-2">
+                  Timezone
+                </label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-themed-text-muted" />
+                  <select
+                    id="timezone"
+                    value={formData.timezone}
+                    onChange={(e) => setFormData({...formData, timezone: e.target.value})}
+                    className="input-themed w-full pl-10"
+                  >
+                    <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                    <option value="America/Denver">Mountain Time (MT)</option>
+                    <option value="America/Chicago">Central Time (CT)</option>
+                    <option value="America/New_York">Eastern Time (ET)</option>
+                    <option value="Europe/London">London (GMT)</option>
+                    <option value="Europe/Paris">Paris (CET)</option>
+                    <option value="Asia/Tokyo">Tokyo (JST)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="panel-footer">
+              Timezone affects how dates and times are displayed throughout the application.
             </div>
           </div>
         </div>
@@ -152,4 +248,4 @@ const Profile = () => {
   )
 }
 
-export default Profile 
+export default Profile

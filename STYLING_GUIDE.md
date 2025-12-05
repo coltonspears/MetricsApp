@@ -1,180 +1,325 @@
 # MetricsApp Styling Guide
 
-## 1. Theme System Overview
+## 1. Design Philosophy
 
-MetricsApp uses a flexible theme system defined in TypeScript and CSS. Themes are managed via React context and CSS variables, allowing for dynamic switching and easy extension.
-
-- **Theme context:** Provided by `ThemeProvider` (`src/lib/theme.tsx`).
-- **Theme definitions:** In `src/lib/themes.ts`.
-- **CSS variables:** Set in `src/styles/themes.css` and dynamically updated via JS.
-
----
-
-## 2. Theme Structure
-
-Each theme is an object with the following structure:
-
-```ts
-interface Theme {
-  id: string
-  name: string
-  description: string
-  type: 'light' | 'dark'
-  colors: ThemeColors
-  layout: ThemeLayout
-}
-```
-
-### 2.1. Colors
-
-- **Backgrounds:** `primary`, `secondary`, `tertiary`, `elevated`, `surface`, `overlay`
-- **Text:** `primary`, `secondary`, `tertiary`, `inverse`, `muted`, `accent`
-- **Borders:** `primary`, `secondary`, `accent`, `muted`, `focus`
-- **Status:** `success`, `error`, `warning`, `info`, `neutral`
-- **Interactive:** `primary`, `primaryHover`, `secondary`, `secondaryHover`, `tertiary`, `tertiaryHover`
-- **Chart:** `primary[]`, `gradients[]`
-- **Alert:** `success`, `error`, `warning`, `info`, `neutral` (each with `background`, `text`, `border`, `icon`)
-
-### 2.2. Layout
-
-- **Border radius:** `none`, `sm`, `md`, `lg`, `xl`, `full`
-- **Spacing:** `xs`, `sm`, `md`, `lg`, `xl`
-- **Shadows:** `sm`, `md`, `lg`, `xl`
-- **Typography:** `fontFamily` (`sans`, `mono`), `fontSize` (`xs`, `sm`, `base`, `lg`, `xl`, `2xl`, `3xl`)
+MetricsApp follows a **Grafana-inspired flat design** approach:
+- **Minimal borders** - subtle dividers rather than heavy outlines
+- **Sharp edges** - small border-radius values (`2-4px`)
+- **Dense UI** - compact spacing for information-rich displays
+- **Flat appearance** - no heavy shadows or depth effects
+- **Semantic colors** - status colors for meaning, accent for interaction
 
 ---
 
-## 3. Using Theme Variables
+## 2. Theme System Overview
 
-All theme values are mapped to CSS variables (e.g., `--bg-primary`, `--text-primary`). These are set on the `:root` and updated dynamically.
+Themes are managed via React context and CSS variables, allowing for dynamic switching.
 
-**Example:**
-```css
-body {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-}
-```
+- **Theme context:** `ThemeProvider` in `src/lib/theme.tsx`
+- **Theme definitions:** `src/lib/themes.ts`
+- **CSS utilities:** `src/styles/themes.css`
 
-**Utility classes** are provided in `themes.css` for quick usage:
-- `.themed-bg-primary`, `.themed-text-secondary`, `.themed-border-accent`, etc.
+### Available Themes
+
+| Theme | Description |
+|-------|-------------|
+| **Professional Dark** | Default. Grafana-inspired with teal accent |
+| **Default** | Emerald accent with rounded corners |
+| **Light** | Clean light theme for bright environments |
 
 ---
 
-## 4. Theme Switching
+## 3. Page Structure
 
-- Use the `ThemeProvider` at the root of your app.
-- Access theme and switcher via the `useTheme()` hook.
-- Use the `<ThemeSelector />` component for a UI theme switcher.
+### Page Shell
+The container for all page content. Provides consistent spacing.
 
-**Example:**
 ```tsx
-const { currentTheme, setTheme, toggleTheme } = useTheme()
+<div className="page-shell">
+  <PageHeader title="Page Title" description="Description" />
+  {/* Page content */}
+</div>
 ```
 
----
+### Page Header
+Use the `PageHeader` component for consistent page headers:
 
-## 5. Component Styling Best Practices
-
-- **Always use CSS variables** for colors, spacing, and typography.
-- **Do not hardcode colors** or font sizes in components.
-- Use utility classes or inline styles referencing CSS variables.
-
-**Example:**
 ```tsx
-<div style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}>
-  Themed content
+<PageHeader
+  title="Dashboard"
+  description="Overview of your metrics"
+  meta={<span className="badge-muted">Last updated: 5m ago</span>}
+  actions={
+    <button className="btn-themed-primary">Action</button>
+  }
+/>
+```
+
+### Page Toolbar
+Horizontal filter/action bar for pages with controls:
+
+```tsx
+<div className="page-toolbar">
+  <div className="page-toolbar__group">
+    <select className="input-themed">...</select>
+    <input className="input-themed" />
+  </div>
+  <div className="page-toolbar__divider" />
+  <div className="page-toolbar__group">
+    <button className="btn-themed-primary">Search</button>
+  </div>
 </div>
 ```
 
 ---
 
-## 6. Customizing and Extending Themes
+## 4. Panel Components
 
-- Add new themes in `src/lib/themes.ts` and include them in the `themes` array.
-- Ensure all required color and layout tokens are provided.
-- Add new CSS variables in `getThemeVars()` if you introduce new tokens.
-
----
-
-## 7. Alerts, Status, and Special Elements
-
-- Use alert variables for backgrounds, borders, and icons:
-  - `--alert-success-bg`, `--alert-error-border`, etc.
-- Status colors: `--status-success`, `--status-error`, etc.
-
----
-
-## 8. Typography
-
-- Use `var(--font-sans)` and `var(--font-mono)` for font families.
-- Use `var(--text-xs)`, `var(--text-base)`, etc., for font sizes.
-
----
-
-## 9. Example: Themed Button
+### Basic Panel
+Card-like containers for content sections:
 
 ```tsx
-<button
-  className="btn-themed-primary"
-  style={{
-    backgroundColor: 'var(--interactive-primary)',
-    color: 'var(--text-inverse)',
-    borderRadius: 'var(--radius-md)'
-  }}
->
-  Themed Button
+<div className="panel">
+  <div className="panel-header">
+    <h3 className="panel-title">Panel Title</h3>
+    <span className="badge-muted">Info</span>
+  </div>
+  {/* Panel content */}
+  <div className="panel-footer">
+    Footer text
+  </div>
+</div>
+```
+
+### Panel Grid
+Responsive grid layouts for panels:
+
+```tsx
+<div className="panel-grid panel-grid--cols-2">
+  <div className="panel">...</div>
+  <div className="panel">...</div>
+</div>
+```
+
+### Stat Cards
+For displaying KPIs and metrics:
+
+```tsx
+<div className="stat-card">
+  <div className="stat-card__label">Active Users</div>
+  <div className="stat-card__value">1,234</div>
+  <div className="stat-card__meta">+12% from last week</div>
+</div>
+```
+
+---
+
+## 5. Button System
+
+### Button Variants
+
+| Class | Usage |
+|-------|-------|
+| `btn-themed-primary` | Primary actions |
+| `btn-themed-secondary` | Secondary actions |
+| `btn-themed-danger` | Destructive actions |
+| `btn-themed-outline` | Alternative primary |
+| `btn-themed-ghost` | Subtle actions |
+
+### Button Sizes
+- `btn-themed-sm` - Small buttons
+- Default - Standard size
+- `btn-themed-lg` - Large buttons
+
+### Usage
+
+```tsx
+<button className="btn-themed-primary">
+  <Icon className="h-4 w-4" />
+  Button Text
+</button>
+
+<button className="btn-themed-secondary btn-themed-sm">
+  Small Secondary
 </button>
 ```
 
-Or use the provided utility class:
-```html
-<button class="btn-themed-primary">Themed Button</button>
+---
+
+## 6. Form Controls
+
+### Input Fields
+
+```tsx
+<input type="text" className="input-themed" placeholder="Enter text..." />
+<select className="input-themed">
+  <option>Option 1</option>
+</select>
+<textarea className="input-themed" rows={3} />
 ```
 
 ---
 
-## 10. Accessibility & Transitions
+## 7. Tab Navigation
 
-- All transitions respect user `prefers-reduced-motion`.
-- Focus states use `--border-focus` for accessibility.
-
----
-
-## 11. Adding New Themed Components
-
-1. Use CSS variables for all colors, spacing, and typography.
-2. Add utility classes if a pattern is reused.
-3. Test in all available themes using the ThemeShowcase or StyleGuide page.
+```tsx
+<div className="tab-nav">
+  <button className="tab-nav__item tab-nav__item--active">Active Tab</button>
+  <button className="tab-nav__item">Tab 2</button>
+  <button className="tab-nav__item">Tab 3</button>
+</div>
+```
 
 ---
 
-## 12. Resources
+## 8. Tables
+
+```tsx
+<table className="table-themed">
+  <thead>
+    <tr>
+      <th>Column 1</th>
+      <th>Column 2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Value 1</td>
+      <td>Value 2</td>
+    </tr>
+  </tbody>
+</table>
+```
+
+---
+
+## 9. Badges & Status
+
+### Badge
+Compact tags for metadata:
+
+```tsx
+<span className="badge-muted">
+  <Icon className="h-3 w-3" />
+  Label
+</span>
+```
+
+### Status Colors
+Use CSS variables for semantic status:
+
+```tsx
+<span style={{ color: 'var(--status-success)' }}>Success</span>
+<span style={{ color: 'var(--status-error)' }}>Error</span>
+<span style={{ color: 'var(--status-warning)' }}>Warning</span>
+<span style={{ color: 'var(--status-info)' }}>Info</span>
+```
+
+---
+
+## 10. Alerts
+
+```tsx
+<div 
+  className="p-3 text-sm"
+  style={{ 
+    backgroundColor: 'var(--alert-info-bg)', 
+    color: 'var(--alert-info-text)',
+    borderLeft: '3px solid var(--alert-info-border)',
+    borderRadius: 'var(--radius-sm)'
+  }}
+>
+  <strong>Info:</strong> Alert message here.
+</div>
+```
+
+---
+
+## 11. CSS Variables Reference
+
+### Backgrounds
+| Variable | Description |
+|----------|-------------|
+| `--bg-primary` | Main page background |
+| `--bg-secondary` | Panel backgrounds |
+| `--bg-tertiary` | Nested elements, cards |
+| `--bg-elevated` | Elevated surfaces |
+| `--bg-surface` | Interactive surfaces |
+
+### Text
+| Variable | Description |
+|----------|-------------|
+| `--text-primary` | Main text |
+| `--text-secondary` | Supporting text |
+| `--text-tertiary` | De-emphasized text |
+| `--text-muted` | Very subtle text |
+| `--text-accent` | Highlighted/code text |
+| `--text-inverse` | Text on colored backgrounds |
+
+### Interactive
+| Variable | Description |
+|----------|-------------|
+| `--interactive-primary` | Primary action color |
+| `--interactive-primary-hover` | Primary hover state |
+| `--interactive-secondary` | Secondary backgrounds |
+| `--interactive-secondary-hover` | Secondary hover state |
+
+### Status
+| Variable | Description |
+|----------|-------------|
+| `--status-success` | Success/positive |
+| `--status-error` | Error/negative |
+| `--status-warning` | Warning/caution |
+| `--status-info` | Informational |
+| `--status-neutral` | Neutral/default |
+
+### Layout
+| Variable | Description |
+|----------|-------------|
+| `--radius-sm` | Small radius (2px) |
+| `--radius-md` | Medium radius |
+| `--radius-lg` | Large radius |
+| `--spacing-xs` | Extra small (4px) |
+| `--spacing-sm` | Small (8px) |
+| `--spacing-md` | Medium (12px) |
+| `--spacing-lg` | Large (16px) |
+| `--spacing-xl` | Extra large (24px) |
+
+### Typography
+| Variable | Description |
+|----------|-------------|
+| `--font-sans` | Primary font family |
+| `--font-mono` | Monospace font |
+| `--text-xs` | 11px |
+| `--text-sm` | 12px |
+| `--text-base` | 14px |
+| `--text-lg` | 16px |
+| `--text-xl` | 18px |
+
+---
+
+## 12. Best Practices
+
+### DO
+- ✅ Use CSS variables for all colors and spacing
+- ✅ Use provided utility classes (`btn-themed-*`, `input-themed`, etc.)
+- ✅ Keep buttons compact with icons
+- ✅ Use `panel` for content sections
+- ✅ Use semantic status colors
+
+### DON'T
+- ❌ Hardcode color values
+- ❌ Use heavy shadows or 3D effects
+- ❌ Use large border-radius values
+- ❌ Create custom button styles (use the system)
+- ❌ Mix Tailwind color classes with theme variables
+
+---
+
+## 13. Resources
 
 - **Theme definitions:** `src/lib/themes.ts`
-- **Theme context/provider:** `src/lib/theme.tsx`
-- **CSS variables/utilities:** `src/styles/themes.css`
-- **Theme selector UI:** `src/components/ThemeSelector.tsx`
-- **Showcase/demo:** `src/pages/ThemeShowcase.tsx`
-- **Visual style guide:** `src/pages/StyleGuide.tsx`
-
----
-
-## 13. Quick Reference: Common CSS Variables
-
-| Token                  | CSS Variable                | Example Value      |
-|------------------------|----------------------------|--------------------|
-| Background Primary     | `--bg-primary`             | `#0f172a`          |
-| Text Primary           | `--text-primary`           | `#f8fafc`          |
-| Border Accent          | `--border-accent`          | `#10b981`          |
-| Status Success         | `--status-success`         | `#10b981`          |
-| Interactive Primary    | `--interactive-primary`    | `#10b981`          |
-| Font Sans              | `--font-sans`              | `Inter, ...`       |
-| Font Size Base         | `--text-base`              | `1rem`             |
-| Radius MD              | `--radius-md`              | `0.375rem`         |
-
----
-
-## 14. Visual Reference
-
-See the `/StyleGuide` page in the app for a live, interactive reference of all tokens and components. 
+- **Theme context:** `src/lib/theme.tsx`
+- **CSS utilities:** `src/styles/themes.css`
+- **Style Guide page:** `/docs/styleguide`
+- **Theme Showcase:** `/docs/themeshowcase`

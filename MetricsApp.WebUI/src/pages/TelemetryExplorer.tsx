@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import {
   Database,
   Search,
-  Play,
   RefreshCw,
   Clock,
   BarChart3,
@@ -525,6 +524,18 @@ const TelemetryExplorer = () => {
           </select>
         </div>
       </div>
+
+      {error && (
+        <div className="panel border-themed-alert-error">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-themed-status-error flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="panel-title text-themed-status-error">Error</h3>
+              <p className="text-sm text-themed-text-secondary mt-1">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-6 flex-1 min-h-0">
         {metricBrowserOpen && (

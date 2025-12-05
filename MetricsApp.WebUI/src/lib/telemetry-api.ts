@@ -64,7 +64,7 @@ export class TelemetryApi {
   /**
    * Get available metric metadata from the new telemetry API
    */
-  static async getMetricMetadata(dataSource?: string): Promise<MetricMetadata[]> {
+  static async getMetricMetadata(_dataSource?: string): Promise<MetricMetadata[]> {
     try {
       // Use the new telemetry metadata endpoint
       const response = await fetch(`${this.baseUrl}/telemetry/metrics/metadata`)
@@ -268,44 +268,6 @@ export class TelemetryApi {
   }
 
   // Helper methods
-  private static parseMetricMetadata(schema: any): MetricMetadata[] {
-    // Parse the schema response to extract metric metadata
-    if (schema.metricNames) {
-      return schema.metricNames.map((name: string) => ({
-        name,
-        type: 'gauge',
-        description: `Metric: ${name}`,
-        unit: 'value',
-        labels: schema.attributeKeys || [],
-        lastSeen: new Date(),
-        sampleCount: 0
-      }))
-    }
-    return []
-  }
-
-  private static parseMetricsResponse(data: any): OTLPMetric[] {
-    if (!data) return []
-
-    // Handle different response formats
-    if (Array.isArray(data)) {
-      // Handle MetricTimeSeries format
-      return data.map(series => ({
-        name: series.metricInfo?.name || 'unknown',
-        type: 'gauge' as const,
-        description: series.metricInfo?.description,
-        unit: series.metricInfo?.unit,
-        samples: series.values?.map(([timestamp, value]: [number, string]) => ({
-          timestamp,
-          value: parseFloat(value),
-          labels: series.metricInfo?.attributes || {}
-        })) || []
-      }))
-    }
-
-    return []
-  }
-
   private static parseNewTelemetryResponse(data: any): OTLPMetric[] {
     if (!data?.metrics) return []
 

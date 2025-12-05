@@ -8,7 +8,7 @@ interface PlaceholderPageProps {
   features?: string[]
 }
 
-const PlaceholderPage = ({ title, description, icon: Icon, children, features }: PlaceholderPageProps) => {
+const PlaceholderPage = ({ title, description, icon: Icon, features }: PlaceholderPageProps) => {
   return (
     <div className="space-y-6">
       {/* Header */}

@@ -1,7 +1,7 @@
-import React from 'react'
-import { Palette, Monitor, Smartphone, Database, Bell, Settings, Search, BarChart3, Activity, Layers, User, Star, HelpCircle } from 'lucide-react'
+import { Palette, Database, Bell, Settings, BarChart3, Activity } from 'lucide-react'
 import { useTheme } from '../lib/theme'
 import ThemeSelector from '../components/ThemeSelector'
+import PageHeader from '../components/PageHeader'
 
 export default function ThemeShowcase() {
   const { currentTheme, availableThemes } = useTheme()
@@ -14,252 +14,167 @@ export default function ThemeShowcase() {
   ]
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 
-            className="text-3xl font-bold"
-            style={{ 
-              color: 'var(--text-primary)',
-              fontFamily: 'var(--font-sans)'
-            }}
-          >
-            Theme Showcase
-          </h1>
-          <p 
-            className="mt-2"
-            style={{ 
-              color: 'var(--text-secondary)',
-              fontSize: 'var(--text-lg)'
-            }}
-          >
-            Explore and compare different themes for MetricsApp
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <ThemeSelector variant="dropdown" showLabel={true} />
-        </div>
-      </div>
+    <div className="page-shell">
+      <PageHeader 
+        title="Theme Showcase" 
+        description="Explore and compare different themes for MetricsApp"
+        actions={<ThemeSelector variant="dropdown" showLabel={true} />}
+      />
 
       {/* Current Theme Info */}
-      <div 
-        className="p-6 border"
-        style={{
-          backgroundColor: 'var(--bg-tertiary)',
-          borderColor: 'var(--border-primary)',
-          borderRadius: 'var(--radius-lg)'
-        }}
-      >
+      <div className="panel">
         <div className="flex items-center gap-4">
           <div
-            className="w-16 h-16 rounded-lg flex items-center justify-center"
+            className="w-12 h-12 flex items-center justify-center"
             style={{
               backgroundColor: 'var(--interactive-primary)',
-              borderRadius: 'var(--radius-md)'
+              borderRadius: 'var(--radius-sm)'
             }}
           >
-            <Palette className="h-8 w-8" style={{ color: 'var(--text-inverse)' }} />
+            <Palette className="h-6 w-6" style={{ color: 'var(--text-inverse)' }} />
           </div>
-          <div>
+          <div className="flex-1">
             <h2 
-              className="text-2xl font-semibold"
+              className="text-lg font-semibold"
               style={{ color: 'var(--text-primary)' }}
             >
               {currentTheme.name}
             </h2>
             <p 
-              className="mt-1"
+              className="text-sm"
               style={{ color: 'var(--text-secondary)' }}
             >
               {currentTheme.description}
             </p>
-            <div className="flex items-center gap-4 mt-2">
-              <span 
-                className="px-2 py-1 text-xs rounded"
-                style={{
-                  backgroundColor: 'var(--bg-elevated)',
-                  color: 'var(--text-primary)',
-                  borderRadius: 'var(--radius-sm)'
-                }}
-              >
-                Type: {currentTheme.type}
-              </span>
-              <span 
-                className="px-2 py-1 text-xs rounded"
-                style={{
-                  backgroundColor: 'var(--bg-elevated)',
-                  color: 'var(--text-primary)',
-                  borderRadius: 'var(--radius-sm)'
-                }}
-              >
-                Font: {currentTheme.layout.typography.fontFamily.sans.split(',')[0]}
-              </span>
-            </div>
+          </div>
+          <div className="flex gap-2">
+            <span className="badge-muted">
+              {currentTheme.type}
+            </span>
+            <span className="badge-muted">
+              {currentTheme.layout.typography.fontFamily.sans.split(',')[0]}
+            </span>
           </div>
         </div>
       </div>
 
       {/* Theme Grid */}
-      <div>
+      <section>
         <h2 
-          className="text-xl font-semibold mb-4"
-          style={{ color: 'var(--text-primary)' }}
+          className="text-sm font-semibold uppercase tracking-wider mb-3"
+          style={{ color: 'var(--text-muted)' }}
         >
           Available Themes
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {availableThemes.map((theme) => (
             <div
               key={theme.id}
-              className="border p-4"
+              className="panel"
               style={{
                 backgroundColor: theme.colors.background.tertiary,
                 borderColor: theme.colors.border.primary,
-                borderRadius: theme.layout.borderRadius.lg,
+                borderRadius: theme.layout.borderRadius.sm,
                 fontFamily: theme.layout.typography.fontFamily.sans
               }}
             >
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 
-                    className="font-semibold"
-                    style={{ color: theme.colors.text.primary }}
-                  >
-                    {theme.name}
-                  </h3>
-                  <div
-                    className="w-4 h-4 rounded border"
-                    style={{
-                      backgroundColor: theme.colors.interactive.primary,
-                      borderColor: theme.colors.border.primary,
-                      borderRadius: theme.layout.borderRadius.sm
-                    }}
-                  />
-                </div>
-                <p 
-                  className="text-sm"
-                  style={{ color: theme.colors.text.secondary }}
+              <div className="flex items-center justify-between mb-2">
+                <h3 
+                  className="font-semibold"
+                  style={{ color: theme.colors.text.primary }}
                 >
-                  {theme.description}
-                </p>
-                
-                {/* Mini color palette */}
-                <div className="flex gap-1">
+                  {theme.name}
+                </h3>
+                <div
+                  className="w-3 h-3"
+                  style={{
+                    backgroundColor: theme.colors.interactive.primary,
+                    borderRadius: theme.layout.borderRadius.sm
+                  }}
+                />
+              </div>
+              <p 
+                className="text-xs mb-3"
+                style={{ color: theme.colors.text.secondary }}
+              >
+                {theme.description}
+              </p>
+              
+              {/* Mini color palette */}
+              <div className="flex gap-1 mb-3">
+                {[
+                  theme.colors.interactive.primary,
+                  theme.colors.status.success,
+                  theme.colors.status.warning,
+                  theme.colors.status.error,
+                  theme.colors.status.info,
+                ].map((color, i) => (
                   <div
-                    className="w-3 h-3 rounded"
+                    key={i}
+                    className="w-4 h-4"
                     style={{ 
-                      backgroundColor: theme.colors.interactive.primary,
+                      backgroundColor: color,
                       borderRadius: theme.layout.borderRadius.sm
                     }}
-                    title="Primary"
                   />
-                  <div
-                    className="w-3 h-3 rounded"
-                    style={{ 
-                      backgroundColor: theme.colors.status.success,
-                      borderRadius: theme.layout.borderRadius.sm
-                    }}
-                    title="Success"
-                  />
-                  <div
-                    className="w-3 h-3 rounded"
-                    style={{ 
-                      backgroundColor: theme.colors.status.warning,
-                      borderRadius: theme.layout.borderRadius.sm
-                    }}
-                    title="Warning"
-                  />
-                  <div
-                    className="w-3 h-3 rounded"
-                    style={{ 
-                      backgroundColor: theme.colors.status.error,
-                      borderRadius: theme.layout.borderRadius.sm
-                    }}
-                    title="Error"
-                  />
-                  <div
-                    className="w-3 h-3 rounded"
-                    style={{ 
-                      backgroundColor: theme.colors.status.info,
-                      borderRadius: theme.layout.borderRadius.sm
-                    }}
-                    title="Info"
-                  />
-                </div>
+                ))}
+              </div>
 
-                {/* Preview metrics */}
-                <div className="space-y-1">
-                  {[65, 78, 43, 89].map((value, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <div 
-                        className="text-xs"
-                        style={{ 
-                          color: theme.colors.text.secondary,
-                          fontSize: theme.layout.typography.fontSize.xs
-                        }}
-                      >
-                        Metric {index + 1}
-                      </div>
-                      <div 
-                        className="flex-1 h-1 rounded overflow-hidden"
-                        style={{ 
-                          backgroundColor: theme.colors.background.elevated,
-                          borderRadius: theme.layout.borderRadius.full
-                        }}
-                      >
-                        <div
-                          className="h-full"
-                          style={{
-                            width: `${value}%`,
-                            backgroundColor: theme.colors.chart.primary[index % theme.colors.chart.primary.length]
-                          }}
-                        />
-                      </div>
-                      <div 
-                        className="text-xs font-medium"
-                        style={{ 
-                          color: theme.colors.text.primary,
-                          fontSize: theme.layout.typography.fontSize.xs
-                        }}
-                      >
-                        {value}%
-                      </div>
+              {/* Preview metrics */}
+              <div className="space-y-2">
+                {[65, 78, 43, 89].map((value, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div 
+                      className="text-xs w-16"
+                      style={{ color: theme.colors.text.secondary }}
+                    >
+                      Metric {index + 1}
                     </div>
-                  ))}
-                </div>
+                    <div 
+                      className="flex-1 h-1 overflow-hidden"
+                      style={{ 
+                        backgroundColor: theme.colors.background.elevated,
+                        borderRadius: theme.layout.borderRadius.full
+                      }}
+                    >
+                      <div
+                        className="h-full"
+                        style={{
+                          width: `${value}%`,
+                          backgroundColor: theme.colors.chart.primary[index % theme.colors.chart.primary.length]
+                        }}
+                      />
+                    </div>
+                    <div 
+                      className="text-xs font-mono w-8 text-right"
+                      style={{ color: theme.colors.text.primary }}
+                    >
+                      {value}%
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
       {/* UI Components Demo */}
-      <div>
+      <section>
         <h2 
-          className="text-xl font-semibold mb-4"
-          style={{ color: 'var(--text-primary)' }}
+          className="text-sm font-semibold uppercase tracking-wider mb-3"
+          style={{ color: 'var(--text-muted)' }}
         >
           UI Components Preview
         </h2>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Navigation Preview */}
-          <div 
-            className="p-4 border"
-            style={{
-              backgroundColor: 'var(--bg-tertiary)',
-              borderColor: 'var(--border-primary)',
-              borderRadius: 'var(--radius-lg)'
-            }}
-          >
-            <h3 
-              className="font-semibold mb-3"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              Navigation Components
-            </h3>
-            <div className="space-y-2">
+          <div className="panel">
+            <div className="panel-header">
+              <h3 className="panel-title">Navigation</h3>
+            </div>
+            <div className="space-y-1">
               {[
                 { icon: Database, label: 'Dashboard', active: true },
                 { icon: BarChart3, label: 'Analytics', active: false },
@@ -269,155 +184,70 @@ export default function ThemeShowcase() {
               ].map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-3 px-3 py-2 transition-colors"
+                  className="flex items-center gap-2 px-2 py-1.5 text-sm"
                   style={{
                     backgroundColor: item.active ? 'var(--interactive-primary)' : 'transparent',
                     color: item.active ? 'var(--text-inverse)' : 'var(--text-secondary)',
-                    borderRadius: 'var(--radius-md)'
+                    borderRadius: 'var(--radius-sm)'
                   }}
                 >
                   <item.icon className="h-4 w-4" />
                   <span>{item.label}</span>
-                  {item.active && (
-                    <div
-                      className="w-2 h-2 rounded-full ml-auto"
-                      style={{ 
-                        backgroundColor: 'var(--text-inverse)',
-                        borderRadius: 'var(--radius-full)'
-                      }}
-                    />
-                  )}
                 </div>
               ))}
             </div>
           </div>
 
           {/* Buttons & Controls */}
-          <div 
-            className="p-4 border"
-            style={{
-              backgroundColor: 'var(--bg-tertiary)',
-              borderColor: 'var(--border-primary)',
-              borderRadius: 'var(--radius-lg)'
-            }}
-          >
-            <h3 
-              className="font-semibold mb-3"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              Buttons & Controls
-            </h3>
+          <div className="panel">
+            <div className="panel-header">
+              <h3 className="panel-title">Buttons & Controls</h3>
+            </div>
             <div className="space-y-3">
-              <div className="flex gap-2">
-                <button
-                  className="px-4 py-2 font-medium transition-colors"
-                  style={{
-                    backgroundColor: 'var(--interactive-primary)',
-                    color: 'var(--text-inverse)',
-                    borderRadius: 'var(--radius-md)'
-                  }}
-                >
-                  Primary
-                </button>
-                <button
-                  className="px-4 py-2 font-medium border transition-colors"
-                  style={{
-                    backgroundColor: 'var(--interactive-secondary)',
-                    color: 'var(--text-primary)',
-                    borderColor: 'var(--border-primary)',
-                    borderRadius: 'var(--radius-md)'
-                  }}
-                >
-                  Secondary
-                </button>
+              <div className="flex flex-wrap gap-2">
+                <button className="btn-themed-primary">Primary</button>
+                <button className="btn-themed-secondary">Secondary</button>
               </div>
-              
-              <div className="flex gap-2">
-                <button
-                  className="px-3 py-1 text-sm font-medium"
-                  style={{
-                    backgroundColor: 'var(--status-success)',
-                    color: 'var(--text-inverse)',
-                    borderRadius: 'var(--radius-sm)'
-                  }}
-                >
+              <div className="flex flex-wrap gap-2">
+                <button className="btn-themed-primary btn-themed-sm" style={{ backgroundColor: 'var(--status-success)' }}>
                   Success
                 </button>
-                <button
-                  className="px-3 py-1 text-sm font-medium"
-                  style={{
-                    backgroundColor: 'var(--status-warning)',
-                    color: 'var(--text-inverse)',
-                    borderRadius: 'var(--radius-sm)'
-                  }}
-                >
+                <button className="btn-themed-primary btn-themed-sm" style={{ backgroundColor: 'var(--status-warning)' }}>
                   Warning
                 </button>
-                <button
-                  className="px-3 py-1 text-sm font-medium"
-                  style={{
-                    backgroundColor: 'var(--status-error)',
-                    color: 'var(--text-inverse)',
-                    borderRadius: 'var(--radius-sm)'
-                  }}
-                >
-                  Error
+                <button className="btn-themed-danger btn-themed-sm">
+                  Danger
                 </button>
               </div>
-
-              <div className="border-t pt-3" style={{ borderColor: 'var(--border-primary)' }}>
-                <input
-                  type="text"
-                  placeholder="Search components..."
-                  className="w-full px-3 py-2 border transition-colors"
-                  style={{
-                    backgroundColor: 'var(--bg-surface)',
-                    borderColor: 'var(--border-primary)',
-                    color: 'var(--text-primary)',
-                    borderRadius: 'var(--radius-md)'
-                  }}
-                />
-              </div>
+              <input
+                type="text"
+                placeholder="Search components..."
+                className="input-themed w-full"
+              />
             </div>
           </div>
 
           {/* Data Visualization */}
-          <div 
-            className="p-4 border"
-            style={{
-              backgroundColor: 'var(--bg-tertiary)',
-              borderColor: 'var(--border-primary)',
-              borderRadius: 'var(--radius-lg)'
-            }}
-          >
-            <h3 
-              className="font-semibold mb-3"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              Data Visualization
-            </h3>
-            <div className="space-y-4">
+          <div className="panel">
+            <div className="panel-header">
+              <h3 className="panel-title">Data Visualization</h3>
+            </div>
+            <div className="space-y-3">
               {mockData.map((item, index) => (
                 <div key={index} className="space-y-1">
                   <div className="flex justify-between items-center">
-                    <span 
-                      className="text-sm font-medium"
-                      style={{ color: 'var(--text-primary)' }}
-                    >
+                    <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
                       {item.label}
                     </span>
-                    <span 
-                      className="text-sm"
-                      style={{ color: 'var(--text-secondary)' }}
-                    >
+                    <span className="text-sm font-mono" style={{ color: 'var(--text-secondary)' }}>
                       {item.value}%
                     </span>
                   </div>
                   <div 
-                    className="w-full h-2 rounded-full overflow-hidden"
+                    className="w-full h-2 overflow-hidden"
                     style={{
-                      backgroundColor: 'var(--bg-elevated)',
-                      borderRadius: 'var(--radius-full)'
+                      backgroundColor: 'var(--bg-tertiary)',
+                      borderRadius: 'var(--radius-sm)'
                     }}
                   >
                     <div
@@ -433,22 +263,12 @@ export default function ThemeShowcase() {
             </div>
           </div>
 
-          {/* Cards & Panels */}
-          <div 
-            className="p-4 border"
-            style={{
-              backgroundColor: 'var(--bg-tertiary)',
-              borderColor: 'var(--border-primary)',
-              borderRadius: 'var(--radius-lg)'
-            }}
-          >
-            <h3 
-              className="font-semibold mb-3"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              Cards & Panels
-            </h3>
-            <div className="space-y-3">
+          {/* Stat Cards */}
+          <div className="panel">
+            <div className="panel-header">
+              <h3 className="panel-title">Stat Cards</h3>
+            </div>
+            <div className="space-y-2">
               {[
                 { title: 'Active Users', value: '1,234', change: '+12%', positive: true },
                 { title: 'Response Time', value: '145ms', change: '-5%', positive: true },
@@ -456,28 +276,13 @@ export default function ThemeShowcase() {
               ].map((metric, index) => (
                 <div
                   key={index}
-                  className="p-3 border"
-                  style={{
-                    backgroundColor: 'var(--bg-surface)',
-                    borderColor: 'var(--border-secondary)',
-                    borderRadius: 'var(--radius-md)'
-                  }}
+                  className="stat-card"
                 >
-                  <div 
-                    className="text-sm"
-                    style={{ color: 'var(--text-secondary)' }}
-                  >
-                    {metric.title}
-                  </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <span 
-                      className="text-lg font-semibold"
-                      style={{ color: 'var(--text-primary)' }}
-                    >
-                      {metric.value}
-                    </span>
+                  <div className="stat-card__label">{metric.title}</div>
+                  <div className="flex items-center justify-between">
+                    <span className="stat-card__value">{metric.value}</span>
                     <span
-                      className="text-sm font-medium"
+                      className="text-xs font-medium"
                       style={{
                         color: metric.positive ? 'var(--status-success)' : 'var(--status-error)'
                       }}
@@ -490,17 +295,17 @@ export default function ThemeShowcase() {
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Color Palette */}
-      <div>
+      <section>
         <h2 
-          className="text-xl font-semibold mb-4"
-          style={{ color: 'var(--text-primary)' }}
+          className="text-sm font-semibold uppercase tracking-wider mb-3"
+          style={{ color: 'var(--text-muted)' }}
         >
           Color Palette
         </h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
           {[
             { name: 'Primary', color: 'var(--interactive-primary)' },
             { name: 'Success', color: 'var(--status-success)' },
@@ -511,124 +316,58 @@ export default function ThemeShowcase() {
             { name: 'Background', color: 'var(--bg-secondary)' },
             { name: 'Surface', color: 'var(--bg-tertiary)' },
           ].map((color, index) => (
-            <div
-              key={index}
-              className="p-4 border"
-              style={{
-                backgroundColor: 'var(--bg-tertiary)',
-                borderColor: 'var(--border-primary)',
-                borderRadius: 'var(--radius-md)'
-              }}
-            >
+            <div key={index} className="surface-muted text-center p-2">
               <div
-                className="w-full h-12 mb-2"
+                className="w-full h-8 mb-1"
                 style={{
                   backgroundColor: color.color,
                   borderRadius: 'var(--radius-sm)'
                 }}
               />
-              <div 
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
+              <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
                 {color.name}
-              </div>
-              <div 
-                className="text-xs font-mono"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                {color.color}
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
       {/* Typography */}
-      <div>
-        <h2 
-          className="text-xl font-semibold mb-4"
-          style={{ color: 'var(--text-primary)' }}
-        >
-          Typography
-        </h2>
-        <div 
-          className="p-6 border space-y-4"
-          style={{
-            backgroundColor: 'var(--bg-tertiary)',
-            borderColor: 'var(--border-primary)',
-            borderRadius: 'var(--radius-lg)'
-          }}
-        >
-          <div>
-            <h1 
-              className="font-bold"
-              style={{ 
-                color: 'var(--text-primary)',
-                fontSize: 'var(--text-3xl)'
-              }}
-            >
-              Heading 1 - {currentTheme.layout.typography.fontFamily.sans.split(',')[0]}
-            </h1>
-          </div>
-          <div>
-            <h2 
-              className="font-semibold"
-              style={{ 
-                color: 'var(--text-primary)',
-                fontSize: 'var(--text-2xl)'
-              }}
-            >
-              Heading 2 - Large headings and titles
-            </h2>
-          </div>
-          <div>
-            <h3 
-              className="font-medium"
-              style={{ 
-                color: 'var(--text-primary)',
-                fontSize: 'var(--text-xl)'
-              }}
-            >
-              Heading 3 - Section headings
-            </h3>
-          </div>
-          <div>
-            <p 
-              style={{ 
-                color: 'var(--text-primary)',
-                fontSize: 'var(--text-base)'
-              }}
-            >
-              Body text - This is the primary text used throughout the application for content, descriptions, and general information.
-            </p>
-          </div>
-          <div>
-            <p 
-              style={{ 
-                color: 'var(--text-secondary)',
-                fontSize: 'var(--text-sm)'
-              }}
-            >
-              Secondary text - Used for supporting information, labels, and less prominent content.
-            </p>
-          </div>
-          <div>
-            <code 
-              className="px-2 py-1 rounded"
-              style={{ 
-                color: 'var(--text-accent)',
-                backgroundColor: 'var(--bg-elevated)',
-                fontFamily: 'var(--font-mono)',
-                fontSize: 'var(--text-sm)',
-                borderRadius: 'var(--radius-sm)'
-              }}
-            >
-              Monospace font - {currentTheme.layout.typography.fontFamily.mono.split(',')[0]}
-            </code>
-          </div>
+      <section className="panel">
+        <div className="panel-header">
+          <h2 className="panel-title">Typography</h2>
+          <span className="badge-muted">{currentTheme.layout.typography.fontFamily.sans.split(',')[0]}</span>
         </div>
-      </div>
+        <div className="space-y-3">
+          <h1 style={{ color: 'var(--text-primary)', fontSize: 'var(--text-3xl)', fontWeight: 600 }}>
+            Heading 1 - Page titles
+          </h1>
+          <h2 style={{ color: 'var(--text-primary)', fontSize: 'var(--text-2xl)', fontWeight: 600 }}>
+            Heading 2 - Section titles
+          </h2>
+          <h3 style={{ color: 'var(--text-primary)', fontSize: 'var(--text-xl)', fontWeight: 500 }}>
+            Heading 3 - Subsections
+          </h3>
+          <p style={{ color: 'var(--text-primary)', fontSize: 'var(--text-base)' }}>
+            Body text - This is the primary text used throughout the application.
+          </p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>
+            Secondary text - Used for supporting information and labels.
+          </p>
+          <code 
+            className="inline-block px-2 py-1"
+            style={{ 
+              color: 'var(--text-accent)',
+              backgroundColor: 'var(--bg-tertiary)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--text-sm)',
+              borderRadius: 'var(--radius-sm)'
+            }}
+          >
+            Monospace - {currentTheme.layout.typography.fontFamily.mono.split(',')[0]}
+          </code>
+        </div>
+      </section>
     </div>
   )
-} 
+}

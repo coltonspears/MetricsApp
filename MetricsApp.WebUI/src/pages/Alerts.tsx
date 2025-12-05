@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { AlertTriangle, CheckCircle, XCircle, Clock, Bell, RefreshCw, Filter } from 'lucide-react'
+import { AlertTriangle, CheckCircle, XCircle, Clock, Bell, RefreshCw, Filter, Edit2, Trash2, Settings } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
+import AlertRuleModal from '../components/AlertRuleModal'
 
 interface Alert {
   id: string
@@ -15,10 +16,37 @@ interface Alert {
   currentValue: string
 }
 
+interface AlertRule {
+  id?: string
+  name: string
+  description: string
+  severity: 'critical' | 'warning' | 'info'
+  conditions: Array<{
+    id: string
+    metric: string
+    operator: 'gt' | 'gte' | 'lt' | 'lte' | 'eq' | 'neq'
+    value: number
+    duration: number
+  }>
+  conditionLogic: 'all' | 'any'
+  evaluationInterval: number
+  notifications: {
+    email: boolean
+    slack: boolean
+    webhook: boolean
+    webhookUrl?: string
+  }
+  enabled: boolean
+  labels: Record<string, string>
+}
+
 const Alerts = () => {
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'active' | 'acknowledged' | 'resolved'>('all')
+  const [isRuleModalOpen, setIsRuleModalOpen] = useState(false)
+  const [editingRule, setEditingRule] = useState<AlertRule | null>(null)
+  const [alertRules, setAlertRules] = useState<AlertRule[]>([])
 
   const loadAlerts = () => {
     setLoading(true)
@@ -130,6 +158,31 @@ const Alerts = () => {
     ))
   }
 
+  const handleSaveRule = (rule: AlertRule) => {
+    if (rule.id) {
+      // Update existing rule
+      setAlertRules(alertRules.map(r => r.id === rule.id ? rule : r))
+    } else {
+      // Create new rule
+      setAlertRules([...alertRules, { ...rule, id: crypto.randomUUID() }])
+    }
+    setEditingRule(null)
+  }
+
+  const handleEditRule = (rule: AlertRule) => {
+    setEditingRule(rule)
+    setIsRuleModalOpen(true)
+  }
+
+  const handleDeleteRule = (ruleId: string) => {
+    setAlertRules(alertRules.filter(r => r.id !== ruleId))
+  }
+
+  const handleCreateRule = () => {
+    setEditingRule(null)
+    setIsRuleModalOpen(true)
+  }
+
   const activeCount = alerts.filter(a => a.status === 'active').length
   const acknowledgedCount = alerts.filter(a => a.status === 'acknowledged').length
   const resolvedCount = alerts.filter(a => a.status === 'resolved').length
@@ -164,7 +217,7 @@ const Alerts = () => {
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </button>
-            <button className="btn-themed-primary">
+            <button onClick={handleCreateRule} className="btn-themed-primary">
               <Bell className="h-4 w-4 mr-2" />
               Create Alert Rule
             </button>
@@ -320,6 +373,90 @@ const Alerts = () => {
           ))
         )}
       </div>
+
+      {/* Alert Rules Section */}
+      <div className="panel">
+        <div className="panel-header">
+          <div className="flex items-center gap-2">
+            <Settings className="h-5 w-5 text-themed-interactive-primary" />
+            <h3 className="panel-title">Alert Rules</h3>
+          </div>
+          <span className="badge-muted">{alertRules.length} rules</span>
+        </div>
+        
+        {alertRules.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <Bell className="h-10 w-10 text-themed-text-muted mb-3 opacity-50" />
+            <p className="text-themed-text-secondary">No alert rules configured</p>
+            <p className="text-sm text-themed-text-muted mt-1">Create a rule to start monitoring metrics</p>
+            <button onClick={handleCreateRule} className="btn-themed-primary mt-4">
+              <Bell className="h-4 w-4 mr-2" />
+              Create Your First Rule
+            </button>
+          </div>
+        ) : (
+          <div className="divide-y divide-themed-border-primary">
+            {alertRules.map(rule => (
+              <div key={rule.id} className="flex items-center justify-between py-4">
+                <div className="flex items-center gap-4">
+                  <div className={`w-3 h-3 rounded-full ${
+                    rule.enabled ? 'bg-themed-status-success' : 'bg-themed-text-muted'
+                  }`} style={{
+                    backgroundColor: rule.enabled ? 'var(--status-success)' : 'var(--text-muted)'
+                  }} />
+                  <div>
+                    <h4 className="font-medium text-themed-text-primary">{rule.name}</h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        rule.severity === 'critical' 
+                          ? 'bg-red-500/10 text-themed-status-error' 
+                          : rule.severity === 'warning'
+                          ? 'bg-yellow-500/10 text-themed-status-warning'
+                          : 'bg-blue-500/10 text-themed-status-info'
+                      }`}>
+                        {rule.severity}
+                      </span>
+                      <span className="text-xs text-themed-text-muted">
+                        {rule.conditions.length} condition{rule.conditions.length !== 1 ? 's' : ''}
+                      </span>
+                      <span className="text-xs text-themed-text-muted">
+                        • Every {rule.evaluationInterval}s
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => handleEditRule(rule)}
+                    className="p-2 text-themed-text-secondary hover:text-themed-text-primary transition-colors"
+                    title="Edit rule"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteRule(rule.id!)}
+                    className="p-2 text-themed-text-secondary hover:text-themed-status-error transition-colors"
+                    title="Delete rule"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Alert Rule Modal */}
+      <AlertRuleModal
+        isOpen={isRuleModalOpen}
+        onClose={() => {
+          setIsRuleModalOpen(false)
+          setEditingRule(null)
+        }}
+        onSave={handleSaveRule}
+        editingRule={editingRule}
+      />
     </div>
   )
 }

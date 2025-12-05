@@ -997,146 +997,107 @@ const JaegerTraceViewer: React.FC = () => {
             )}
           </div>
           
-          <div className="overflow-auto h-full">
-            {traces.map(trace => {
-              const rootSpan = trace.spans.find(span => !span.parentSpanId);
-              const serviceName = rootSpan?.serviceName || 'unknown';
-              const rootOperation = rootSpan?.name || 'unknown';
-              const totalDuration = Math.max(...trace.spans.map(span => span.startTime + span.duration)) - Math.min(...trace.spans.map(span => span.startTime));
-              const spanCount = trace.spans.length;
-              const hasErrors = trace.spans.some(span => span.isError);
-              const serviceCount = new Set(trace.spans.map(span => span.serviceName)).size;
-              const errorCount = trace.spans.filter(span => span.isError).length;
-              const traceStartTime = Math.min(...trace.spans.map(span => span.startTime));
+          <div className="flex-1 overflow-auto">
+            {traces.length === 0 ? (
+              <div 
+                className="flex items-center justify-center h-full p-8 text-center"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                <div>
+                  <Activity className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">No traces found</p>
+                  <p className="text-xs mt-1">Select a service and search for traces</p>
+                </div>
+              </div>
+            ) : (
+              traces.map(trace => {
+                const rootSpan = trace.spans.find(span => !span.parentSpanId);
+                const serviceName = rootSpan?.serviceName || 'unknown';
+                const rootOperation = rootSpan?.name || 'unknown';
+                const totalDuration = Math.max(...trace.spans.map(span => span.startTime + span.duration)) - Math.min(...trace.spans.map(span => span.startTime));
+                const spanCount = trace.spans.length;
+                const hasErrors = trace.spans.some(span => span.isError);
+                const serviceCount = new Set(trace.spans.map(span => span.serviceName)).size;
+                const errorCount = trace.spans.filter(span => span.isError).length;
+                const traceStartTime = Math.min(...trace.spans.map(span => span.startTime));
+                const isSelected = selectedTrace?.traceId === trace.traceId;
 
-              return (
-                <div
-                  key={trace.traceId}
-                  onClick={() => loadTraceDetails(trace.traceId)}
-                  className="px-4 py-3 border-b cursor-pointer transition-colors"
-                  style={{
-                    backgroundColor: selectedTrace?.traceId === trace.traceId 
-                      ? 'var(--interactive-secondary)' 
-                      : 'transparent',
-                    borderColor: selectedTrace?.traceId === trace.traceId 
-                      ? 'var(--border-accent)' 
-                      : 'var(--border-primary)'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedTrace?.traceId !== trace.traceId) {
-                      e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedTrace?.traceId !== trace.traceId) {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                    }
-                  }}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center space-x-2">
-                        <span 
-                          className="font-semibold"
-                          style={{ 
-                            color: 'var(--text-primary)',
-                            fontSize: 'var(--text-base)',
-                            fontFamily: 'var(--font-sans)'
-                          }}
-                        >
-                          {rootOperation}
-                        </span>
-                        {hasErrors && (
-                          <div className="flex items-center space-x-1">
-                            <AlertCircle size={14} style={{ color: 'var(--status-error)' }} />
-                            <span 
-                              style={{ 
-                                fontSize: 'var(--text-xs)',
-                                color: 'var(--status-error)',
-                                fontWeight: 'bold'
-                              }}
-                            >
-                              {errorCount} error{errorCount !== 1 ? 's' : ''}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div 
-                        className="mt-1"
-                        style={{ 
-                          fontSize: 'var(--text-sm)',
-                          color: 'var(--text-secondary)'
-                        }}
-                      >
-                        {serviceName}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div 
-                        className="font-mono font-semibold"
-                        style={{ 
-                          fontSize: 'var(--text-sm)',
-                          color: 'var(--text-primary)'
-                        }}
-                      >
-                        {formatDuration(totalDuration)}
-                      </div>
-                      <div 
-                        style={{ 
-                          fontSize: 'var(--text-xs)',
-                          color: 'var(--text-tertiary)'
-                        }}
-                      >
-                        {formatTime(traceStartTime)}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div 
-                    className="mb-2 text-xs truncate"
-                    style={{ 
-                      color: 'var(--text-tertiary)',
-                      fontFamily: 'var(--font-mono)'
+                return (
+                  <div
+                    key={trace.traceId}
+                    onClick={() => loadTraceDetails(trace.traceId)}
+                    className="px-3 py-2 border-b cursor-pointer transition-colors"
+                    style={{
+                      backgroundColor: isSelected ? 'var(--bg-tertiary)' : 'transparent',
+                      borderColor: 'var(--border-primary)',
+                      borderLeftWidth: '3px',
+                      borderLeftColor: isSelected ? 'var(--interactive-primary)' : 'transparent'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSelected) {
+                        e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected) {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                      }
                     }}
                   >
-                    {trace.traceId}
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div 
-                      className="flex items-center space-x-4"
-                      style={{ 
-                        fontSize: 'var(--text-xs)',
-                        color: 'var(--text-tertiary)'
-                      }}
-                    >
-                      <span>{spanCount} span{spanCount !== 1 ? 's' : ''}</span>
-                      <span>{serviceCount} service{serviceCount !== 1 ? 's' : ''}</span>
+                    <div className="flex items-start justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span 
+                            className="font-medium text-sm truncate"
+                            style={{ color: 'var(--text-primary)' }}
+                          >
+                            {rootOperation}
+                          </span>
+                          {hasErrors && (
+                            <span className="badge-muted text-xs" style={{ color: 'var(--status-error)', borderColor: 'var(--status-error)' }}>
+                              {errorCount} error{errorCount !== 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                          {serviceName}
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <div className="font-mono text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+                          {formatDuration(totalDuration)}
+                        </div>
+                        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                          {formatTime(traceStartTime)}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      {trace.spans.slice(0, 3).map((span) => (
-                        <div
-                          key={span.spanId}
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: getSpanColor(span.serviceName) }}
-                          title={span.serviceName}
-                        />
-                      ))}
-                      {trace.spans.length > 3 && (
-                        <span 
-                          style={{ 
-                            fontSize: 'var(--text-xs)',
-                            color: 'var(--text-tertiary)'
-                          }}
-                        >
-                          +{trace.spans.length - 3}
-                        </span>
-                      )}
+                    
+                    <div className="flex items-center justify-between mt-1.5">
+                      <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+                        <span>{spanCount} spans</span>
+                        <span>{serviceCount} services</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {trace.spans.slice(0, 4).map((span) => (
+                          <div
+                            key={span.spanId}
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: getSpanColor(span.serviceName) }}
+                            title={span.serviceName}
+                          />
+                        ))}
+                        {trace.spans.length > 4 && (
+                          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            +{trace.spans.length - 4}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Database, Search, Bell, Settings, Sun, Moon, Activity, Layers, ChevronDown, Plus, BarChart3, User, LogOut, History, Star, Home, HelpCircle, Sliders, Bookmark, Menu, Shield, Users, Building, GitBranch, BookCopy, Target, FileText, GitCommit } from 'lucide-react'
+import { Database, Search, Bell, Settings, Sun, Moon, Activity, Layers, ChevronDown, Plus, BarChart3, User, LogOut, History, Star, Home, HelpCircle, Sliders, Bookmark, Menu, Shield, Users, Building, GitBranch, BookCopy, Target, FileText, GitCommit, Network } from 'lucide-react'
 import { useTheme } from '../lib/theme'
 import ThemeSelector from './ThemeSelector'
 import BreadcrumbDropdown, { BreadcrumbDropdownItem } from './BreadcrumbDropdown'
@@ -31,6 +31,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { name: 'Telemetry Explorer', href: '/telemetry', icon: Target, current: location.pathname === '/telemetry' || location.pathname === '/telemetry/testing' },
     { name: 'Log Viewer', href: '/logs', icon: FileText, current: location.pathname === '/logs' },
     { name: 'Tracing', href: '/tracing', icon: GitCommit, current: location.pathname === '/tracing' },
+    { name: 'Service Map', href: '/service-map', icon: Network, current: location.pathname === '/service-map' },
     { name: 'RUM', href: '/rum', icon: Activity, current: location.pathname === '/rum' },
     { name: 'Alerts', href: '/alerts', icon: Bell, current: location.pathname === '/alerts' },
     { name: 'Settings', href: '/settings', icon: Settings, current: location.pathname === '/settings' },

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Search, Filter, ArrowUpDown, Database, Plus, Settings, TestTube, BarChart3, Eye, AlertCircle, Loader2, CheckCircle, XCircle, Grid3X3, List, RefreshCw } from 'lucide-react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { Search, Filter, ArrowUpDown, Database, Plus, Settings, TestTube, BarChart3, Eye, AlertCircle, Loader2, CheckCircle, XCircle, Grid3X3, List, RefreshCw, Activity, Clock } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { 
   DataSourceConfiguration, 
@@ -53,6 +53,19 @@ export default function DataSources() {
     const saved = localStorage.getItem('dataSourcesViewMode')
     return (saved as ViewMode) || 'card'
   })
+  
+  // Health monitoring state
+  const [healthMonitoringEnabled, setHealthMonitoringEnabled] = useState(() => {
+    const saved = localStorage.getItem('dataSourcesHealthMonitoring')
+    return saved ? JSON.parse(saved) : true
+  })
+  const [healthRefreshInterval, setHealthRefreshInterval] = useState(() => {
+    const saved = localStorage.getItem('dataSourcesHealthInterval')
+    return saved ? Number(saved) : 60000 // Default 60 seconds
+  })
+  const [lastHealthCheck, setLastHealthCheck] = useState<Date | null>(null)
+  const [healthCheckInProgress, setHealthCheckInProgress] = useState(false)
+  const healthCheckTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     loadDataSources()
@@ -178,6 +191,81 @@ export default function DataSources() {
     }
   }
 
+  // Health check all enabled data sources
+  const runHealthCheck = useCallback(async () => {
+    if (healthCheckInProgress) return
+    
+    setHealthCheckInProgress(true)
+    const enabledSources = dataSources.filter(ds => ds.isEnabled)
+    
+    for (const ds of enabledSources) {
+      try {
+        const result = await DataSourceApi.testDataSource(ds)
+        setTestResults(prev => ({ ...prev, [ds.id]: result }))
+      } catch (error) {
+        setTestResults(prev => ({ 
+          ...prev, 
+          [ds.id]: {
+            isSuccess: false,
+            responseTimeMs: 0,
+            errorMessage: error instanceof Error ? error.message : 'Health check failed',
+            details: 'Unable to verify connection'
+          }
+        }))
+      }
+    }
+    
+    setLastHealthCheck(new Date())
+    setHealthCheckInProgress(false)
+  }, [dataSources, healthCheckInProgress])
+
+  // Setup auto health check timer
+  useEffect(() => {
+    if (healthMonitoringEnabled && dataSources.length > 0) {
+      // Run initial health check
+      runHealthCheck()
+      
+      // Setup interval
+      healthCheckTimerRef.current = setInterval(() => {
+        runHealthCheck()
+      }, healthRefreshInterval)
+    }
+    
+    return () => {
+      if (healthCheckTimerRef.current) {
+        clearInterval(healthCheckTimerRef.current)
+      }
+    }
+  }, [healthMonitoringEnabled, healthRefreshInterval, dataSources.length])
+
+  // Persist health monitoring settings
+  useEffect(() => {
+    localStorage.setItem('dataSourcesHealthMonitoring', JSON.stringify(healthMonitoringEnabled))
+  }, [healthMonitoringEnabled])
+
+  useEffect(() => {
+    localStorage.setItem('dataSourcesHealthInterval', String(healthRefreshInterval))
+  }, [healthRefreshInterval])
+
+  const getHealthStatus = (dataSourceId: string): 'healthy' | 'unhealthy' | 'unknown' | 'checking' => {
+    if (testingDataSources.has(dataSourceId)) return 'checking'
+    const result = testResults[dataSourceId]
+    if (!result) return 'unknown'
+    return result.isSuccess ? 'healthy' : 'unhealthy'
+  }
+
+  const getHealthColor = (status: 'healthy' | 'unhealthy' | 'unknown' | 'checking'): string => {
+    switch (status) {
+      case 'healthy': return 'var(--status-success)'
+      case 'unhealthy': return 'var(--status-error)'
+      case 'checking': return 'var(--status-warning)'
+      default: return 'var(--text-muted)'
+    }
+  }
+
+  const healthyCount = dataSources.filter(ds => testResults[ds.id]?.isSuccess).length
+  const unhealthyCount = dataSources.filter(ds => testResults[ds.id] && !testResults[ds.id].isSuccess).length
+
   const handleBuildDashboard = (dataSource: DataSourceConfiguration) => {
     navigate(`/dashboards/new?datasource=${dataSource.id}`)
   }
@@ -269,6 +357,18 @@ export default function DataSources() {
             <XCircle className="h-3 w-3" />
             {dataSources.length - enabledCount} disabled
           </span>
+          {healthyCount > 0 && (
+            <span className="badge-muted" style={{ color: 'var(--status-success)' }}>
+              <Activity className="h-3 w-3" />
+              {healthyCount} healthy
+            </span>
+          )}
+          {unhealthyCount > 0 && (
+            <span className="badge-muted" style={{ color: 'var(--status-error)' }}>
+              <AlertCircle className="h-3 w-3" />
+              {unhealthyCount} unhealthy
+            </span>
+          )}
         </div>
       </PageHeader>
 
@@ -345,6 +445,78 @@ export default function DataSources() {
         </div>
       </div>
 
+      {/* Health Monitoring Controls */}
+      <div className="panel">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Activity className="h-4 w-4" style={{ color: healthMonitoringEnabled ? 'var(--status-success)' : 'var(--text-muted)' }} />
+              <span className="text-sm font-medium text-themed-text-primary">Health Monitoring</span>
+            </div>
+            <button
+              onClick={() => setHealthMonitoringEnabled(!healthMonitoringEnabled)}
+              className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200`}
+              style={{ 
+                backgroundColor: healthMonitoringEnabled ? 'var(--interactive-primary)' : 'var(--bg-elevated)'
+              }}
+            >
+              <span
+                className="pointer-events-none inline-block h-5 w-5 transform rounded-full shadow ring-0 transition duration-200"
+                style={{ 
+                  backgroundColor: 'var(--bg-surface)',
+                  transform: healthMonitoringEnabled ? 'translateX(20px)' : 'translateX(0)'
+                }}
+              />
+            </button>
+          </div>
+          
+          {healthMonitoringEnabled && (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-themed-text-muted" />
+                <span className="text-sm text-themed-text-secondary">Interval:</span>
+                <select
+                  value={healthRefreshInterval}
+                  onChange={(e) => setHealthRefreshInterval(Number(e.target.value))}
+                  className="input-themed text-sm py-1"
+                >
+                  <option value={30000}>30s</option>
+                  <option value={60000}>1m</option>
+                  <option value={300000}>5m</option>
+                  <option value={600000}>10m</option>
+                </select>
+              </div>
+              
+              <div className="flex items-center gap-2 text-sm text-themed-text-muted">
+                {lastHealthCheck && (
+                  <span>
+                    Last check: {lastHealthCheck.toLocaleTimeString()}
+                  </span>
+                )}
+              </div>
+              
+              <button
+                onClick={runHealthCheck}
+                disabled={healthCheckInProgress}
+                className="btn-themed-secondary text-sm py-1 disabled:opacity-50"
+              >
+                {healthCheckInProgress ? (
+                  <>
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    Checking...
+                  </>
+                ) : (
+                  <>
+                    <Activity className="h-3 w-3 mr-1" />
+                    Check Now
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Data Sources Grid/List */}
       {filteredDataSources.length === 0 ? (
         <div className="panel flex flex-col items-center justify-center py-16">
@@ -378,7 +550,26 @@ export default function DataSources() {
                     {dataSource.dataSourceType} • {getDataSourceCategory(dataSource.dataSourceType)}
                   </p>
                 </div>
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 flex items-center gap-2">
+                  {/* Health indicator */}
+                  {healthMonitoringEnabled && (
+                    <div 
+                      className="relative"
+                      title={`Health: ${getHealthStatus(dataSource.id)}`}
+                    >
+                      <div 
+                        className={`w-2.5 h-2.5 rounded-full ${
+                          getHealthStatus(dataSource.id) === 'checking' ? 'animate-pulse' : ''
+                        }`}
+                        style={{ backgroundColor: getHealthColor(getHealthStatus(dataSource.id)) }}
+                      />
+                      {getHealthStatus(dataSource.id) === 'healthy' && testResults[dataSource.id] && (
+                        <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[10px] whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
+                          {testResults[dataSource.id].responseTimeMs}ms
+                        </span>
+                      )}
+                    </div>
+                  )}
                   <span className={`badge-muted ${
                     dataSource.isEnabled 
                       ? 'text-themed-status-success'
@@ -462,6 +653,11 @@ export default function DataSources() {
                 <th className="px-6 py-3 text-left text-xs font-semibold text-themed-text-secondary uppercase tracking-wider">
                   Status
                 </th>
+                {healthMonitoringEnabled && (
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-themed-text-secondary uppercase tracking-wider">
+                    Health
+                  </th>
+                )}
                 <th className="px-6 py-3 text-left text-xs font-semibold text-themed-text-secondary uppercase tracking-wider">
                   Created
                 </th>
@@ -499,6 +695,26 @@ export default function DataSources() {
                       {dataSource.isEnabled ? 'Enabled' : 'Disabled'}
                     </span>
                   </td>
+                  {healthMonitoringEnabled && (
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className={`w-2.5 h-2.5 rounded-full ${
+                            getHealthStatus(dataSource.id) === 'checking' ? 'animate-pulse' : ''
+                          }`}
+                          style={{ backgroundColor: getHealthColor(getHealthStatus(dataSource.id)) }}
+                        />
+                        <span className="text-sm capitalize" style={{ color: getHealthColor(getHealthStatus(dataSource.id)) }}>
+                          {getHealthStatus(dataSource.id)}
+                        </span>
+                        {getHealthStatus(dataSource.id) === 'healthy' && testResults[dataSource.id] && (
+                          <span className="text-xs text-themed-text-muted">
+                            ({testResults[dataSource.id].responseTimeMs}ms)
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                  )}
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-themed-text-secondary">
                     {formatDate(dataSource.createdAt)}
                   </td>

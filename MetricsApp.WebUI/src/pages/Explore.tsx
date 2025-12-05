@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Download, RefreshCw, Database, LineChart, Table, AlertCircle, Info, HelpCircle, Clock, Play, Plus, X, ChevronDown, Code, Settings, ChevronRight, ChevronLeft } from 'lucide-react'
+import { Download, RefreshCw, Database, LineChart, Table, AlertCircle, Clock, Play, ChevronDown, ChevronRight, ChevronLeft, Search, Layers, Bookmark, BookmarkCheck, Star, Trash2, Edit2, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { DataSourceApi, DataSourceConfiguration } from '../lib/datasource-api'
 import QueryBuilder from '../components/QueryBuilder'
@@ -33,8 +33,6 @@ interface AvailableMetric {
   name: string
   type: string
   description?: string
-  isSearchable?: boolean
-  isAggregatable?: boolean
 }
 
 interface AvailableField {
@@ -51,6 +49,29 @@ interface AvailableTag {
   description?: string
 }
 
+interface SavedQuery {
+  id: string
+  name: string
+  query: string
+  datasourceId: string
+  datasourceName: string
+  timeRangeLabel: string
+  createdAt: string
+  isFavorite: boolean
+}
+
+const TIME_RANGES = [
+  { label: 'Last 5m', hours: 5 / 60 },
+  { label: 'Last 15m', hours: 0.25 },
+  { label: 'Last 30m', hours: 0.5 },
+  { label: 'Last 1h', hours: 1 },
+  { label: 'Last 3h', hours: 3 },
+  { label: 'Last 6h', hours: 6 },
+  { label: 'Last 12h', hours: 12 },
+  { label: 'Last 24h', hours: 24 },
+  { label: 'Last 7d', hours: 168 },
+]
+
 const Explore = () => {
   const navigate = useNavigate()
   const [datasources, setDatasources] = useState<DataSource[]>([])
@@ -64,7 +85,6 @@ const Explore = () => {
   const [showExportModal, setShowExportModal] = useState(false)
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart')
   const [apiConnectionError, setApiConnectionError] = useState<string | null>(null)
-  const [showDebuggingInfo, setShowDebuggingInfo] = useState(false)
   const [showTimeRangeDropdown, setShowTimeRangeDropdown] = useState(false)
   const [availableMetrics, setAvailableMetrics] = useState<AvailableMetric[]>([])
   const [availableFields, setAvailableFields] = useState<AvailableField[]>([])
@@ -73,8 +93,20 @@ const Explore = () => {
   const [loadingFields, setLoadingFields] = useState(false)
   const [loadingTags, setLoadingTags] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [metricSearch, setMetricSearch] = useState('')
+  const [savedQueries, setSavedQueries] = useState<SavedQuery[]>(() => {
+    try {
+      const saved = localStorage.getItem('metricsapp_saved_queries')
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
+  const [showSavedQueries, setShowSavedQueries] = useState(false)
+  const [saveQueryName, setSaveQueryName] = useState('')
+  const [showSaveDialog, setShowSaveDialog] = useState(false)
+  const [editingQueryId, setEditingQueryId] = useState<string | null>(null)
 
-  // Load datasources on component mount
   useEffect(() => {
     loadDatasources()
   }, [])
@@ -136,7 +168,7 @@ const Explore = () => {
     setLoadingTags(true)
     try {
       const metadata = await DataSourceApi.getDataSourceMetadata(datasourceId)
-      setAvailableMetrics(metadata.availableMetrics.map(m => ({ name: m, type: 'unknown' }))) // Assuming type is unknown from simple string list
+      setAvailableMetrics(metadata.availableMetrics.map(m => ({ name: m, type: 'unknown' })))
       setAvailableFields(metadata.availableFields || [])
       setAvailableTags(metadata.availableTags || [])
     } catch (error) {
@@ -291,18 +323,85 @@ const Explore = () => {
   }
 
   const activeDatasource = activeDatasourceId ? datasources.find(ds => ds.id === activeDatasourceId) : null
-const timeRangeLabel = formatTimeRange(timeRange)
-const activeDatasourceLabel = activeDatasource ? `${activeDatasource.name} (${activeDatasource.dataSourceType})` : 'Select a data source'
-const queryModeLabel = queryMode === 'builder' ? 'Builder' : 'Code'
-const viewModeLabel = viewMode === 'chart' ? 'Chart' : 'Table'
+  const timeRangeLabel = formatTimeRange(timeRange)
 
-const renderMainContent = () => {
+  // Persist saved queries to localStorage
+  useEffect(() => {
+    localStorage.setItem('metricsapp_saved_queries', JSON.stringify(savedQueries))
+  }, [savedQueries])
+
+  const handleSaveQuery = () => {
+    if (!saveQueryName.trim() || !query.trim() || !activeDatasource) return
+    
+    const newQuery: SavedQuery = {
+      id: editingQueryId || crypto.randomUUID(),
+      name: saveQueryName.trim(),
+      query: query,
+      datasourceId: activeDatasource.id,
+      datasourceName: activeDatasource.name,
+      timeRangeLabel: timeRangeLabel,
+      createdAt: new Date().toISOString(),
+      isFavorite: false
+    }
+
+    if (editingQueryId) {
+      setSavedQueries(savedQueries.map(q => q.id === editingQueryId ? { ...newQuery, isFavorite: q.isFavorite } : q))
+      setEditingQueryId(null)
+    } else {
+      setSavedQueries([newQuery, ...savedQueries])
+    }
+    
+    setShowSaveDialog(false)
+    setSaveQueryName('')
+  }
+
+  const handleLoadQuery = (savedQuery: SavedQuery) => {
+    setQuery(savedQuery.query)
+    if (savedQuery.datasourceId !== activeDatasourceId) {
+      const ds = datasources.find(d => d.id === savedQuery.datasourceId)
+      if (ds) {
+        setActiveDatasourceId(savedQuery.datasourceId)
+      }
+    }
+    setShowSavedQueries(false)
+  }
+
+  const handleDeleteQuery = (queryId: string) => {
+    setSavedQueries(savedQueries.filter(q => q.id !== queryId))
+  }
+
+  const handleToggleFavorite = (queryId: string) => {
+    setSavedQueries(savedQueries.map(q => 
+      q.id === queryId ? { ...q, isFavorite: !q.isFavorite } : q
+    ))
+  }
+
+  const handleEditQuery = (savedQuery: SavedQuery) => {
+    setEditingQueryId(savedQuery.id)
+    setSaveQueryName(savedQuery.name)
+    setShowSaveDialog(true)
+  }
+
+  const sortedSavedQueries = [...savedQueries].sort((a, b) => {
+    if (a.isFavorite !== b.isFavorite) return a.isFavorite ? -1 : 1
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  })
+
+  const filteredMetrics = availableMetrics.filter(m => 
+    m.name.toLowerCase().includes(metricSearch.toLowerCase())
+  )
+
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[320px]">
-        <div className="flex items-center space-x-4">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-b-transparent border-themed-interactive-primary" />
-          <span className="text-sm text-themed-text-secondary">Loading data sources...</span>
+      <div className="page-shell">
+        <div className="flex items-center justify-center py-16">
+          <div className="flex items-center gap-3">
+            <div 
+              className="animate-spin rounded-full h-8 w-8 border-2 border-b-transparent"
+              style={{ borderColor: 'var(--interactive-primary)', borderBottomColor: 'transparent' }}
+            />
+            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Loading data sources...</span>
+          </div>
         </div>
       </div>
     )
@@ -310,23 +409,23 @@ const renderMainContent = () => {
 
   if (apiConnectionError) {
     return (
-      <div className="panel border-themed-alert-error">
-        <div className="panel-header">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-themed-status-error" />
-            <h3 className="panel-title text-themed-status-error">Connection Error</h3>
+      <div className="page-shell">
+        <PageHeader title="Explore" description="Query and visualize your data" />
+        <div 
+          className="panel p-6"
+          style={{ borderLeft: '3px solid var(--status-error)' }}
+        >
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 flex-shrink-0" style={{ color: 'var(--status-error)' }} />
+            <div className="flex-1">
+              <h3 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Connection Error</h3>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>{apiConnectionError}</p>
+              <button onClick={loadDatasources} className="btn-themed-secondary mt-3">
+                <RefreshCw className="h-4 w-4" />
+                Retry
+              </button>
+            </div>
           </div>
-        </div>
-        <p className="text-sm text-themed-text-secondary">{apiConnectionError}</p>
-        <div className="page-actions mt-4">
-          <button
-            type="button"
-            onClick={loadDatasources}
-            className="btn-themed-secondary border-themed-alert-error text-themed-status-error"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Retry
-          </button>
         </div>
       </div>
     )
@@ -334,484 +433,591 @@ const renderMainContent = () => {
 
   if (datasources.length === 0) {
     return (
-      <div className="panel text-center space-y-4">
-        <Database className="mx-auto h-12 w-12 text-themed-text-muted" />
-        <h3 className="panel-title text-2xl">No Data Sources</h3>
-        <p className="text-sm text-themed-text-secondary">
-          No data sources are configured. Add a data source to start exploring your data.
-        </p>
-        <button
-          type="button"
-          onClick={() => navigate('/connections/add')}
-          className="btn-themed-primary inline-flex items-center justify-center mx-auto"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Data Source
-        </button>
+      <div className="page-shell">
+        <PageHeader title="Explore" description="Query and visualize your data" />
+        <div className="panel flex flex-col items-center justify-center py-12">
+          <Database className="h-12 w-12 mb-3 opacity-30" style={{ color: 'var(--text-muted)' }} />
+          <h3 className="text-base font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
+            No Data Sources
+          </h3>
+          <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
+            Add a data source to start exploring your data.
+          </p>
+          <button onClick={() => navigate('/connections/add')} className="btn-themed-primary">
+            Add Data Source
+          </button>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col xl:flex-row gap-6 flex-1 overflow-hidden">
-      <aside
-        className={`surface-muted flex flex-col h-full overflow-hidden transition-all duration-200 ${sidebarCollapsed ? 'w-20' : 'w-80'}`}
-        style={{ padding: sidebarCollapsed ? 'var(--spacing-sm)' : 'var(--spacing-md)' }}
+    <div className="page-shell" style={{ gap: 0, padding: 0 }}>
+      {/* Top toolbar */}
+      <div 
+        className="flex items-center gap-2 px-4 py-2 border-b"
+        style={{ 
+          backgroundColor: 'var(--bg-secondary)', 
+          borderColor: 'var(--border-primary)' 
+        }}
       >
-        <div className="flex items-center justify-between pb-3 border-b border-themed-border-primary">
-          <span
-            className={`text-xs font-semibold uppercase tracking-widest text-themed-text-secondary transition-opacity ${sidebarCollapsed ? 'opacity-0 pointer-events-none' : 'opacity-80'}`}
+        {/* Data source selector */}
+        <div className="flex items-center gap-2">
+          <Database className="h-4 w-4" style={{ color: 'var(--text-muted)' }} />
+          <select
+            value={activeDatasourceId || ''}
+            onChange={e => setActiveDatasourceId(e.target.value)}
+            className="input-themed"
+            style={{ minWidth: '180px' }}
           >
-            Data Sources
-          </span>
+            {datasources.map(ds => (
+              <option key={ds.id} value={ds.id}>
+                {ds.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="page-toolbar__divider" />
+
+        {/* Time range */}
+        <div className="relative">
           <button
-            type="button"
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="text-themed-text-secondary hover:text-themed-text-primary transition-colors"
-            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            onClick={() => setShowTimeRangeDropdown(!showTimeRangeDropdown)}
+            className="btn-themed-secondary"
           >
-            {sidebarCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+            <Clock className="h-4 w-4" />
+            <span>{timeRangeLabel}</span>
+            <ChevronDown className="h-3 w-3" />
           </button>
-        </div>
-        <div className="mt-3 flex-1 overflow-y-auto pr-1 space-y-3">
-          {datasources.map(ds => (
-            <div
-              key={ds.id}
-              className={`rounded-md border border-transparent transition-colors ${
-                activeDatasourceId === ds.id ? 'border-themed-border-accent bg-themed-bg-elevated' : 'hover:bg-themed-interactive-secondary-hover/40'
-              }`}
+          {showTimeRangeDropdown && (
+            <div 
+              className="absolute top-full left-0 mt-1 z-50 min-w-[160px]"
+              style={{ 
+                backgroundColor: 'var(--bg-secondary)', 
+                border: '1px solid var(--border-primary)',
+                borderRadius: 'var(--radius-sm)',
+                boxShadow: 'var(--shadow-lg)'
+              }}
             >
-              <button
-                type="button"
-                className="w-full text-left px-3 py-2 flex items-center gap-2 text-sm text-themed-text-primary"
-                onClick={() => setActiveDatasourceId(ds.id)}
-              >
-                <Database className="h-4 w-4 text-themed-text-secondary" />
-                <span className={`${sidebarCollapsed ? 'hidden' : 'inline-flex flex-col'} whitespace-nowrap`}>
-                  <span className="font-medium">{ds.name}</span>
-                  <span className="text-xs text-themed-text-muted">{ds.dataSourceType}</span>
-                </span>
-              </button>
-              {activeDatasourceId === ds.id && !sidebarCollapsed && (
-                <div className="px-3 pb-3 space-y-4 text-xs text-themed-text-secondary">
-                  <div>
-                    <h4 className="font-semibold uppercase tracking-wide text-[0.65rem] text-themed-text-muted mb-2">Metrics</h4>
-                    {loadingMetrics ? (
-                      <div className="py-1">Loading metrics...</div>
-                    ) : availableMetrics.length > 0 ? (
-                      <ul className="space-y-1">
-                        {availableMetrics.map(metric => (
-                          <li key={metric.name}>
-                            <button
-                              type="button"
-                              className="w-full text-left text-sm text-themed-text-primary hover:text-themed-interactive-primary transition-colors"
-                              title={metric.description || metric.name}
-                              onClick={() => setQuery(metric.name)}
-                            >
-                              {metric.name}
-                              <span className="text-xs text-themed-text-muted ml-1">({metric.type})</span>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <div className="py-1">No metrics available.</div>
-                    )}
-                  </div>
-
-                  <div>
-                    <h4 className="font-semibold uppercase tracking-wide text-[0.65rem] text-themed-text-muted mb-2">Fields</h4>
-                    {loadingFields ? (
-                      <div className="py-1">Loading fields...</div>
-                    ) : availableFields.length > 0 ? (
-                      <ul className="space-y-1">
-                        {availableFields.map(field => (
-                          <li key={field.name}>
-                            <button
-                              type="button"
-                              className="w-full text-left text-sm text-themed-text-primary hover:text-themed-interactive-primary transition-colors"
-                              title={field.description || field.name}
-                              onClick={() => setQuery(prev => `${prev} ${field.name}`)}
-                            >
-                              {field.name}
-                              <span className="text-xs text-themed-text-muted ml-1">({field.type})</span>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <div className="py-1">No fields available.</div>
-                    )}
-                  </div>
-
-                  <div>
-                    <h4 className="font-semibold uppercase tracking-wide text-[0.65rem] text-themed-text-muted mb-2">Tags</h4>
-                    {loadingTags ? (
-                      <div className="py-1">Loading tags...</div>
-                    ) : availableTags.length > 0 ? (
-                      <ul className="space-y-1">
-                        {availableTags.map(tag => (
-                          <li key={tag.name}>
-                            <button
-                              type="button"
-                              className="w-full text-left text-sm text-themed-text-primary hover:text-themed-interactive-primary transition-colors"
-                              title={tag.description || tag.name}
-                              onClick={() => setQuery(prev => `${prev} ${tag.name}`)}
-                            >
-                              {tag.name}
-                              <span className="text-xs text-themed-text-muted ml-1">
-                                ({tag.values.length} values)
-                              </span>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <div className="py-1">No tags available.</div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </aside>
-
-      <div className="flex-1 flex flex-col gap-6 overflow-hidden">
-        <div className="panel flex flex-col gap-6">
-          <div className="flex flex-wrap items-end gap-4">
-            <div className="space-y-1">
-              <label htmlFor="datasource-select" className="block text-xs font-semibold uppercase tracking-wide text-themed-text-muted">
-                Data Source
-              </label>
-              <select
-                id="datasource-select"
-                value={activeDatasourceId || ''}
-                onChange={e => setActiveDatasourceId(e.target.value)}
-                className="input-themed w-56"
-              >
-                {datasources.map(ds => (
-                  <option key={ds.id} value={ds.id}>
-                    {ds.name} ({ds.dataSourceType})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="relative space-y-1">
-              <label className="block text-xs font-semibold uppercase tracking-wide text-themed-text-muted">
-                Time Range
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowTimeRangeDropdown(!showTimeRangeDropdown)}
-                className="btn-themed-secondary"
-              >
-                <Clock className="h-4 w-4 mr-2" />
-                {timeRangeLabel}
-                <ChevronDown className="h-4 w-4 ml-2" />
-              </button>
-              {showTimeRangeDropdown && (
-                <div className="surface-muted absolute z-20 mt-2 w-64 shadow-lg border border-themed-border-primary rounded-lg p-0 overflow-hidden">
-                  <div className="px-4 py-2 text-sm font-medium text-themed-text-secondary border-b border-themed-border-primary">
-                    Quick Time Ranges
-                  </div>
-                  {[
-                    { label: 'Last 15 minutes', hours: 0.25 },
-                    { label: 'Last hour', hours: 1 },
-                    { label: 'Last 4 hours', hours: 4 },
-                    { label: 'Last 24 hours', hours: 24 },
-                    { label: 'Last 7 days', hours: 168 }
-                  ].map(range => (
-                    <button
-                      key={range.label}
-                      type="button"
-                      onClick={() => setQuickTimeRange(range.hours)}
-                      className="block w-full text-left px-4 py-2 text-sm text-themed-text-primary hover:bg-themed-interactive-secondary-hover transition-colors"
-                    >
-                      {range.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="inline-flex items-center rounded-md border border-themed-border-primary overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setQueryMode('builder')}
-                className={`px-3 py-2 text-sm font-medium transition-colors ${
-                  queryMode === 'builder'
-                    ? 'bg-themed-interactive-primary text-themed-text-inverse'
-                    : 'bg-transparent text-themed-text-primary hover:bg-themed-interactive-secondary-hover'
-                }`}
-              >
-                <Settings className="h-4 w-4 mr-1" />
-                Builder
-              </button>
-              <button
-                type="button"
-                onClick={() => setQueryMode('code')}
-                className={`px-3 py-2 text-sm font-medium transition-colors ${
-                  queryMode === 'code'
-                    ? 'bg-themed-interactive-primary text-themed-text-inverse'
-                    : 'bg-transparent text-themed-text-primary hover:bg-themed-interactive-secondary-hover'
-                }`}
-              >
-                <Code className="h-4 w-4 mr-1" />
-                Code
-              </button>
-            </div>
-
-            <button
-              type="button"
-              onClick={executeQuery}
-              disabled={isRunning || !query.trim()}
-              className="btn-themed-primary inline-flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isRunning ? (
-                <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-themed-text-inverse border-r-transparent" />
-              ) : (
-                <Play className="h-4 w-4 mr-2" />
-              )}
-              {isRunning ? 'Running...' : 'Run Query'}
-            </button>
-          </div>
-
-          {queryMode === 'builder' ? (
-            <QueryBuilder
-              datasources={datasources}
-              selectedDatasourceId={activeDatasourceId || ''}
-              query={query}
-              queryMode={queryMode}
-              availableMetrics={availableMetrics}
-              loadingMetrics={loadingMetrics}
-              availableFields={availableFields}
-              loadingFields={loadingFields}
-              availableTags={availableTags}
-              loadingTags={loadingTags}
-              timeRange={timeRange}
-              onQueryChange={setQuery}
-              onQueryModeChange={setQueryMode}
-              onDatasourceChange={setActiveDatasourceId}
-              onTimeRangeChange={setTimeRange}
-              onQuickTimeRange={setQuickTimeRange}
-              onExecute={executeQuery}
-              isRunning={isRunning}
-            />
-          ) : (
-            <div className="space-y-3 w-full">
-              <label htmlFor="query-editor" className="block text-sm font-medium text-themed-text-secondary">
-                Query
-              </label>
-              <textarea
-                id="query-editor"
-                rows={8}
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                placeholder={`Enter your ${activeDatasource?.dataSourceType} query...`}
-                className="input-themed font-mono text-sm w-full min-h-[200px]"
-              />
+              {TIME_RANGES.map(range => (
+                <button
+                  key={range.label}
+                  onClick={() => setQuickTimeRange(range.hours)}
+                  className="block w-full text-left px-3 py-2 text-sm transition-colors"
+                  style={{ color: 'var(--text-primary)' }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  {range.label}
+                </button>
+              ))}
             </div>
           )}
         </div>
 
-        <div className="panel flex-1 flex flex-col overflow-hidden">
-          <div className="panel-header">
-            <div>
-              <h3 className="panel-title">Query Results</h3>
-              {queryResult?.metadata ? (
-                <div className="panel-subtitle flex flex-wrap gap-4 text-xs">
-                  <span>{queryResult.metadata.recordCount} records</span>
-                  <span>Execution time: {queryResult.metadata.executionTime}ms</span>
-                  <span>Last run: {new Date(queryResult.timestamp).toLocaleTimeString()}</span>
-                </div>
-              ) : (
-                <p className="panel-subtitle">Run a query to see data visualizations and tables.</p>
-              )}
-            </div>
-            <div className="page-actions">
-              <button
-                type="button"
-                onClick={() => setViewMode(viewMode === 'chart' ? 'table' : 'chart')}
-                className="btn-themed-secondary"
+        <div className="page-toolbar__divider" />
+
+        {/* Query mode toggle */}
+        <div 
+          className="flex"
+          style={{ 
+            backgroundColor: 'var(--bg-tertiary)', 
+            borderRadius: 'var(--radius-sm)',
+            padding: '2px'
+          }}
+        >
+          <button
+            onClick={() => setQueryMode('builder')}
+            className="px-3 py-1 text-xs font-medium transition-colors"
+            style={{
+              backgroundColor: queryMode === 'builder' ? 'var(--interactive-primary)' : 'transparent',
+              color: queryMode === 'builder' ? 'var(--text-inverse)' : 'var(--text-secondary)',
+              borderRadius: 'var(--radius-sm)'
+            }}
+          >
+            Builder
+          </button>
+          <button
+            onClick={() => setQueryMode('code')}
+            className="px-3 py-1 text-xs font-medium transition-colors"
+            style={{
+              backgroundColor: queryMode === 'code' ? 'var(--interactive-primary)' : 'transparent',
+              color: queryMode === 'code' ? 'var(--text-inverse)' : 'var(--text-secondary)',
+              borderRadius: 'var(--radius-sm)'
+            }}
+          >
+            Code
+          </button>
+        </div>
+
+        {/* View mode toggle */}
+        <div 
+          className="flex"
+          style={{ 
+            backgroundColor: 'var(--bg-tertiary)', 
+            borderRadius: 'var(--radius-sm)',
+            padding: '2px'
+          }}
+        >
+          <button
+            onClick={() => setViewMode('chart')}
+            className="px-2 py-1 transition-colors"
+            style={{
+              backgroundColor: viewMode === 'chart' ? 'var(--interactive-primary)' : 'transparent',
+              color: viewMode === 'chart' ? 'var(--text-inverse)' : 'var(--text-secondary)',
+              borderRadius: 'var(--radius-sm)'
+            }}
+          >
+            <LineChart className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('table')}
+            className="px-2 py-1 transition-colors"
+            style={{
+              backgroundColor: viewMode === 'table' ? 'var(--interactive-primary)' : 'transparent',
+              color: viewMode === 'table' ? 'var(--text-inverse)' : 'var(--text-secondary)',
+              borderRadius: 'var(--radius-sm)'
+            }}
+          >
+            <Table className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="flex-1" />
+
+        {/* Run button */}
+        <button
+          onClick={executeQuery}
+          disabled={isRunning || !query.trim()}
+          className="btn-themed-primary"
+        >
+          {isRunning ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent" />
+          ) : (
+            <Play className="h-4 w-4" />
+          )}
+          <span>{isRunning ? 'Running...' : 'Run'}</span>
+        </button>
+
+        {/* Save query button */}
+        <button
+          onClick={() => setShowSaveDialog(true)}
+          disabled={!query.trim()}
+          className="btn-themed-secondary disabled:opacity-50"
+          title="Save query"
+        >
+          <Bookmark className="h-4 w-4" />
+        </button>
+
+        {/* Saved queries dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setShowSavedQueries(!showSavedQueries)}
+            className={`btn-themed-secondary ${savedQueries.length > 0 ? '' : 'opacity-50'}`}
+          >
+            <BookmarkCheck className="h-4 w-4" />
+            <span>{savedQueries.length}</span>
+            <ChevronDown className="h-3 w-3" />
+          </button>
+          {showSavedQueries && savedQueries.length > 0 && (
+            <div 
+              className="absolute top-full right-0 mt-1 z-50 min-w-[320px] max-h-[400px] overflow-y-auto"
+              style={{ 
+                backgroundColor: 'var(--bg-secondary)', 
+                border: '1px solid var(--border-primary)',
+                borderRadius: 'var(--radius-sm)',
+                boxShadow: 'var(--shadow-lg)'
+              }}
+            >
+              <div 
+                className="px-3 py-2 border-b text-xs font-medium uppercase tracking-wider"
+                style={{ borderColor: 'var(--border-primary)', color: 'var(--text-muted)' }}
               >
-                {viewMode === 'chart' ? <Table className="h-4 w-4 mr-2" /> : <LineChart className="h-4 w-4 mr-2" />}
-                {viewMode === 'chart' ? 'Table View' : 'Chart View'}
-              </button>
-              {queryResult && (
-                <button
-                  type="button"
-                  onClick={() => setShowExportModal(true)}
-                  className="btn-themed-secondary"
+                Saved Queries
+              </div>
+              {sortedSavedQueries.map(sq => (
+                <div
+                  key={sq.id}
+                  className="px-3 py-2 border-b transition-colors cursor-pointer group"
+                  style={{ borderColor: 'var(--border-primary)' }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </button>
-              )}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0" onClick={() => handleLoadQuery(sq)}>
+                      <div className="flex items-center gap-2">
+                        {sq.isFavorite && <Star className="h-3 w-3 fill-current" style={{ color: 'var(--status-warning)' }} />}
+                        <span className="font-medium text-sm truncate" style={{ color: 'var(--text-primary)' }}>
+                          {sq.name}
+                        </span>
+                      </div>
+                      <div className="text-xs mt-0.5 truncate font-mono" style={{ color: 'var(--text-muted)' }}>
+                        {sq.query.length > 50 ? sq.query.slice(0, 50) + '...' : sq.query}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                        <span>{sq.datasourceName}</span>
+                        <span>•</span>
+                        <span>{sq.timeRangeLabel}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleToggleFavorite(sq.id) }}
+                        className="p-1 rounded hover:bg-black/10"
+                        title={sq.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                      >
+                        <Star 
+                          className={`h-3 w-3 ${sq.isFavorite ? 'fill-current' : ''}`} 
+                          style={{ color: sq.isFavorite ? 'var(--status-warning)' : 'var(--text-muted)' }} 
+                        />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleEditQuery(sq) }}
+                        className="p-1 rounded hover:bg-black/10"
+                        title="Edit name"
+                      >
+                        <Edit2 className="h-3 w-3" style={{ color: 'var(--text-muted)' }} />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDeleteQuery(sq.id) }}
+                        className="p-1 rounded hover:bg-black/10"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-3 w-3" style={{ color: 'var(--status-error)' }} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
+          )}
+        </div>
+
+        <div className="page-toolbar__divider" />
+
+        {queryResult && (
+          <button onClick={() => setShowExportModal(true)} className="btn-themed-secondary">
+            <Download className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      {/* Main content area */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <aside
+          className="flex flex-col border-r overflow-hidden transition-all"
+          style={{ 
+            width: sidebarCollapsed ? '48px' : '240px',
+            backgroundColor: 'var(--bg-secondary)',
+            borderColor: 'var(--border-primary)'
+          }}
+        >
+          <div 
+            className="flex items-center justify-between px-3 py-2 border-b"
+            style={{ borderColor: 'var(--border-primary)' }}
+          >
+            {!sidebarCollapsed && (
+              <span 
+                className="text-xs font-medium uppercase tracking-wider"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                Metrics
+              </span>
+            )}
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="p-1 transition-colors"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-1">
+          {!sidebarCollapsed && (
+            <>
+              <div className="p-2">
+                <div className="relative">
+                  <Search 
+                    className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3" 
+                    style={{ color: 'var(--text-muted)' }} 
+                  />
+                  <input
+                    type="text"
+                    placeholder="Filter metrics..."
+                    value={metricSearch}
+                    onChange={e => setMetricSearch(e.target.value)}
+                    className="input-themed w-full text-xs pl-7"
+                  />
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-2 pb-2">
+                {loadingMetrics ? (
+                  <div className="text-xs py-4 text-center" style={{ color: 'var(--text-muted)' }}>
+                    Loading metrics...
+                  </div>
+                ) : filteredMetrics.length > 0 ? (
+                  <div className="space-y-0.5">
+                    {filteredMetrics.map(metric => (
+                      <button
+                        key={metric.name}
+                        onClick={() => setQuery(metric.name)}
+                        className="w-full text-left px-2 py-1.5 text-xs rounded transition-colors truncate"
+                        style={{ color: 'var(--text-primary)' }}
+                        onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+                        onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                        title={metric.name}
+                      >
+                        {metric.name}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-xs py-4 text-center" style={{ color: 'var(--text-muted)' }}>
+                    No metrics found
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </aside>
+
+        {/* Query and results area */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Query editor */}
+          <div 
+            className="border-b"
+            style={{ borderColor: 'var(--border-primary)' }}
+          >
+            {queryMode === 'builder' ? (
+              <div className="p-4">
+                <QueryBuilder
+                  datasources={datasources}
+                  selectedDatasourceId={activeDatasourceId || ''}
+                  query={query}
+                  queryMode={queryMode}
+                  availableMetrics={availableMetrics}
+                  loadingMetrics={loadingMetrics}
+                  availableFields={availableFields}
+                  loadingFields={loadingFields}
+                  availableTags={availableTags}
+                  loadingTags={loadingTags}
+                  timeRange={timeRange}
+                  onQueryChange={setQuery}
+                  onQueryModeChange={setQueryMode}
+                  onDatasourceChange={setActiveDatasourceId}
+                  onTimeRangeChange={setTimeRange}
+                  onQuickTimeRange={setQuickTimeRange}
+                  onExecute={executeQuery}
+                  isRunning={isRunning}
+                />
+              </div>
+            ) : (
+              <div className="p-2">
+                <textarea
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                      executeQuery()
+                    }
+                  }}
+                  placeholder={`Enter your ${activeDatasource?.dataSourceType || ''} query... (Ctrl+Enter to run)`}
+                  className="input-themed w-full font-mono text-sm"
+                  style={{ 
+                    minHeight: '80px',
+                    resize: 'vertical'
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Results */}
+          <div className="flex-1 overflow-auto p-4">
             {queryResult ? (
               queryResult.error ? (
-                <div className="bg-themed-alert-error bg-opacity-10 border border-themed-alert-error rounded-lg p-4">
-                  <div className="flex">
-                    <AlertCircle className="h-5 w-5 text-themed-status-error mr-2 mt-0.5" />
+                <div 
+                  className="p-4"
+                  style={{ 
+                    backgroundColor: 'var(--alert-error-bg)',
+                    borderLeft: '3px solid var(--status-error)',
+                    borderRadius: 'var(--radius-sm)'
+                  }}
+                >
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-5 w-5 flex-shrink-0" style={{ color: 'var(--status-error)' }} />
                     <div>
-                      <h3 className="text-sm font-medium text-themed-status-error">Query Error</h3>
-                      <p className="mt-1 text-sm text-themed-text-secondary">{queryResult.error}</p>
+                      <h3 className="text-sm font-medium" style={{ color: 'var(--status-error)' }}>Query Error</h3>
+                      <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>{queryResult.error}</p>
                     </div>
                   </div>
                 </div>
               ) : (
-                <DataVisualization
-                  data={queryResult.results}
-                  datasourceType={activeDatasource?.dataSourceType || 'unknown'}
-                  viewMode={viewMode}
-                />
+                <div className="h-full">
+                  {queryResult.metadata && (
+                    <div className="flex items-center gap-4 mb-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+                      <span>{queryResult.metadata.recordCount} records</span>
+                      <span>•</span>
+                      <span>{queryResult.metadata.executionTime}ms</span>
+                      <span>•</span>
+                      <span>{new Date(queryResult.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                  )}
+                  <DataVisualization
+                    data={queryResult.results}
+                    datasourceType={activeDatasource?.dataSourceType || 'unknown'}
+                    viewMode={viewMode}
+                  />
+                </div>
               )
             ) : (
-              <div className="surface-muted">
-                <div className="flex">
-                  <Info className="h-5 w-5 text-themed-status-info mr-2 mt-0.5" />
-                  <div>
-                    <h3 className="text-sm font-medium text-themed-status-info">Query Tips</h3>
-                    <div className="mt-2 text-sm text-themed-text-secondary space-y-2">
-                      {activeDatasource?.dataSourceType === 'prometheus' && (
-                        <ul className="list-disc pl-5 space-y-1">
-                          <li>Use metric names like <code className="bg-themed-bg-surface px-1 rounded">up</code> or <code className="bg-themed-bg-surface px-1 rounded">http_requests_total</code></li>
-                          <li>Add filters with <code className="bg-themed-bg-surface px-1 rounded">&#123;label=&quot;value&quot;&#125;</code></li>
-                          <li>Use functions like <code className="bg-themed-bg-surface px-1 rounded">rate()</code>, <code className="bg-themed-bg-surface px-1 rounded">sum()</code>, <code className="bg-themed-bg-surface px-1 rounded">avg()</code></li>
-                        </ul>
-                      )}
-                      {activeDatasource?.dataSourceType === 'sqlserver' && (
-                        <ul className="list-disc pl-5 space-y-1">
-                          <li>Use standard SQL syntax: <code className="bg-themed-bg-surface px-1 rounded">SELECT * FROM table</code></li>
-                          <li>Filter by time: <code className="bg-themed-bg-surface px-1 rounded">WHERE timestamp &gt;= DATEADD(hour, -1, GETDATE())</code></li>
-                          <li>Limit results: <code className="bg-themed-bg-surface px-1 rounded">SELECT TOP 100 *</code></li>
-                        </ul>
-                      )}
-                      {activeDatasource?.dataSourceType === 'ingested' && (
-                        <ul className="list-disc pl-5 space-y-1">
-                          <li>Leave query empty to fetch all metrics in the time range</li>
-                          <li>Use the Query Builder for guided metric selection</li>
-                          <li>Adjust the time range to control the data scope</li>
-                        </ul>
-                      )}
-                    </div>
-                  </div>
+              <div 
+                className="h-full flex items-center justify-center"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                <div className="text-center max-w-md">
+                  <Layers className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    Write a query and click Run to see results
+                  </p>
+                  {activeDatasource?.dataSourceType === 'prometheus' && (
+                    <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
+                      Try: <code className="font-mono px-1 py-0.5" style={{ backgroundColor: 'var(--bg-tertiary)' }}>up</code> or <code className="font-mono px-1 py-0.5" style={{ backgroundColor: 'var(--bg-tertiary)' }}>rate(http_requests_total[5m])</code>
+                    </p>
+                  )}
                 </div>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {showExportModal && queryResult && (
+        <ExportModal
+          data={queryResult.results}
+          filename={`${activeDatasource?.name || 'export'}-${new Date().toISOString().split('T')[0]}`}
+          onClose={() => setShowExportModal(false)}
+        />
+      )}
+
+      {/* Save Query Dialog */}
+      {showSaveDialog && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div 
+            className="fixed inset-0 bg-black/50 transition-opacity"
+            onClick={() => {
+              setShowSaveDialog(false)
+              setEditingQueryId(null)
+              setSaveQueryName('')
+            }}
+          />
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div 
+              className="relative w-full max-w-md rounded-lg shadow-xl overflow-hidden"
+              style={{ backgroundColor: 'var(--bg-primary)' }}
+            >
+              <div 
+                className="flex items-center justify-between px-6 py-4 border-b"
+                style={{ borderColor: 'var(--border-primary)', backgroundColor: 'var(--bg-secondary)' }}
+              >
+                <div className="flex items-center gap-2">
+                  <Bookmark className="h-5 w-5" style={{ color: 'var(--interactive-primary)' }} />
+                  <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    {editingQueryId ? 'Edit Saved Query' : 'Save Query'}
+                  </h2>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowSaveDialog(false)
+                    setEditingQueryId(null)
+                    setSaveQueryName('')
+                  }}
+                  className="p-1 rounded-md hover:bg-black/10 transition-colors"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              
+              <div className="px-6 py-4 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    Query Name
+                  </label>
+                  <input
+                    type="text"
+                    value={saveQueryName}
+                    onChange={(e) => setSaveQueryName(e.target.value)}
+                    placeholder="e.g., CPU Usage Last Hour"
+                    className="input-themed w-full"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveQuery()
+                    }}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    Query Preview
+                  </label>
+                  <div 
+                    className="p-3 rounded-md font-mono text-sm"
+                    style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-muted)' }}
+                  >
+                    {query.length > 100 ? query.slice(0, 100) + '...' : query}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 text-sm" style={{ color: 'var(--text-muted)' }}>
+                  <span>Data Source: <strong style={{ color: 'var(--text-secondary)' }}>{activeDatasource?.name}</strong></span>
+                  <span>•</span>
+                  <span>Time Range: <strong style={{ color: 'var(--text-secondary)' }}>{timeRangeLabel}</strong></span>
+                </div>
+              </div>
+
+              <div 
+                className="flex items-center justify-end gap-2 px-6 py-4 border-t"
+                style={{ borderColor: 'var(--border-primary)', backgroundColor: 'var(--bg-secondary)' }}
+              >
+                <button 
+                  onClick={() => {
+                    setShowSaveDialog(false)
+                    setEditingQueryId(null)
+                    setSaveQueryName('')
+                  }} 
+                  className="btn-themed-secondary"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleSaveQuery}
+                  disabled={!saveQueryName.trim()}
+                  className="btn-themed-primary disabled:opacity-50"
+                >
+                  {editingQueryId ? 'Update' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Click outside handler for dropdowns */}
+      {(showSavedQueries || showTimeRangeDropdown) && (
+        <div 
+          className="fixed inset-0 z-40"
+          onClick={() => {
+            setShowSavedQueries(false)
+            setShowTimeRangeDropdown(false)
+          }}
+        />
+      )}
     </div>
   )
 }
 
-return (
-  <div className="page-shell">
-    <PageHeader
-      title="Explore"
-      description="Query, transform, and visualize telemetry across your connected data sources."
-      meta={(
-        <span className="badge-muted">
-          <Database className="h-3 w-3" />
-          {activeDatasourceLabel}
-        </span>
-      )}
-    >
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="badge-muted">
-          <Settings className="h-3 w-3" />
-          Mode: {queryModeLabel}
-        </span>
-        <span className="badge-muted">
-          {viewMode === 'chart' ? <LineChart className="h-3 w-3" /> : <Table className="h-3 w-3" />}
-          View: {viewModeLabel}
-        </span>
-        <span className="badge-muted">
-          <Clock className="h-3 w-3" />
-          Range: {timeRangeLabel}
-        </span>
-      </div>
-    </PageHeader>
-
-    <div className="page-toolbar">
-      <div className="page-toolbar__group text-sm text-themed-text-secondary">
-        <Database className="h-4 w-4 text-themed-text-muted" />
-        <span>{activeDatasource ? activeDatasource.url : 'No endpoint configured'}</span>
-      </div>
-      <div className="page-toolbar__divider" />
-      <div className="page-toolbar__group text-sm text-themed-text-secondary">
-        <Code className="h-4 w-4 text-themed-text-muted" />
-        <span>Editor: {queryModeLabel}</span>
-      </div>
-      <div className="page-toolbar__divider" />
-      <div className="page-toolbar__group text-sm text-themed-text-secondary">
-        <LineChart className="h-4 w-4 text-themed-text-muted" />
-        <span>View: {viewModeLabel}</span>
-      </div>
-      <div className="page-toolbar__divider" />
-      <div className="page-toolbar__group text-sm text-themed-text-secondary">
-        <Clock className="h-4 w-4 text-themed-text-muted" />
-        <span>Window: {timeRangeLabel}</span>
-      </div>
-    </div>
-
-    {renderMainContent()}
-
-    {showExportModal && queryResult && (
-      <ExportModal
-        data={queryResult.results}
-        filename={`${activeDatasource?.name || 'export'}-${new Date().toISOString().split('T')[0]}`}
-        onClose={() => setShowExportModal(false)}
-      />
-    )}
-
-    <button
-      type="button"
-      onClick={() => setShowDebuggingInfo(!showDebuggingInfo)}
-      className="fixed bottom-4 right-4 p-2 bg-themed-bg-tertiary border border-themed-border-primary rounded-full shadow-lg text-themed-text-secondary hover:text-themed-text-primary transition-colors"
-      title="Toggle debugging information"
-    >
-      <HelpCircle className="h-5 w-5" />
-    </button>
-
-    {showDebuggingInfo && (
-      <div className="bg-themed-bg-tertiary rounded-lg border border-themed-border-primary p-6 fixed bottom-20 right-4 w-[32rem] max-h-[60vh] overflow-y-auto z-50">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium text-themed-text-primary">Debugging Information</h3>
-          <button
-            type="button"
-            onClick={() => setShowDebuggingInfo(false)}
-            className="text-themed-text-muted hover:text-themed-text-primary"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <h4 className="text-sm font-medium text-themed-text-secondary">Available Data Sources</h4>
-            <pre className="mt-2 text-xs bg-themed-bg-surface p-3 rounded border overflow-x-auto text-themed-text-primary">
-              {JSON.stringify(datasources, null, 2)}
-            </pre>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-themed-text-secondary">Current Query State</h4>
-            <pre className="mt-2 text-xs bg-themed-bg-surface p-3 rounded border overflow-x-auto text-themed-text-primary">
-              {JSON.stringify({ activeDatasourceId, query, queryMode, timeRange, queryResult }, null, 2)}
-            </pre>
-          </div>
-        </div>
-      </div>
-    )}
-  </div>
-)
-}
-
 export default Explore
-
-

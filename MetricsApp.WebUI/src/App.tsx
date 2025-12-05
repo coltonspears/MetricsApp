@@ -41,6 +41,7 @@ import Logout from './pages/Logout'
 import StyleGuide from './pages/StyleGuide'
 import PluginsListPage from './pages/PluginsListPage'
 import PluginDetailPage from './pages/PluginDetailPage'
+import ServiceMap from './pages/ServiceMap'
 
 function App() {
   const location = useLocation()
@@ -101,6 +102,7 @@ function App() {
           <Route path="/telemetry/testing" element={<TelemetryTesting />} />
           <Route path="/logs" element={<LogViewer />} />
           <Route path="/tracing" element={<Tracing />} />
+          <Route path="/service-map" element={<ServiceMap />} />
           <Route path="/connections/add" element={<AddConnection />} />
           <Route path="/connections/datasources/:dataSourceType" element={<DataSourceDetails />} />
           <Route path="/connections/datasources" element={<DataSources />} />

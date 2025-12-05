@@ -32,6 +32,7 @@ var metricsApi = builder.AddProject<Projects.MetricsApp_Api>("metricsapp-api")
     .WaitFor(redis)
     .WaitFor(rabbitmq);
 
+
 // Web UI
 builder.AddNpmApp("ReactWebUI", "../MetricsApp.WebUI", "dev")
     .WithReference(metricsApi)

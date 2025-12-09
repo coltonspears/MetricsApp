@@ -1,0 +1,33 @@
+<!--
+  MSBuild targets for MetricsApp plugin projects.
+  Include this in your plugin .csproj to enable automatic manifest validation/generation.
+  
+  Usage in your .csproj:
+    <Import Project="$(MSBuildThisFileDirectory)MetricsApp.Plugin.targets" />
+    
+  Or add as a package reference (when packaged):
+    <PackageReference Include="MetricsApp.Abstractions" Version="1.0.0" />
+-->
+<Project>
+  <PropertyGroup>
+    <!-- Enable manifest validation by default -->
+    <ValidatePluginManifest Condition="'$(ValidatePluginManifest)' == ''">true</ValidatePluginManifest>
+    <!-- Path to manifest file -->
+    <PluginManifestPath Condition="'$(PluginManifestPath)' == ''">$(MSBuildProjectDirectory)\manifest.json</PluginManifestPath>
+    <!-- Copy manifest to output -->
+    <CopyManifestToOutput Condition="'$(CopyManifestToOutput)' == ''">true</CopyManifestToOutput>
+  </PropertyGroup>
+
+  <!-- Include manifest.json as content that gets copied to output -->
+  <ItemGroup Condition="Exists('$(PluginManifestPath)') AND '$(CopyManifestToOutput)' == 'true'">
+    <None Include="$(PluginManifestPath)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  
+  <!-- Warn if manifest is missing -->
+  <Target Name="CheckPluginManifest" BeforeTargets="Build" Condition="'$(ValidatePluginManifest)' == 'true'">
+    <Warning 
+      Condition="!Exists('$(PluginManifestPath)')" 
+      Text="Plugin manifest not found at $(PluginManifestPath). Create a manifest.json file or set ValidatePluginManifest=false to disable this warning." />
+  </Target>
+</Project>
+

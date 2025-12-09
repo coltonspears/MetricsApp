@@ -39,4 +39,32 @@
       <ProjectReference Include="..\MetricsApp.Worker\MetricsApp.Worker.csproj" />
     </ItemGroup>
 
+    <!-- Copy plugins to output Plugins folder after build -->
+    <Target Name="CopyPlugins" AfterTargets="Build">
+        <Message Text="Copying plugins to $(OutDir)Plugins..." Importance="high" />
+        
+        <!-- Create plugin directories -->
+        <MakeDir Directories="$(OutDir)Plugins\initial-setup-plugin" />
+        <MakeDir Directories="$(OutDir)Plugins\sqlserver-plugin" />
+        
+        <!-- Copy InitialSetupPlugin -->
+        <ItemGroup>
+            <InitialSetupPluginFiles Include="..\InitialSetupPlugin\bin\$(Configuration)\$(TargetFramework)\InitialSetupPlugin.dll" />
+            <InitialSetupPluginFiles Include="..\InitialSetupPlugin\bin\$(Configuration)\$(TargetFramework)\InitialSetupPlugin.pdb" Condition="Exists('..\InitialSetupPlugin\bin\$(Configuration)\$(TargetFramework)\InitialSetupPlugin.pdb')" />
+            <InitialSetupPluginFiles Include="..\InitialSetupPlugin\bin\$(Configuration)\$(TargetFramework)\manifest.json" />
+            <InitialSetupPluginFiles Include="..\InitialSetupPlugin\bin\$(Configuration)\$(TargetFramework)\schema.sql" Condition="Exists('..\InitialSetupPlugin\bin\$(Configuration)\$(TargetFramework)\schema.sql')" />
+        </ItemGroup>
+        <Copy SourceFiles="@(InitialSetupPluginFiles)" DestinationFolder="$(OutDir)Plugins\initial-setup-plugin" SkipUnchangedFiles="true" />
+        
+        <!-- Copy SqlServerPlugin -->
+        <ItemGroup>
+            <SqlServerPluginFiles Include="..\SqlServerPlugin\bin\$(Configuration)\$(TargetFramework)\SqlServerPlugin.dll" />
+            <SqlServerPluginFiles Include="..\SqlServerPlugin\bin\$(Configuration)\$(TargetFramework)\SqlServerPlugin.pdb" Condition="Exists('..\SqlServerPlugin\bin\$(Configuration)\$(TargetFramework)\SqlServerPlugin.pdb')" />
+            <SqlServerPluginFiles Include="..\SqlServerPlugin\bin\$(Configuration)\$(TargetFramework)\manifest.json" />
+        </ItemGroup>
+        <Copy SourceFiles="@(SqlServerPluginFiles)" DestinationFolder="$(OutDir)Plugins\sqlserver-plugin" SkipUnchangedFiles="true" />
+        
+        <Message Text="Plugins copied successfully!" Importance="high" />
+    </Target>
+
 </Project>

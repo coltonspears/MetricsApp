@@ -1,0 +1,94 @@
+{
+  "manifest_version": "2.0.0",
+  "plugin_id": "{{plugin-id}}",
+  "name": "{{PluginName}}",
+  "version": "1.0.0",
+  "title": "{{Plugin Title}}",
+  "description": "{{Plugin description}}",
+  
+  "capabilities": ["datasource", "dashboard"],
+  
+  "tags": ["example", "template"],
+  
+  "author": {
+    "name": "Your Name",
+    "email": "your.email@example.com",
+    "homepage": "https://github.com/your-username"
+  },
+  
+  "repository": "https://github.com/your-username/{{plugin-id}}",
+  "license": "MIT",
+  
+  "entry": {
+    "assembly": "{{PluginName}}.dll",
+    "frontend_bundle": "/plugins/{{plugin-id}}/bundle.js",
+    "frontend_styles": "/plugins/{{plugin-id}}/styles.css"
+  },
+  
+  "dependencies": {
+    "plugins": {},
+    "platform": {
+      "metricsapp": ">=1.0.0"
+    }
+  },
+  
+  "exports": {
+    "datasources": [
+      {
+        "type": "{{datasource-type}}",
+        "displayName": "{{Data Source Name}}",
+        "description": "{{Data source description}}",
+        "icon": "database",
+        "categories": ["database", "metrics"]
+      }
+    ],
+    "dashboardPanels": [
+      {
+        "type": "{{panel-type}}",
+        "displayName": "{{Panel Name}}",
+        "description": "{{Panel description}}",
+        "icon": "bar-chart"
+      }
+    ],
+    "routes": [
+      {
+        "path": "/plugins/{{plugin-id}}/settings",
+        "component": "SettingsPage",
+        "title": "{{Plugin Title}} Settings"
+      }
+    ]
+  },
+  
+  "settings": {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "title": "Enable Plugin",
+          "default": true
+        },
+        "apiEndpoint": {
+          "type": "string",
+          "title": "API Endpoint",
+          "description": "The API endpoint URL"
+        }
+      }
+    }
+  },
+  
+  "permissions": [
+    "datasources:read",
+    "datasources:write"
+  ],
+  
+  "assets": {
+    "dashboards": ["assets/dashboards/*.json"],
+    "alerts": ["assets/alerts/*.json"],
+    "icons": {
+      "light": "assets/icon-light.svg",
+      "dark": "assets/icon-dark.svg"
+    }
+  }
+}
+

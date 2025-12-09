@@ -189,8 +189,8 @@ public class MetricsAppSink : ILogEventSink, IDisposable
         {
             // Send as simple EventDto for OtelController to process
             var eventDtos = events.Select(ConvertToEventDto).ToList();
-            var json = JsonSerializer.Serialize(eventDtos, _jsonOptions);
-            return new StringContent(json, Encoding.UTF8, "application/json");
+            var simpleJson = JsonSerializer.Serialize(eventDtos, _jsonOptions);
+            return new StringContent(simpleJson, Encoding.UTF8, "application/json");
         }
 
         // Create proper OTLP format
@@ -226,8 +226,8 @@ public class MetricsAppSink : ILogEventSink, IDisposable
             }
         };
 
-        var json = JsonSerializer.Serialize(otlpPayload, _jsonOptions);
-        return new StringContent(json, Encoding.UTF8, "application/json");
+        var otlpJson = JsonSerializer.Serialize(otlpPayload, _jsonOptions);
+        return new StringContent(otlpJson, Encoding.UTF8, "application/json");
     }
 
     private HttpContent CreateJaegerContent(List<LogEvent> events)

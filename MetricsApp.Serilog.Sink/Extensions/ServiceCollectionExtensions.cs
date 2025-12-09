@@ -22,8 +22,12 @@ public static class ServiceCollectionExtensions
         if (services == null) throw new ArgumentNullException(nameof(services));
         if (configuration == null) throw new ArgumentNullException(nameof(configuration));
 
-        // Register the configuration
-        services.Configure<MetricsAppSinkConfiguration>(configuration.GetSection(configSection));
+        // Replace default logging with Serilog
+        services.AddLogging(builder =>
+        {
+            builder.ClearProviders();
+            builder.AddSerilog(dispose: true);
+        });
 
         // Configure Serilog
         var sinkConfig = new MetricsAppSinkConfiguration();
@@ -100,7 +104,20 @@ public static class ServiceCollectionExtensions
         var config = new MetricsAppSinkConfiguration();
         configureOptions(config);
 
-        // Register the configuration
+        return services.AddMetricsAppLogging(config);
+    }
+
+    /// <summary>
+    /// Adds MetricsApp Serilog sink with a pre-configured configuration object
+    /// </summary>
+    public static IServiceCollection AddMetricsAppLogging(
+        this IServiceCollection services,
+        MetricsAppSinkConfiguration config)
+    {
+        if (services == null) throw new ArgumentNullException(nameof(services));
+        if (config == null) throw new ArgumentNullException(nameof(config));
+
+        // Register the configuration if not already registered
         services.AddSingleton(config);
 
         // Configure Serilog

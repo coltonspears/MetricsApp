@@ -96,6 +96,7 @@ const JaegerTraceViewer: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedSpans, setExpandedSpans] = useState<Set<string>>(new Set());
+  const [servicesLoaded, setServicesLoaded] = useState(false);
   
   const [filters, setFilters] = useState<TraceSearchFilters>({
     limit: 20,
@@ -103,36 +104,32 @@ const JaegerTraceViewer: React.FC = () => {
     end: new Date()
   });
 
-  // Load services on component mount
+  // Load services on component mount (only once)
   useEffect(() => {
-    loadServices();
-  }, []);
-
-  // Auto-load services in background if none are present
-  useEffect(() => {
-    if (services.length === 0) {
-      // Try to load services in background
+    if (!servicesLoaded) {
       loadServices();
     }
-  }, []);
+  }, [servicesLoaded]);
   
-  // Retry loading services periodically if none are found
+  // Retry loading services periodically if none are found (with debounce)
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (services.length === 0) {
+    let interval: NodeJS.Timeout | undefined;
+    if (servicesLoaded && services.length === 0) {
       interval = setInterval(() => {
         loadServices();
-      }, 5000); // Retry every 5 seconds
+      }, 10000); // Retry every 10 seconds (less aggressive)
     }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [services.length]);
+  }, [servicesLoaded, services.length]);
 
   // Load operations when service changes
   useEffect(() => {
     if (filters.service) {
       loadOperations(filters.service);
+    } else {
+      setOperations([]); // Clear operations when no service selected
     }
   }, [filters.service]);
 
@@ -195,10 +192,13 @@ const JaegerTraceViewer: React.FC = () => {
       const response = await fetch('/api/v1/integrations/jaeger/services');
       if (response.ok) {
         const result = await response.json();
-        setServices(result.data.data || []);
+        const servicesList = result.data?.data || [];
+        setServices(servicesList);
       }
     } catch (err) {
       console.error('Failed to load services:', err);
+    } finally {
+      setServicesLoaded(true);
     }
   };
 
@@ -207,10 +207,17 @@ const JaegerTraceViewer: React.FC = () => {
       const response = await fetch(`/api/v1/integrations/jaeger/services/${encodeURIComponent(serviceName)}/operations`);
       if (response.ok) {
         const result = await response.json();
-        setOperations(result.data.data?.map((op: any) => op.operationName) || []);
+        // Jaeger returns operations as strings directly in the data array
+        const operationsData = result.data?.data || [];
+        // Handle both string array and object array formats
+        const operationsList = operationsData.map((op: any) => 
+          typeof op === 'string' ? op : (op.operationName || op.name || String(op))
+        ).filter((op: string) => op && op.trim() !== '');
+        setOperations(operationsList);
       }
     } catch (err) {
       console.error('Failed to load operations:', err);
+      setOperations([]);
     }
   };
 
@@ -244,7 +251,7 @@ const JaegerTraceViewer: React.FC = () => {
         if (result.data && result.data.data) {
           // Handle Jaeger format response
           traces = result.data.data.map((jaegerTrace: any) => {
-            const normalizedSpans = jaegerTrace.spans.map((span: any) => {
+            const normalizedSpans = (jaegerTrace.spans || []).map((span: any) => {
               // Find parent from references if parentSpanID is empty
               let parentSpanId = span.parentSpanID;
               if (!parentSpanId && span.references && span.references.length > 0) {
@@ -254,20 +261,21 @@ const JaegerTraceViewer: React.FC = () => {
                 }
               }
               
+              const tags = span.tags || [];
               return {
                 traceId: span.traceID,
                 spanId: span.spanID,
                 parentSpanId: parentSpanId || undefined,
                 name: span.operationName,
-                serviceName: jaegerTrace.processes[span.processID]?.serviceName || 'unknown',
-                startTime: span.startTime,
-                duration: span.duration,
-                attributes: span.tags.reduce((acc: any, tag: any) => {
+                serviceName: jaegerTrace.processes?.[span.processID]?.serviceName || 'unknown',
+                startTime: span.startTime || 0,
+                duration: span.duration || 0,
+                attributes: tags.reduce((acc: any, tag: any) => {
                   acc[tag.key] = tag.value;
                   return acc;
                 }, {}),
                 status: { code: 0 },
-                isError: span.tags.some((tag: any) => tag.key === 'error' && tag.value === true)
+                isError: tags.some((tag: any) => tag.key === 'error' && tag.value === true)
               };
             });
             
@@ -275,9 +283,9 @@ const JaegerTraceViewer: React.FC = () => {
               traceId: jaegerTrace.traceID,
               spans: normalizedSpans,
               services: Object.fromEntries(
-                jaegerTrace.spans.map((span: any) => [
+                (jaegerTrace.spans || []).map((span: any) => [
                   span.spanID, 
-                  jaegerTrace.processes[span.processID]?.serviceName || 'unknown'
+                  jaegerTrace.processes?.[span.processID]?.serviceName || 'unknown'
                 ])
               )
             };
@@ -355,12 +363,12 @@ const JaegerTraceViewer: React.FC = () => {
               serviceName: jaegerTrace.processes[span.processID]?.serviceName || 'unknown',
               startTime: span.startTime,
               duration: span.duration,
-              attributes: span.tags.reduce((acc: any, tag: any) => {
+              attributes: (span.tags || []).reduce((acc: any, tag: any) => {
                 acc[tag.key] = tag.value;
                 return acc;
               }, {}),
               status: { code: 0 },
-              isError: span.tags.some((tag: any) => tag.key === 'error' && tag.value === true)
+              isError: (span.tags || []).some((tag: any) => tag.key === 'error' && tag.value === true)
             };
           });
           
@@ -384,6 +392,14 @@ const JaegerTraceViewer: React.FC = () => {
         
         if (normalizedTrace) {
           setSelectedTrace(normalizedTrace);
+          // Auto-expand all spans that have children for better visibility
+          const spansWithChildren = new Set<string>();
+          normalizedTrace.spans.forEach(span => {
+            if (span.parentSpanId) {
+              spansWithChildren.add(span.parentSpanId);
+            }
+          });
+          setExpandedSpans(spansWithChildren);
         }
       }
     } catch (err) {
@@ -458,10 +474,11 @@ const JaegerTraceViewer: React.FC = () => {
     const serviceName = span.serviceName;
     const spanColor = getSpanColor(serviceName);
     
-    // Calculate span position and width relative to trace
-    const spanStart = ((span.startTime - traceStartTime) / traceDuration) * 100;
-    const spanWidth = (span.duration / traceDuration) * 100;
-    const selfTime = span.duration - childSpans.reduce((acc, child) => acc + child.duration, 0);
+    // Calculate span position and width relative to trace (handle edge cases)
+    const safeDuration = traceDuration > 0 ? traceDuration : 1;
+    const spanStart = Math.max(0, Math.min(100, ((span.startTime - traceStartTime) / safeDuration) * 100));
+    const spanWidth = Math.max(0.5, Math.min(100 - spanStart, (span.duration / safeDuration) * 100));
+    const selfTime = Math.max(0, span.duration - childSpans.reduce((acc, child) => acc + child.duration, 0));
 
     const isError = span.isError;
     
@@ -804,9 +821,13 @@ const JaegerTraceViewer: React.FC = () => {
   };
 
   const rootSpans = selectedTrace ? buildSpanTree(selectedTrace.spans) : [];
-  const traceStartTime = selectedTrace ? Math.min(...selectedTrace.spans.map(s => s.startTime)) : 0;
-  const traceEndTime = selectedTrace ? Math.max(...selectedTrace.spans.map(s => s.startTime + s.duration)) : 0;
-  const traceDuration = traceEndTime - traceStartTime;
+  const traceStartTime = selectedTrace && selectedTrace.spans.length > 0 
+    ? Math.min(...selectedTrace.spans.map(s => s.startTime)) 
+    : 0;
+  const traceEndTime = selectedTrace && selectedTrace.spans.length > 0 
+    ? Math.max(...selectedTrace.spans.map(s => s.startTime + s.duration)) 
+    : 0;
+  const traceDuration = Math.max(1, traceEndTime - traceStartTime); // Ensure minimum duration of 1
 
   return (
     <div className="h-full flex flex-col" style={{ backgroundColor: 'var(--bg-primary)' }}>

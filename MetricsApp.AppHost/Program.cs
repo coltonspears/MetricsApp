@@ -23,6 +23,14 @@ builder.AddContainer("prometheus", "prom/prometheus", "latest")
         "--web.enable-lifecycle",
         "--web.enable-remote-write-receiver");
 
+// Jaeger All-In-One for distributed tracing with OTLP support
+// Exposes: OTLP gRPC (4317), OTLP HTTP (4318), Query UI/API (16686)
+var jaeger = builder.AddContainer("jaeger", "jaegertracing/all-in-one", "latest")
+    .WithEnvironment("COLLECTOR_OTLP_ENABLED", "true")
+    .WithHttpEndpoint(16686, 16686, name: "jaeger-ui")     // Query UI & API
+    .WithEndpoint(4317, 4317, name: "otlp-grpc")           // OTLP gRPC receiver
+    .WithHttpEndpoint(4318, 4318, name: "otlp-http");      // OTLP HTTP receiver
+
 // MetricsApp API acts as the OTLP collector and query surface
 var metricsApi = builder.AddProject<Projects.MetricsApp_Api>("metricsapp-api")
     .WithReference(database)
@@ -30,7 +38,16 @@ var metricsApi = builder.AddProject<Projects.MetricsApp_Api>("metricsapp-api")
     .WithReference(rabbitmq)
     .WaitFor(database)
     .WaitFor(redis)
-    .WaitFor(rabbitmq);
+    .WaitFor(rabbitmq)
+    .WaitFor(jaeger)
+    // Configure Jaeger integration for the API
+    .WithEnvironment("Jaeger__QueryUrl", "http://localhost:16686")
+    .WithEnvironment("Jaeger__OtlpUrl", "http://localhost:4318")
+    // Configure OpenTelemetry to export traces to Jaeger OTLP endpoint
+    .WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317")
+    .WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
+    // Make the default endpoints external so they're accessible
+    .WithExternalHttpEndpoints();
 
 
 // Web UI

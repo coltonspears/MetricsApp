@@ -1,4 +1,5 @@
 using MetricsApp.Abstractions.Plugins;
+using MetricsApp.Abstractions.Plugins.Capabilities;
 using MetricsApp.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,7 +19,7 @@ public class PluginsController : ControllerBase
     }
 
     /// <summary>
-    /// Get all plugins (for tiling in the UI)
+    /// Get all plugins (for tiling in the UI).
     /// </summary>
     [HttpGet]
     public IActionResult GetPlugins()
@@ -30,11 +31,11 @@ public class PluginsController : ControllerBase
                 PluginId = m.PluginId,
                 Name = m.Name,
                 Version = m.Version,
-                Type = m.Type,
-                Title = m.Title,
-                Description = m.Description,
+                Capabilities = m.Capabilities,
+                Title = m.Title ?? m.Name,
+                Description = m.Description ?? string.Empty,
                 Tags = m.Tags ?? new List<string>(),
-                HasFrontend = !string.IsNullOrWhiteSpace(m.Entry.FrontendBundle)
+                HasFrontend = !string.IsNullOrWhiteSpace(m.Entry?.FrontendBundle)
             })
             .ToList();
 
@@ -42,21 +43,21 @@ public class PluginsController : ControllerBase
     }
 
     /// <summary>
-    /// Get only front-end/UI plugins (dashboards, setup screens, etc.)
+    /// Get only front-end/UI plugins (dashboards, setup screens, etc.).
     /// </summary>
     [HttpGet("frontend")]
     public IActionResult GetFrontendPlugins()
     {
         var manifests = _pluginManager
             .LoadManifests(_pluginsRoot)
-            .Where(m => m.Type == PluginType.Dashboard || m.Type == PluginType.Setup)
+            .Where(m => m.Capabilities.Contains("dashboard") || m.Capabilities.Contains("setup") || m.Capabilities.Contains("routes"))
             .Select(m => new FrontendPluginDefinition
             {
                 PluginId = m.PluginId,
                 Name = m.Name,
                 Version = m.Version,
                 MountPointId = m.PluginId,
-                BundleUrl = m.Entry.FrontendBundle
+                BundleUrl = m.Entry?.FrontendBundle
             })
             .ToList();
 
@@ -64,7 +65,7 @@ public class PluginsController : ControllerBase
     }
 
     /// <summary>
-    /// Get the full manifest for a single plugin
+    /// Get the full manifest for a single plugin.
     /// </summary>
     [HttpGet("{pluginId}")]
     public IActionResult GetPlugin(string pluginId)
@@ -78,5 +79,93 @@ public class PluginsController : ControllerBase
             return NotFound();
 
         return Ok(manifest);
+    }
+
+    /// <summary>
+    /// Get all loaded plugins with their current state.
+    /// </summary>
+    [HttpGet("loaded")]
+    public IActionResult GetLoadedPlugins()
+    {
+        var loaded = _pluginManager.LoadedPlugins.Values
+            .Select(p => new
+            {
+                PluginId = p.Manifest.PluginId,
+                Name = p.Manifest.Name,
+                Version = p.Manifest.Version,
+                Title = p.Manifest.Title,
+                Description = p.Manifest.Description,
+                Capabilities = p.Manifest.Capabilities,
+                State = p.State.ToString(),
+                Error = p.Error,
+                HasFrontend = !string.IsNullOrWhiteSpace(p.Manifest.Entry?.FrontendBundle)
+            })
+            .ToList();
+
+        return Ok(loaded);
+    }
+
+    /// <summary>
+    /// Get plugins that provide a specific capability.
+    /// </summary>
+    [HttpGet("capability/{capability}")]
+    public IActionResult GetPluginsByCapability(string capability)
+    {
+        var plugins = _pluginManager.LoadedPlugins.Values
+            .Where(p => p.Manifest.Capabilities.Contains(capability, StringComparer.OrdinalIgnoreCase))
+            .Select(p => new
+            {
+                PluginId = p.Manifest.PluginId,
+                Name = p.Manifest.Name,
+                Version = p.Manifest.Version,
+                Title = p.Manifest.Title,
+                Description = p.Manifest.Description,
+                Capabilities = p.Manifest.Capabilities,
+                State = p.State.ToString()
+            })
+            .ToList();
+
+        return Ok(plugins);
+    }
+
+    /// <summary>
+    /// Get all available data sources from plugins.
+    /// </summary>
+    [HttpGet("datasources")]
+    public IActionResult GetDataSourcePlugins()
+    {
+        var dataSources = _pluginManager.GetCapabilities<IDataSourceCapability>()
+            .Select(ds => new
+            {
+                Type = ds.DataSourceType,
+                DisplayName = ds.DisplayName,
+                Description = ds.Description,
+                Icon = ds.IconName,
+                Categories = ds.Categories
+            })
+            .ToList();
+
+        return Ok(dataSources);
+    }
+
+    /// <summary>
+    /// Get all available dashboard panels from plugins.
+    /// </summary>
+    [HttpGet("panels")]
+    public IActionResult GetDashboardPanels()
+    {
+        var panels = _pluginManager.GetCapabilities<IDashboardCapability>()
+            .SelectMany(dc => dc.GetPanelTypes())
+            .Select(p => new
+            {
+                Type = p.Type,
+                DisplayName = p.DisplayName,
+                Description = p.Description,
+                Icon = p.IconName,
+                DefaultSize = p.DefaultSize
+            })
+            .ToList();
+
+        return Ok(panels);
     }
 }

@@ -6,15 +6,30 @@ import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import { registerInstrumentations } from '@opentelemetry/instrumentation'
 import { FetchInstrumentation } from '@opentelemetry/instrumentation-fetch'
 import { XMLHttpRequestInstrumentation } from '@opentelemetry/instrumentation-xml-http-request'
-import { UserInteractionInstrumentation } from '@opentelemetry/instrumentation-user-interaction'
-import { DocumentLoadInstrumentation } from '@opentelemetry/instrumentation-document-load'
 import { trace, SpanStatusCode, Span, SpanKind } from '@opentelemetry/api'
 
 type Attributes = Record<string, any>
 
-const OTEL_COLLECTOR_URL = import.meta.env.VITE_OTEL_COLLECTOR_URL ?? '/api/v1/ingest/otlp/traces'
 const SERVICE_NAME = import.meta.env.VITE_OTEL_SERVICE_NAME ?? 'metricsapp-webui'
 const SERVICE_VERSION = import.meta.env.VITE_OTEL_SERVICE_VERSION ?? '1.1.0'
+
+// Get the OTLP collector URL - convert relative paths to absolute URLs
+function getOtelCollectorUrl(): string {
+  const configuredUrl = import.meta.env.VITE_OTEL_COLLECTOR_URL ?? '/api/v1/ingest/otlp/traces'
+  
+  // If it's already an absolute URL, use it as-is
+  if (configuredUrl.startsWith('http://') || configuredUrl.startsWith('https://')) {
+    return configuredUrl
+  }
+  
+  // Convert relative path to absolute URL using current origin
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}${configuredUrl.startsWith('/') ? '' : '/'}${configuredUrl}`
+  }
+  
+  // Fallback for SSR or non-browser environments
+  return `http://localhost:3000${configuredUrl.startsWith('/') ? '' : '/'}${configuredUrl}`
+}
 
 let isInitialized = false
 let provider: WebTracerProvider | undefined
@@ -26,8 +41,10 @@ export function initializeTelemetry() {
   }
 
   try {
+    const collectorUrl = getOtelCollectorUrl()
+    
     const traceExporter = new OTLPTraceExporter({
-      url: OTEL_COLLECTOR_URL,
+      url: collectorUrl,
       headers: {
         'Content-Type': 'application/json'
       }
@@ -42,42 +59,48 @@ export function initializeTelemetry() {
       })
     )
 
-    const tracerProvider = new WebTracerProvider({
-      resource
-    })
+    // Create span processor for exporting traces
+    const spanProcessor = new SimpleSpanProcessor(traceExporter)
 
-    // TypeScript types for WebTracerProvider may not include addSpanProcessor directly
-    // but it exists on the prototype from BasicTracerProvider
-    ;(tracerProvider as any).addSpanProcessor(new SimpleSpanProcessor(traceExporter))
+    const tracerProvider = new WebTracerProvider({
+      resource,
+      spanProcessors: [spanProcessor]
+    })
 
     tracerProvider.register()
 
     provider = tracerProvider
 
+    // URLs to ignore for instrumentation (prevents infinite loop from tracing telemetry export requests)
+    const ignoreUrls = [
+      /\/api\/v1\/ingest\/otlp/,  // OTLP trace/metrics/logs export endpoints
+      /\/api\/v1\/rum\//,         // RUM events endpoint
+      /\/api\/v1\/telemetry\//,   // Telemetry query endpoints
+      /\/v1\/traces/,             // Alternative OTLP endpoint format
+      /\/v1\/metrics/,            // Alternative OTLP metrics endpoint
+      /\/v1\/logs/                // Alternative OTLP logs endpoint
+    ]
+
     registerInstrumentations({
       instrumentations: [
         new FetchInstrumentation({
-          propagateTraceHeaderCorsUrls: [
-            /^https?:\/\/localhost.*\/api\/.*/,
-            /^https?:\/\/.*\.metricsapp\.local.*\/api\/.*/
-          ],
+          // Don't propagate trace headers - causes CORS preflight issues
+          propagateTraceHeaderCorsUrls: [],
+          ignoreUrls,
           clearTimingResources: true
         }),
         new XMLHttpRequestInstrumentation({
-          propagateTraceHeaderCorsUrls: [
-            /^https?:\/\/localhost.*\/api\/.*/,
-            /^https?:\/\/.*\.metricsapp\.local.*\/api\/.*/
-          ]
-        }),
-        new UserInteractionInstrumentation({
-          eventNames: ['click', 'submit', 'keydown']
-        }),
-        new DocumentLoadInstrumentation()
+          // Don't propagate trace headers - causes CORS preflight issues
+          propagateTraceHeaderCorsUrls: [],
+          ignoreUrls
+        })
+        // Removed UserInteractionInstrumentation - too granular (traced every click)
+        // Removed DocumentLoadInstrumentation - not needed for basic HTTP tracing
       ]
     })
 
     isInitialized = true
-    console.log('OpenTelemetry initialized for MetricsApp WebUI')
+    console.log(`OpenTelemetry initialized for MetricsApp WebUI (exporting to: ${collectorUrl})`)
 
     window.addEventListener('unhandledrejection', event => {
       recordError(event.reason, 'unhandled_promise_rejection')
@@ -145,6 +168,14 @@ export async function traceAsync<T>(
   })
 }
 
+/**
+ * @deprecated DO NOT USE with FetchInstrumentation enabled.
+ * FetchInstrumentation auto-traces all fetch() calls. Using this function
+ * alongside auto-instrumentation will create DUPLICATE spans and can cause
+ * infinite loops when exporting telemetry.
+ * 
+ * Only use this if you've disabled FetchInstrumentation and need manual tracing.
+ */
 export async function traceApiCall<T>(
   url: string,
   method: string,
@@ -231,9 +262,13 @@ export function recordError(error: any, errorType: string = 'unknown') {
   span.end()
 }
 
+/**
+ * @deprecated DO NOT USE - FetchInstrumentation auto-traces all fetch() calls.
+ * Using this will create duplicate spans. Just use the native fetch() directly.
+ */
 export const tracedFetch = async (url: string, options?: RequestInit) => {
-  const method = options?.method ?? 'GET'
-  return traceApiCall(url, method, () => fetch(url, options))
+  // Just use native fetch - FetchInstrumentation handles tracing automatically
+  return fetch(url, options)
 }
 
 

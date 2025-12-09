@@ -307,15 +307,9 @@ public class OtelController : ControllerBase
     {
         try
         {
-            var jaegerHttpUrl = _configuration["Jaeger:QueryUrl"];
-            if (string.IsNullOrEmpty(jaegerHttpUrl))
-            {
-                _logger.LogDebug("No Jaeger:QueryUrl configured, skipping Jaeger forwarding");
-                return;
-            }
-
-            // Use Jaeger's HTTP collector endpoint instead of gRPC
-            //var jaegerCollectorUrl = jaegerHttpUrl.Replace(":16686", ":14318").TrimEnd('/');
+            // Get the Jaeger OTLP HTTP collector endpoint (default: port 4318)
+            // This is separate from the Query API (port 16686)
+            var jaegerOtlpUrl = _configuration["Jaeger:OtlpUrl"] ?? "http://localhost:4318";
             
             using var httpClient = _httpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(10);
@@ -332,24 +326,26 @@ public class OtelController : ControllerBase
                 
                 content = new StringContent(jsonContent, System.Text.Encoding.UTF8);
                 content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
-                //content.Headers.Add("Content-Encoding", "gzip"); // Jaeger expects gzip encoding for traces
             }
 
-            var response = await httpClient.PostAsync($"{jaegerHttpUrl}/api/traces", content);
+            // Use the standard OTLP HTTP endpoint path for traces
+            var otlpTracesEndpoint = $"{jaegerOtlpUrl.TrimEnd('/')}/v1/traces";
+            var response = await httpClient.PostAsync(otlpTracesEndpoint, content);
             
             if (response.IsSuccessStatusCode)
             {
-                _logger.LogDebug("Successfully forwarded trace to Jaeger collector at {JaegerUrl}", jaegerHttpUrl);
+                _logger.LogDebug("Successfully forwarded trace to Jaeger OTLP collector at {OtlpUrl}", otlpTracesEndpoint);
             }
             else
             {
-                _logger.LogWarning("Failed to forward trace to Jaeger collector. Status: {StatusCode}, Reason: {ReasonPhrase}", 
-                    response.StatusCode, response.ReasonPhrase);
+                var responseBody = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("Failed to forward trace to Jaeger OTLP collector. Status: {StatusCode}, Reason: {ReasonPhrase}, Body: {Body}", 
+                    response.StatusCode, response.ReasonPhrase, responseBody);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Exception occurred while forwarding trace to Jaeger");
+            _logger.LogWarning(ex, "Exception occurred while forwarding trace to Jaeger OTLP collector");
         }
     }
 

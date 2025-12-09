@@ -1,4 +1,4 @@
-import { recordError, traceApiCall } from './telemetry'
+import { recordError } from './telemetry'
 
 export type RumEventType = 'pageview' | 'interaction' | 'error' | 'performance' | 'custom'
 
@@ -233,16 +233,20 @@ export class RumCollector {
     }
 
     try {
-      await traceApiCall(this.config.endpoint, 'POST', () => {
-        return fetch(this.config.endpoint, {
-          method: 'POST',
-          credentials: this.config.credentials,
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body
-        })
+      // Don't use traceApiCall here - the FetchInstrumentation auto-traces this,
+      // and adding manual tracing would cause double spans
+      const response = await fetch(this.config.endpoint, {
+        method: 'POST',
+        credentials: this.config.credentials,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body
       })
+      
+      if (!response.ok) {
+        throw new Error(`RUM flush failed: ${response.status} ${response.statusText}`)
+      }
     } catch (error) {
       recordError(error, 'rum.flush')
       // Requeue the events to try again later, but keep the queue bounded
@@ -528,7 +532,8 @@ export const createRumFetch = (collector: RumCollector = rumCollector) => {
     const start = performance.now()
 
     try {
-      const response = await traceApiCall(url, method, () => fetch(input, requestInit))
+      // Don't use traceApiCall - FetchInstrumentation auto-traces all fetches
+      const response = await fetch(input, requestInit)
 
       collector.trackEvent('performance', {
         category: 'http',

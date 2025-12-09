@@ -70,7 +70,7 @@ builder.Services.AddLogging(logging =>
 builder.Services.AddInMemoryQueue();
 builder.Services.AddInMemoryCaching();
 builder.Services.AddInMemoryRepository();
-builder.Services.AddSingleton<IDataRepository, SqlServerDataRepository>();
+//builder.Services.AddSingleton<IDataRepository, SqlServerDataRepository>();
 builder.Services.AddWindowsPerfCounterParser();
 builder.Services.AddOpenTelemetryParsers();
 

@@ -1,6 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using MetricsApp.Serilog.Sink.Extensions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MetricsApp.Serilog.Sink.Examples;
 
@@ -125,24 +129,25 @@ public class OrdersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
     {
-        using var activity = Log.Logger.ForContext("OrderId", Guid.NewGuid())
-                                       .ForContext("CustomerId", request.CustomerId)
-                                       .ForContext("Items", request.Items?.Count ?? 0);
+        // Create a contextual logger with order-specific properties
+        var contextLogger = Log.Logger.ForContext("OrderId", Guid.NewGuid())
+                                      .ForContext("CustomerId", request.CustomerId)
+                                      .ForContext("Items", request.Items?.Count ?? 0);
 
-        activity.Information("Starting order creation for customer {CustomerId}", request.CustomerId);
+        contextLogger.Information("Starting order creation for customer {CustomerId}", request.CustomerId);
 
         try
         {
             // Validate request
             if (string.IsNullOrEmpty(request.CustomerId))
             {
-                activity.Warning("Order creation failed: missing customer ID");
+                contextLogger.Warning("Order creation failed: missing customer ID");
                 return BadRequest("Customer ID is required");
             }
 
             if (request.Items == null || !request.Items.Any())
             {
-                activity.Warning("Order creation failed: no items provided");
+                contextLogger.Warning("Order creation failed: no items provided");
                 return BadRequest("At least one item is required");
             }
 
@@ -151,14 +156,14 @@ public class OrdersController : ControllerBase
 
             var orderId = Random.Shared.Next(1, 1000);
             
-            activity.Information("Order {OrderId} created successfully for customer {CustomerId} with {ItemCount} items",
+            contextLogger.Information("Order {OrderId} created successfully for customer {CustomerId} with {ItemCount} items",
                 orderId, request.CustomerId, request.Items.Count);
 
             return Ok(new { OrderId = orderId, Status = "Created" });
         }
         catch (Exception ex)
         {
-            activity.Error(ex, "Failed to create order for customer {CustomerId}", request.CustomerId);
+            contextLogger.Error(ex, "Failed to create order for customer {CustomerId}", request.CustomerId);
             return StatusCode(500, "Internal server error");
         }
     }

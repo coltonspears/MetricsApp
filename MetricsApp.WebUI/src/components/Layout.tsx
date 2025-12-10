@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Database, Search, Bell, Settings, Sun, Moon, Activity, Layers, ChevronDown, Plus, BarChart3, User, LogOut, History, Star, Home, HelpCircle, Sliders, Bookmark, Menu, Shield, Users, Building, GitBranch, BookCopy, Target, FileText, GitCommit, Network } from 'lucide-react'
+import { Database, Search, Bell, Settings, Sun, Moon, Activity, Layers, ChevronDown, Plus, BarChart3, User, LogOut, History, Star, Home, HelpCircle, Sliders, Bookmark, Menu, Shield, Users, Building, GitBranch, BookCopy, Target, FileText, GitCommit, Network, LayoutDashboard } from 'lucide-react'
 import { useTheme } from '../lib/theme'
 import ThemeSelector from './ThemeSelector'
 import BreadcrumbDropdown, { BreadcrumbDropdownItem } from './BreadcrumbDropdown'
@@ -25,7 +25,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   // Restore navigation and related arrays
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: Database, current: location.pathname === '/' },
+    { name: 'Dashboard', href: '/', icon: Database, current: location.pathname === '/' || location.pathname === '/dashboard' },
+    { name: 'Dashboards', href: '/dashboards', icon: LayoutDashboard, current: location.pathname.startsWith('/dashboards') },
     { name: 'Explore', href: '/explore', icon: BarChart3, current: location.pathname === '/explore' },
     { name: 'Search', href: '/search', icon: Search, current: location.pathname === '/search' },
     { name: 'Telemetry Explorer', href: '/telemetry', icon: Target, current: location.pathname === '/telemetry' || location.pathname === '/telemetry/testing' },

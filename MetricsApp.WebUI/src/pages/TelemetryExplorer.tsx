@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Database,
   Search,
@@ -10,10 +11,14 @@ import {
   Activity,
   AlertTriangle,
   Target,
-  Sliders
+  Sliders,
+  Save,
+  LayoutDashboard,
+  FolderOpen
 } from 'lucide-react'
 import { DataSourceApi, DataSourceConfiguration } from '../lib/datasource-api'
 import TelemetryApi from '../lib/telemetry-api'
+import { DashboardApi, DashboardUtils, type DashboardPanel, type PanelQuery } from '../lib/dashboard-api'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
 import PageHeader from '../components/PageHeader'
 
@@ -82,6 +87,7 @@ const timeRangeOptions = [
 ]
 
 const TelemetryExplorer = () => {
+  const navigate = useNavigate()
   const [dataSources, setDataSources] = useState<DataSourceConfiguration[]>([])
   const [selectedDataSource, setSelectedDataSource] = useState<string>('')
   const [metricExplorer, setMetricExplorer] = useState<MetricExplorer>({
@@ -104,6 +110,8 @@ const TelemetryExplorer = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [otlpHealth, setOTLPHealth] = useState<boolean | null>(null)
+  const [showSaveModal, setShowSaveModal] = useState(false)
+  const [savingDashboard, setSavingDashboard] = useState(false)
 
   useEffect(() => {
     loadDataSources()
@@ -242,6 +250,84 @@ const TelemetryExplorer = () => {
         ? prev.selectedMetrics.filter(m => m !== metricName)
         : [...prev.selectedMetrics, metricName]
     }))
+  }
+
+  const handleSaveAsDashboard = async (name: string, description?: string) => {
+    if (panels.length === 0) {
+      setError('No panels to save. Add some queries first.')
+      return
+    }
+
+    try {
+      setSavingDashboard(true)
+      
+      // Convert visualization panels to dashboard panels
+      const dashboardPanels: DashboardPanel[] = panels.map((panel, index) => ({
+        id: panel.id,
+        title: panel.title,
+        type: panel.type as any,
+        gridPos: {
+          x: (index % 2) * 12,
+          y: Math.floor(index / 2) * 8,
+          width: 12,
+          height: 8
+        },
+        dataSourceRef: '$datasource',
+        queries: [{
+          refId: 'A',
+          expression: panel.query.query,
+          hidden: false,
+          queryOptions: {}
+        }],
+        options: {},
+        fieldConfig: {
+          defaults: {
+            thresholds: [],
+            mappings: []
+          },
+          overrides: []
+        },
+        collapsed: false,
+        links: []
+      }))
+
+      // Create the dashboard instance
+      const dashboard = await DashboardApi.createInstance({
+        tenantId: 'default',
+        name,
+        description,
+        tags: ['from-explorer'],
+        variableValues: {
+          datasource: {
+            value: selectedDataSource,
+            dataSourceId: selectedDataSource,
+            isDefault: false
+          }
+        },
+        panels: dashboardPanels,
+        timeRange: {
+          from: `now-${timeRange.relative || '1h'}`,
+          to: 'now'
+        },
+        refreshIntervalSeconds: 30,
+        isStarred: false,
+        permissions: {
+          visibility: 'Private',
+          userPermissions: {},
+          teamPermissions: {},
+          allowAnonymous: false
+        },
+        syncWithTemplate: false
+      })
+
+      // Navigate to the new dashboard
+      navigate(`/dashboards/${dashboard.id}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save dashboard')
+    } finally {
+      setSavingDashboard(false)
+      setShowSaveModal(false)
+    }
   }
 
   const handleTimeRangeChange = (value: string) => {
@@ -477,6 +563,18 @@ const TelemetryExplorer = () => {
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </button>
+            {panels.length > 0 && (
+              <>
+                <div className="h-6 w-px bg-themed-border-primary" />
+                <button
+                  onClick={() => setShowSaveModal(true)}
+                  className="btn-themed-primary"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Save as Dashboard
+                </button>
+              </>
+            )}
           </div>
         }
       >
@@ -730,6 +828,106 @@ const TelemetryExplorer = () => {
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Save as Dashboard Modal */}
+      {showSaveModal && (
+        <SaveDashboardModal
+          onClose={() => setShowSaveModal(false)}
+          onSave={handleSaveAsDashboard}
+          saving={savingDashboard}
+          panelCount={panels.length}
+        />
+      )}
+    </div>
+  )
+}
+
+// Save Dashboard Modal Component
+interface SaveDashboardModalProps {
+  onClose: () => void
+  onSave: (name: string, description?: string) => void
+  saving: boolean
+  panelCount: number
+}
+
+const SaveDashboardModal = ({ onClose, onSave, saving, panelCount }: SaveDashboardModalProps) => {
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-themed-bg-elevated rounded-xl shadow-xl w-full max-w-md p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-themed-interactive-secondary rounded-lg">
+            <LayoutDashboard className="h-5 w-5 text-themed-interactive-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold">Save as Dashboard</h2>
+            <p className="text-sm text-themed-text-secondary">
+              Save your current exploration as a reusable dashboard
+            </p>
+          </div>
+        </div>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Dashboard Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="input-themed w-full"
+              placeholder="My Telemetry Dashboard"
+              autoFocus
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Description (optional)</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="input-themed w-full"
+              rows={3}
+              placeholder="Describe what this dashboard monitors..."
+            />
+          </div>
+
+          <div className="bg-themed-bg-secondary rounded-lg p-3">
+            <div className="flex items-center gap-2 text-sm text-themed-text-secondary">
+              <BarChart3 className="h-4 w-4" />
+              <span>{panelCount} panel{panelCount !== 1 ? 's' : ''} will be saved</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 mt-6">
+          <button 
+            onClick={onClose} 
+            className="btn-themed-secondary"
+            disabled={saving}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onSave(name, description)}
+            disabled={!name.trim() || saving}
+            className="btn-themed-primary disabled:opacity-50"
+          >
+            {saving ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Save Dashboard
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>

@@ -5,6 +5,8 @@ import { rumCollector, trackPageView } from './lib/rum-collector'
 import { traceRouteChange } from './lib/telemetry'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
+import DashboardList from './pages/DashboardList'
+import DashboardView from './pages/DashboardView'
 import Explore from './pages/Explore'
 import Search from './pages/Search'
 import TelemetryExplorer from './pages/TelemetryExplorer'
@@ -96,6 +98,9 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboards" element={<DashboardList />} />
+          <Route path="/dashboards/:dashboardId" element={<DashboardView />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/search" element={<Search />} />
           <Route path="/telemetry" element={<TelemetryExplorer />} />

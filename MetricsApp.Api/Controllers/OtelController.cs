@@ -7,13 +7,25 @@ namespace MetricsApp.Api.Controllers;
 
 /// <summary>
 /// OpenTelemetry Protocol (OTLP) ingestion endpoints.
-/// Handles traces, metrics, and logs according to OTLP specification.
+/// Handles traces, metrics, and logs over OTLP/HTTP.
+///
+/// MVP behavior:
+/// - JSON payloads are accepted and queued for in-process parsing/storage.
+/// - Protobuf payloads are accepted only for /traces (forwarded to Jaeger as-is)
+///   and rejected with 415 for /metrics and /logs because the in-process parsers
+///   only understand JSON.
 /// </summary>
 [ApiController]
 [Route("api/v1/ingest/otlp")]
 [ApiExplorerSettings(GroupName = "ingestion")]
 public class OtelController : ControllerBase
 {
+    /// <summary>Maximum accepted body size for a single OTLP request.</summary>
+    public const int MaxRequestBodyBytes = 5 * 1024 * 1024;
+
+    private const string ProtobufContentType = "application/x-protobuf";
+    private const string JsonContentType = "application/json";
+
     private readonly ILogger<OtelController> _logger;
     private readonly IMessageQueueProducer<EventDto> _queueProducer;
     private readonly IHttpClientFactory _httpClientFactory;
@@ -31,36 +43,21 @@ public class OtelController : ControllerBase
         _configuration = configuration;
     }
 
-    /// <summary>
-    /// OTLP traces ingestion endpoint
-    /// </summary>
     [HttpPost("traces")]
-    public async Task<IActionResult> PostTraces()
-    {
-        return await ProcessOtlpRequest("traces");
-    }
+    [RequestSizeLimit(MaxRequestBodyBytes)]
+    public Task<IActionResult> PostTraces(CancellationToken cancellationToken)
+        => ProcessOtlpRequest("traces", allowProtobuf: true, cancellationToken);
 
-    /// <summary>
-    /// OTLP metrics ingestion endpoint
-    /// </summary>
     [HttpPost("metrics")]
-    public async Task<IActionResult> PostMetrics()
-    {
-        return await ProcessOtlpRequest("metrics");
-    }
+    [RequestSizeLimit(MaxRequestBodyBytes)]
+    public Task<IActionResult> PostMetrics(CancellationToken cancellationToken)
+        => ProcessOtlpRequest("metrics", allowProtobuf: false, cancellationToken);
 
-    /// <summary>
-    /// OTLP logs ingestion endpoint
-    /// </summary>
     [HttpPost("logs")]
-    public async Task<IActionResult> PostLogs()
-    {
-        return await ProcessOtlpRequest("logs");
-    }
+    [RequestSizeLimit(MaxRequestBodyBytes)]
+    public Task<IActionResult> PostLogs(CancellationToken cancellationToken)
+        => ProcessOtlpRequest("logs", allowProtobuf: false, cancellationToken);
 
-    /// <summary>
-    /// Health check endpoint for OTLP service
-    /// </summary>
     [HttpGet("health")]
     public IActionResult GetHealth()
     {
@@ -69,145 +66,143 @@ public class OtelController : ControllerBase
             status = "healthy",
             service = "otlp-ingestion",
             timestamp = DateTimeOffset.UtcNow,
-            version = "1.0.0"
+            version = "1.0.0",
         });
     }
 
-    /// <summary>
-    /// Debug stats endpoint
-    /// </summary>
     [HttpGet("debug/stats")]
     public IActionResult GetDebugStats()
     {
         return Ok(new
         {
-            endpoints = new[] { "/api/v1/ingest/otlp/traces", "/api/v1/ingest/otlp/metrics", "/api/v1/ingest/otlp/logs" },
-            supportedContentTypes = new[] { "application/x-protobuf", "application/json" },
-            timestamp = DateTimeOffset.UtcNow
+            endpoints = new[]
+            {
+                "/api/v1/ingest/otlp/traces",
+                "/api/v1/ingest/otlp/metrics",
+                "/api/v1/ingest/otlp/logs",
+            },
+            supportedContentTypes = new
+            {
+                traces = new[] { JsonContentType, ProtobufContentType + " (forwarded to Jaeger only)" },
+                metrics = new[] { JsonContentType },
+                logs = new[] { JsonContentType },
+            },
+            timestamp = DateTimeOffset.UtcNow,
         });
     }
 
-    private async Task<IActionResult> ProcessOtlpRequest(string dataType)
+    private async Task<IActionResult> ProcessOtlpRequest(string dataType, bool allowProtobuf, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Received OTLP {DataType} request", dataType);
-        
+        var contentType = Request.ContentType ?? JsonContentType;
+        var isProtobuf = contentType.Contains(ProtobufContentType, StringComparison.OrdinalIgnoreCase);
+
+        if (isProtobuf && !allowProtobuf)
+        {
+            _logger.LogWarning("Rejected OTLP {DataType} protobuf request: only JSON is supported on this endpoint", dataType);
+            return StatusCode(StatusCodes.Status415UnsupportedMediaType, ProcessingResult.Error(
+                $"OTLP protobuf is not supported for {dataType}. Send 'application/json' instead."));
+        }
+
         try
         {
-            // Determine content type first
-            var contentType = Request.ContentType ?? "application/json";
-            var isProtobuf = contentType.Contains("application/x-protobuf");
-
             object payload;
             int contentLength;
-            string? debugContent = null;
 
             if (isProtobuf)
             {
-                // For protobuf, read as byte array
                 using var memoryStream = new MemoryStream();
-                await Request.Body.CopyToAsync(memoryStream);
+                await Request.Body.CopyToAsync(memoryStream, cancellationToken);
                 var contentBytes = memoryStream.ToArray();
-                
+
                 if (contentBytes.Length == 0)
                 {
-                    _logger.LogWarning("Received empty OTLP {DataType} protobuf request", dataType);
-                    return BadRequest("Empty request body");
+                    return BadRequest(ProcessingResult.Error("Empty request body"));
                 }
 
                 contentLength = contentBytes.Length;
                 payload = contentBytes;
-                debugContent = $"Protobuf data: {contentBytes.Length} bytes";
             }
             else
             {
-                // For JSON, read as string and parse
                 using var reader = new StreamReader(Request.Body);
-                var content = await reader.ReadToEndAsync();
+                var content = await reader.ReadToEndAsync(cancellationToken);
 
                 if (string.IsNullOrEmpty(content))
                 {
-                    _logger.LogWarning("Received empty OTLP {DataType} JSON request", dataType);
-                    return BadRequest("Empty request body");
+                    return BadRequest(ProcessingResult.Error("Empty request body"));
                 }
 
                 contentLength = content.Length;
-                debugContent = content;
                 try
                 {
                     payload = JsonSerializer.Deserialize<JsonElement>(content);
                 }
-                catch (JsonException)
+                catch (JsonException ex)
                 {
-                    // If JSON parsing fails, store as string for downstream parsing
-                    payload = content;
+                    _logger.LogWarning(ex, "Invalid JSON in OTLP {DataType} request", dataType);
+                    return BadRequest(ProcessingResult.Error($"Invalid JSON: {ex.Message}"));
                 }
             }
 
-            _logger.LogDebug("Request Headers: {Headers}", string.Join(", ", Request.Headers.Select(h => $"[{h.Key}, {string.Join(", ", (IEnumerable<string>)h.Value)}]")));
-            _logger.LogInformation("Processing OTLP {DataType} request. ContentType: {ContentType}, Size: {Size} bytes", 
+            _logger.LogInformation(
+                "Processing OTLP {DataType} request. ContentType: {ContentType}, Size: {Size} bytes",
                 dataType, contentType, contentLength);
 
-            // Map dataType to correct source type for parsers
+            // For traces over protobuf, we only forward to Jaeger - we don't queue
+            // (no in-process parser would understand the bytes).
+            if (dataType == "traces" && isProtobuf)
+            {
+                _ = Task.Run(() => SafeForwardToJaeger(payload, contentType));
+                return Ok(ProcessingResult.Success());
+            }
+
             var sourceType = dataType switch
             {
                 "traces" => "otlp-traces",
-                "metrics" => "otlp-metrics", 
+                "metrics" => "otlp-metrics",
                 "logs" => "otlp-logs",
-                _ => $"otlp-{dataType}"
+                _ => $"otlp-{dataType}",
             };
 
-            // Map dataType to EventDto.Type 
             var eventType = dataType switch
             {
                 "traces" => "trace",
                 "metrics" => "metric",
                 "logs" => "log",
-                _ => dataType
+                _ => dataType,
             };
 
-            // Create event for the queue
             var eventDto = new EventDto
             {
                 Timestamp = DateTimeOffset.UtcNow,
                 TenantId = "default",
-                AppId = isProtobuf ? "unknown-service" : (ExtractServiceName(payload) ?? "unknown-service"),
+                AppId = ExtractServiceName(payload) ?? "unknown-service",
                 Type = eventType,
                 SourceType = sourceType,
-                HostName = isProtobuf ? "unknown-host" : (ExtractHostName(payload) ?? Request.Headers["Host"].FirstOrDefault() ?? "unknown-host"),
+                HostName = ExtractHostName(payload)
+                    ?? Request.Headers["Host"].FirstOrDefault()
+                    ?? "unknown-host",
                 Ip = GetClientIpAddress(),
                 LogLevel = "INFO",
-                Payload = payload
+                Payload = payload,
             };
 
-            // Queue the event for processing
-            await _queueProducer.EnqueueAsync(eventDto);
+            await _queueProducer.EnqueueAsync(eventDto, cancellationToken);
 
-            // Also forward traces to Jaeger for dual storage
             if (dataType == "traces")
             {
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        await ForwardToJaeger(payload, contentType);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Failed to forward trace to Jaeger, continuing with internal processing");
-                    }
-                });
+                _ = Task.Run(() => SafeForwardToJaeger(payload, contentType));
             }
 
-            _logger.LogDebug("Successfully queued OTLP {DataType} event from {HostName} with source type {SourceType}", 
+            _logger.LogDebug(
+                "Queued OTLP {DataType} event from {HostName} as source {SourceType}",
                 dataType, eventDto.HostName, eventDto.SourceType);
 
-            // Return success response
-            return Ok(new ProcessingResult(true));
+            return Ok(ProcessingResult.Success());
         }
-        catch (JsonException ex)
+        catch (OperationCanceledException)
         {
-            _logger.LogError(ex, "Invalid JSON in OTLP {DataType} request", dataType);
-            return BadRequest(ProcessingResult.Error($"Invalid JSON: {ex.Message}"));
+            throw;
         }
         catch (Exception ex)
         {
@@ -216,51 +211,48 @@ public class OtelController : ControllerBase
         }
     }
 
-    private string? ExtractServiceName(object payload)
+    private async Task SafeForwardToJaeger(object payload, string contentType)
+    {
+        try
+        {
+            await ForwardToJaeger(payload, contentType);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to forward trace to Jaeger; in-process processing continues unaffected");
+        }
+    }
+
+    private string? ExtractServiceName(object payload) =>
+        TryExtractAttribute(payload, "service.name");
+
+    private string? ExtractHostName(object payload) =>
+        TryExtractAttribute(payload, "host.name");
+
+    private static string? TryExtractAttribute(object payload, string attributeName)
     {
         try
         {
             if (payload is JsonElement jsonElement)
             {
-                return ExtractAttributeValue(jsonElement, "service.name");
+                return ExtractAttributeValue(jsonElement, attributeName);
             }
-            else if (payload is string content && content.Contains("service.name"))
+
+            if (payload is string content && content.Contains(attributeName, StringComparison.Ordinal))
             {
-                var jsonDoc = JsonDocument.Parse(content);
-                return ExtractAttributeValue(jsonDoc.RootElement, "service.name");
+                using var jsonDoc = JsonDocument.Parse(content);
+                return ExtractAttributeValue(jsonDoc.RootElement, attributeName);
             }
         }
         catch
         {
-            // Ignore extraction errors
+            // Best-effort enrichment - swallow parse errors.
         }
         return null;
     }
 
-    private string? ExtractHostName(object payload)
+    private static string? ExtractAttributeValue(JsonElement element, string attributeName)
     {
-        try
-        {
-            if (payload is JsonElement jsonElement)
-            {
-                return ExtractAttributeValue(jsonElement, "host.name");
-            }
-            else if (payload is string content && content.Contains("host.name"))
-            {
-                var jsonDoc = JsonDocument.Parse(content);
-                return ExtractAttributeValue(jsonDoc.RootElement, "host.name");
-            }
-        }
-        catch
-        {
-            // Ignore extraction errors
-        }
-        return null;
-    }
-
-    private string? ExtractAttributeValue(JsonElement element, string attributeName)
-    {
-        // Simple recursive search for attribute value
         if (element.ValueKind == JsonValueKind.Object)
         {
             foreach (var property in element.EnumerateObject())
@@ -269,7 +261,7 @@ public class OtelController : ControllerBase
                 {
                     foreach (var attr in property.Value.EnumerateArray())
                     {
-                        if (attr.TryGetProperty("key", out var key) && 
+                        if (attr.TryGetProperty("key", out var key) &&
                             key.GetString() == attributeName &&
                             attr.TryGetProperty("value", out var valueObj) &&
                             valueObj.TryGetProperty("stringValue", out var stringValue))
@@ -295,57 +287,48 @@ public class OtelController : ControllerBase
         return null;
     }
 
-    private string GetClientIpAddress()
-    {
-        return Request.Headers["X-Forwarded-For"].FirstOrDefault() ??
-               Request.Headers["X-Real-IP"].FirstOrDefault() ??
-               HttpContext.Connection.RemoteIpAddress?.ToString() ??
-               "unknown";
-    }
+    private string GetClientIpAddress() =>
+        Request.Headers["X-Forwarded-For"].FirstOrDefault()
+        ?? Request.Headers["X-Real-IP"].FirstOrDefault()
+        ?? HttpContext.Connection.RemoteIpAddress?.ToString()
+        ?? "unknown";
 
     private async Task ForwardToJaeger(object payload, string contentType)
     {
-        try
+        var jaegerOtlpUrl = _configuration["Jaeger:OtlpUrl"] ?? "http://localhost:4318";
+
+        using var httpClient = _httpClientFactory.CreateClient();
+        httpClient.Timeout = TimeSpan.FromSeconds(10);
+
+        HttpContent content;
+        if (contentType.Contains(ProtobufContentType, StringComparison.OrdinalIgnoreCase) && payload is byte[] protobufData)
         {
-            // Get the Jaeger OTLP HTTP collector endpoint (default: port 4318)
-            // This is separate from the Query API (port 16686)
-            var jaegerOtlpUrl = _configuration["Jaeger:OtlpUrl"] ?? "http://localhost:4318";
-            
-            using var httpClient = _httpClientFactory.CreateClient();
-            httpClient.Timeout = TimeSpan.FromSeconds(10);
-
-            HttpContent content;
-            if (contentType.Contains("application/x-protobuf") && payload is byte[] protobufData)
-            {
-                content = new ByteArrayContent(protobufData);
-                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-protobuf");
-            }
-            else
-            {
-                var jsonContent = payload is JsonElement element ? element.GetRawText() : JsonSerializer.Serialize(payload);
-                
-                content = new StringContent(jsonContent, System.Text.Encoding.UTF8);
-                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
-            }
-
-            // Use the standard OTLP HTTP endpoint path for traces
-            var otlpTracesEndpoint = $"{jaegerOtlpUrl.TrimEnd('/')}/v1/traces";
-            var response = await httpClient.PostAsync(otlpTracesEndpoint, content);
-            
-            if (response.IsSuccessStatusCode)
-            {
-                _logger.LogDebug("Successfully forwarded trace to Jaeger OTLP collector at {OtlpUrl}", otlpTracesEndpoint);
-            }
-            else
-            {
-                var responseBody = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning("Failed to forward trace to Jaeger OTLP collector. Status: {StatusCode}, Reason: {ReasonPhrase}, Body: {Body}", 
-                    response.StatusCode, response.ReasonPhrase, responseBody);
-            }
+            content = new ByteArrayContent(protobufData);
+            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(ProtobufContentType);
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogWarning(ex, "Exception occurred while forwarding trace to Jaeger OTLP collector");
+            var jsonContent = payload is JsonElement element
+                ? element.GetRawText()
+                : JsonSerializer.Serialize(payload);
+
+            content = new StringContent(jsonContent, System.Text.Encoding.UTF8);
+            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(JsonContentType);
+        }
+
+        var otlpTracesEndpoint = $"{jaegerOtlpUrl.TrimEnd('/')}/v1/traces";
+        var response = await httpClient.PostAsync(otlpTracesEndpoint, content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            _logger.LogDebug("Forwarded trace to Jaeger OTLP collector at {OtlpUrl}", otlpTracesEndpoint);
+        }
+        else
+        {
+            var responseBody = await response.Content.ReadAsStringAsync();
+            _logger.LogWarning(
+                "Failed to forward trace to Jaeger. Status {StatusCode} ({Reason}). Body: {Body}",
+                response.StatusCode, response.ReasonPhrase, responseBody);
         }
     }
 
@@ -355,4 +338,3 @@ public class OtelController : ControllerBase
         public static ProcessingResult Error(string message) => new(false, message);
     }
 }
-

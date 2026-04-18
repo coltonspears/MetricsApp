@@ -1,4 +1,6 @@
+using MetricsApp.Abstractions.Parsers;
 using MetricsApp.Abstractions.Plugins;
+using MetricsApp.Api.Ingestion;
 using MetricsApp.DataSources.MySql;
 using MetricsApp.DataSources.PostgreSQL;
 using MetricsApp.DataSources.Prometheus;
@@ -68,6 +70,8 @@ builder.Services.AddInMemoryCaching();
 builder.Services.AddInMemoryRepository();
 builder.Services.AddWindowsPerfCounterParser();
 builder.Services.AddOpenTelemetryParsers();
+builder.Services.AddSingleton<IDataParser, SerilogSinkParser>();
+builder.Services.AddSingleton<IDataParser, RawEventParser>();
 
 // Pluggable external data sources (federation; not the primary store)
 builder.Services.AddDataSources();

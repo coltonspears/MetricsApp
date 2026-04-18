@@ -147,17 +147,13 @@ public class MetricsAppSink : ILogEventSink, IDisposable
 
         switch (_config.TargetEndpoint.ToLowerInvariant())
         {
-            case "telemetry":
-                content = CreateTelemetryContent(events);
-                break;
             case "otel":
                 content = CreateOtlpContent(events);
                 break;
-            case "jaeger":
-                content = CreateJaegerContent(events);
-                break;
+            case "events":
+            case "telemetry":
             default:
-                content = CreateTelemetryContent(events);
+                content = CreateEventsContent(events);
                 break;
         }
 
@@ -171,14 +167,9 @@ public class MetricsAppSink : ILogEventSink, IDisposable
         }
     }
 
-    private HttpContent CreateTelemetryContent(List<LogEvent> events)
+    private HttpContent CreateEventsContent(List<LogEvent> events)
     {
-        // For TelemetryController, we can send logs directly to the logs endpoint
-        // or we can send individual EventDto objects to match the existing queue pattern
-        
         var eventDtos = events.Select(ConvertToEventDto).ToList();
-        
-        // Send as batch of EventDto objects (similar to how OtelController works)
         var json = JsonSerializer.Serialize(eventDtos, _jsonOptions);
         return new StringContent(json, Encoding.UTF8, "application/json");
     }
@@ -187,13 +178,9 @@ public class MetricsAppSink : ILogEventSink, IDisposable
     {
         if (!_config.UseOtlpFormat)
         {
-            // Send as simple EventDto for OtelController to process
-            var eventDtos = events.Select(ConvertToEventDto).ToList();
-            var simpleJson = JsonSerializer.Serialize(eventDtos, _jsonOptions);
-            return new StringContent(simpleJson, Encoding.UTF8, "application/json");
+            return CreateEventsContent(events);
         }
 
-        // Create proper OTLP format
         var otlpPayload = new OtlpLogsPayload
         {
             ResourceLogs = new List<OtlpResourceLogs>
@@ -228,15 +215,6 @@ public class MetricsAppSink : ILogEventSink, IDisposable
 
         var otlpJson = JsonSerializer.Serialize(otlpPayload, _jsonOptions);
         return new StringContent(otlpJson, Encoding.UTF8, "application/json");
-    }
-
-    private HttpContent CreateJaegerContent(List<LogEvent> events)
-    {
-        // For Jaeger endpoint, we might want to send trace-like events
-        // For now, convert to EventDto format
-        var eventDtos = events.Select(ConvertToEventDto).ToList();
-        var json = JsonSerializer.Serialize(eventDtos, _jsonOptions);
-        return new StringContent(json, Encoding.UTF8, "application/json");
     }
 
     private EventDto ConvertToEventDto(LogEvent logEvent)

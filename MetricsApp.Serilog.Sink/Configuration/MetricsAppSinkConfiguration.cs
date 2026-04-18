@@ -36,9 +36,12 @@ public class MetricsAppSinkConfiguration
     public string HostName { get; set; } = System.Environment.MachineName;
 
     /// <summary>
-    /// Which API endpoint to use for sending logs. Options: "telemetry", "otel", "jaeger"
+    /// Which API endpoint to use for sending logs.
+    /// - "events" (default): POSTs <c>EventDto[]</c> to <c>/api/v1/ingest/events</c>.
+    /// - "otel":   POSTs OTLP-shaped JSON to <c>/api/v1/ingest/otlp/logs</c>.
+    /// - "telemetry": legacy alias for "events".
     /// </summary>
-    public string TargetEndpoint { get; set; } = "telemetry";
+    public string TargetEndpoint { get; set; } = "events";
 
     /// <summary>
     /// Number of log events to batch before sending
@@ -96,13 +99,13 @@ public class MetricsAppSinkConfiguration
     public string GetApiEndpointUrl()
     {
         var baseUrl = ApiBaseUrl.TrimEnd('/');
-        
+
         return TargetEndpoint.ToLowerInvariant() switch
         {
-            "telemetry" => $"{baseUrl}/api/v1/telemetry/logs",
+            "events" => $"{baseUrl}/api/v1/ingest/events",
+            "telemetry" => $"{baseUrl}/api/v1/ingest/events",
             "otel" => $"{baseUrl}/api/v1/ingest/otlp/logs",
-            "jaeger" => $"{baseUrl}/api/v1/integrations/jaeger/traces", // For trace-like logs
-            _ => $"{baseUrl}/api/v1/telemetry/logs"
+            _ => $"{baseUrl}/api/v1/ingest/events",
         };
     }
 
@@ -131,7 +134,7 @@ public class MetricsAppSinkConfiguration
         if (!Uri.TryCreate(ApiBaseUrl, UriKind.Absolute, out _))
             errors.Add("ApiBaseUrl must be a valid URI");
 
-        var validEndpoints = new[] { "telemetry", "otel", "jaeger" };
+        var validEndpoints = new[] { "events", "telemetry", "otel" };
         if (!validEndpoints.Contains(TargetEndpoint.ToLowerInvariant()))
             errors.Add($"TargetEndpoint must be one of: {string.Join(", ", validEndpoints)}");
 

@@ -7,9 +7,19 @@
 ## What ships in the MVP
 
 - **Ingestion**
-  - OTLP/HTTP endpoints for traces, metrics and logs (`/api/v1/ingest/otlp/*`).
-  - Raw HTTP/JSON ingest API for ad-hoc payloads.
-  - First-class .NET integration via `MetricsApp.Serilog.Sink`.
+  - OTLP/HTTP endpoints for traces, metrics and logs (`POST /api/v1/ingest/otlp/{traces|metrics|logs}`).
+    JSON is the supported wire format end-to-end. Protobuf is accepted only for `/traces`
+    and forwarded as-is to Jaeger; `/metrics` and `/logs` return `415 Unsupported Media Type`
+    on protobuf so senders fail loudly instead of silently dropping data.
+  - Raw HTTP/JSON ingest API: `POST /api/v1/ingest/events` accepts a single `EventDto` or
+    an array. Missing `Timestamp`, `TenantId`, `AppId`, `HostName` and `Ip` are filled in
+    server-side. Max body size is 5 MB.
+  - First-class .NET integration via `MetricsApp.Serilog.Sink`. Default `TargetEndpoint` is
+    `events`, which posts to `/api/v1/ingest/events`. `otel` posts OTLP-shaped JSON to the
+    OTLP logs endpoint instead.
+
+  Run `pwsh ./scripts/ingest-smoke.ps1` to exercise every ingestion path against a running
+  API (positive + negative cases).
 - **Query + storage**
   - SQLite-backed repository for telemetry, dashboards and alert state.
   - In-process queue + cache (no external broker required).

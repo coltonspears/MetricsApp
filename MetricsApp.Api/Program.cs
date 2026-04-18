@@ -1,20 +1,15 @@
-using System;
-using System.IO;
-using System.Linq;
-using MetricsApp.DataSources.Prometheus;
-using MetricsApp.DataSources.SqlServer;
-using MetricsApp.Worker.Workers;
-using MetricsApp.Abstractions.Data;
 using MetricsApp.Abstractions.Plugins;
-using MetricsApp.Repository.InMemory.Extensions;
-using MetricsApp.Agent.Collectors.WindowsPerfCounters;
-using MetricsApp.Agent.Core.Services;
-using MetricsApp.Agent.Core.Abstractions;
-using MetricsApp.Api.Services;
+using MetricsApp.DataSources.MySql;
+using MetricsApp.DataSources.PostgreSQL;
+using MetricsApp.DataSources.Prometheus;
+using MetricsApp.DataSources.Sqlite;
+using MetricsApp.DataSources.SqlServer;
+using MetricsApp.DataSources.WindowsPerformanceCounters;
 using MetricsApp.Parser.OpenTelemetry.Extensions;
-using Scalar.AspNetCore;
+using MetricsApp.Worker.Workers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,7 +25,8 @@ builder.Services
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+        options.JsonSerializerOptions.DefaultIgnoreCondition =
+            System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -66,15 +62,14 @@ builder.Services.AddLogging(logging =>
     logging.AddDebug();
 });
 
-// Telemetry ingestion pipeline
+// Telemetry ingestion pipeline (in-memory for MVP; SQLite repo lands in M3)
 builder.Services.AddInMemoryQueue();
 builder.Services.AddInMemoryCaching();
 builder.Services.AddInMemoryRepository();
-//builder.Services.AddSingleton<IDataRepository, SqlServerDataRepository>();
 builder.Services.AddWindowsPerfCounterParser();
 builder.Services.AddOpenTelemetryParsers();
 
-// Data source integrations
+// Pluggable external data sources (federation; not the primary store)
 builder.Services.AddDataSources();
 builder.Services.AddSqlServerDataSource();
 builder.Services.AddSqliteDataSource();
@@ -87,9 +82,10 @@ builder.Services.AddPrometheusDataSource(httpClient =>
     httpClient.DefaultRequestHeaders.Add("User-Agent", "MetricsApp/1.0");
 });
 
+// Background ingestion worker (consumes the queue, parses, persists)
 builder.Services.AddHostedService<IngestionWorker>();
 
-// Plugin system
+// Plugin discovery (safe no-op when Plugins/ is empty)
 builder.Services.AddPlugins(builder.Configuration, Path.Combine(AppContext.BaseDirectory, "Plugins"));
 
 var app = builder.Build();

@@ -1,8 +1,32 @@
 import { useState, useEffect } from 'react'
 import { Save, RefreshCw, Database, Bell, Settings as SettingsIcon, ExternalLink, Clock, Shield, Sliders } from 'lucide-react'
 import { useTheme } from '../lib/theme'
+import { API_BASE_URL } from '../lib/api'
 import ThemeSelector from '../components/ThemeSelector'
 import PageHeader from '../components/PageHeader'
+
+function deriveScalarUrl(apiBase: string): string {
+  try {
+    const url = new URL(apiBase, typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
+    return `${url.origin}/scalar`
+  } catch {
+    return '/scalar'
+  }
+}
+
+const DEFAULT_SETTINGS: AppSettings = {
+  refreshInterval: 30,
+  alertThresholds: {
+    cpu: 80,
+    memory: 85,
+    disk: 90,
+    responseTime: 500,
+  },
+  dataRetention: 30,
+  enableNotifications: true,
+  apiEndpoint: API_BASE_URL,
+  scalarURL: deriveScalarUrl(API_BASE_URL),
+}
 
 interface AppSettings {
   refreshInterval: number
@@ -20,19 +44,7 @@ interface AppSettings {
 
 const Settings = () => {
   const { currentTheme } = useTheme()
-  const [settings, setSettings] = useState<AppSettings>({
-    refreshInterval: 30,
-    alertThresholds: {
-      cpu: 80,
-      memory: 85,
-      disk: 90,
-      responseTime: 500
-    },
-    dataRetention: 30,
-    enableNotifications: true,
-    apiEndpoint: 'https://localhost:7201/api/v1',
-    scalarURL: 'https://localhost:7201/scalar'
-  })
+  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
   
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -57,19 +69,7 @@ const Settings = () => {
   }
 
   const handleReset = () => {
-    setSettings({
-      refreshInterval: 30,
-      alertThresholds: {
-        cpu: 80,
-        memory: 85,
-        disk: 90,
-        responseTime: 500
-      },
-      dataRetention: 30,
-      enableNotifications: true,
-      apiEndpoint: 'https://localhost:7201/api/v1',
-      scalarURL: 'https://localhost:7201/scalar'
-    })
+    setSettings(DEFAULT_SETTINGS)
   }
 
   function openInNewWindow(scalarURL: string) {

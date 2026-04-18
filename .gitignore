@@ -278,3 +278,12 @@ __pycache__/
 .DS_Store
 node_modules
 **/dist/
+# WebUI build output
+MetricsApp.WebUI/dist/
+
+
+# .NET build output (standard patterns missing from original gitignore)
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+

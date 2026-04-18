@@ -35,6 +35,7 @@ import {
   type PanelType
 } from '../lib/dashboard-api'
 import TelemetryApi from '../lib/telemetry-api'
+import { DataSourceApi } from '../lib/datasource-api'
 
 // Time range presets
 const TIME_RANGE_PRESETS = [
@@ -189,27 +190,37 @@ const DashboardView = () => {
       const resolvedQuery = DashboardUtils.resolveVariables(query.expression, variableValues)
 
       // Execute query through telemetry API
-      const metrics = await TelemetryApi.queryMetrics({
-        startTime: start,
-        endTime: end,
-        metricNames: [resolvedQuery],
-        limit: 1000
+      // const metrics = await TelemetryApi.queryMetrics({
+      //   startTime: start,
+      //   endTime: end,
+      //   metricNames: [resolvedQuery],
+      //   limit: 1000
+      // })
+
+      const metrics = await DataSourceApi.queryMetrics(variableValues.datasource.value, {
+        query: resolvedQuery,
+        startTime: start.toISOString(),
+        endTime: end.toISOString()
       })
 
-      const chartData = metrics.flatMap(metric =>
-        metric.samples.map((sample: any) => ({
-          timestamp: new Date(sample.timestamp * 1000),
+      const chartData = metrics.result?.map((metric: any) => ({
+        name: metric.name,
+        type: metric.type as 'gauge' | 'counter' | 'histogram',
+        description: metric.description,
+        unit: metric.unit,
+        samples: metric.samples?.map((sample: any) => ({
+          timestamp: sample.timestamp,
           value: sample.value,
-          metric: metric.name,
-          labels: sample.labels
-        }))
-      )
+          labels: sample.labels || {}
+        })) || []
+      }))
+
 
       setPanelData(prev => ({
         ...prev,
         [panel.id]: {
           loading: false,
-          data: chartData,
+          data: chartData || [],
           lastUpdated: new Date()
         }
       }))
@@ -218,7 +229,7 @@ const DashboardView = () => {
         ...prev,
         [panel.id]: {
           loading: false,
-          data: [],
+          data: [] as any[],
           error: err instanceof Error ? err.message : 'Query failed'
         }
       }))

@@ -10,7 +10,7 @@
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5" />
         <PackageReference Include="Scalar.AspNetCore" Version="2.4.8" />
         <PackageReference Include="Scalar.AspNetCore.Swashbuckle" Version="2.4.8" />
-        
+
         <!-- OpenTelemetry packages for proper OTLP support -->
         <PackageReference Include="OpenTelemetry" Version="1.9.0" />
         <PackageReference Include="OpenTelemetry.Api" Version="1.9.0" />
@@ -19,52 +19,22 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\MetricsApp.Abstractions\MetricsApp.Abstractions.csproj" />
-      <ProjectReference Include="..\MetricsApp.Agent.Collectors.WindowsPerfCounters\MetricsApp.Agent.Collectors.WindowsPerfCounters.csproj" />
-      <ProjectReference Include="..\MetricsApp.Agent.Core\MetricsApp.Agent.Core.csproj" />
-      <ProjectReference Include="..\MetricsApp.Cache.InMemory\MetricsApp.Cache.InMemory.csproj" />
-      <ProjectReference Include="..\MetricsApp.DataSources.Core\MetricsApp.DataSources.Core.csproj" />
-      <ProjectReference Include="..\MetricsApp.DataSources.MySql\MetricsApp.DataSources.MySql.csproj" />
-      <ProjectReference Include="..\MetricsApp.DataSources.PostgreSQL\MetricsApp.DataSources.PostgreSQL.csproj" />
-      <ProjectReference Include="..\MetricsApp.DataSources.Prometheus\MetricsApp.DataSources.Prometheus.csproj" />
-      <ProjectReference Include="..\MetricsApp.DataSources.Redis\MetricsApp.DataSources.Redis.csproj" />
-      <ProjectReference Include="..\MetricsApp.DataSources.Sqlite\MetricsApp.DataSources.Sqlite.csproj" />
-      <ProjectReference Include="..\MetricsApp.DataSources.SqlServer\MetricsApp.DataSources.SqlServer.csproj" />
-      <ProjectReference Include="..\MetricsApp.DataSources.WindowsPerformanceCounters\MetricsApp.DataSources.WindowsPerformanceCounters.csproj" />
-      <ProjectReference Include="..\MetricsApp.Parser.WindowsPerfCounters\MetricsApp.Parser.WindowsPerfCounters.csproj" />
-      <ProjectReference Include="..\MetricsApp.Parser.OpenTelemetry\MetricsApp.Parser.OpenTelemetry.csproj" />
-      <ProjectReference Include="..\MetricsApp.Queue.InMemory\MetricsApp.Queue.InMemory.csproj" />
-      <ProjectReference Include="..\MetricsApp.Repository.InMemory\MetricsApp.Repository.InMemory.csproj" />
-      <ProjectReference Include="..\MetricsApp.ServiceDefaults\MetricsApp.ServiceDefaults.csproj" />
-      <ProjectReference Include="..\MetricsApp.Worker\MetricsApp.Worker.csproj" />
+        <ProjectReference Include="..\MetricsApp.Abstractions\MetricsApp.Abstractions.csproj" />
+        <ProjectReference Include="..\MetricsApp.Cache.InMemory\MetricsApp.Cache.InMemory.csproj" />
+        <ProjectReference Include="..\MetricsApp.DataSources.Core\MetricsApp.DataSources.Core.csproj" />
+        <ProjectReference Include="..\MetricsApp.DataSources.MySql\MetricsApp.DataSources.MySql.csproj" />
+        <ProjectReference Include="..\MetricsApp.DataSources.PostgreSQL\MetricsApp.DataSources.PostgreSQL.csproj" />
+        <ProjectReference Include="..\MetricsApp.DataSources.Prometheus\MetricsApp.DataSources.Prometheus.csproj" />
+        <ProjectReference Include="..\MetricsApp.DataSources.Redis\MetricsApp.DataSources.Redis.csproj" />
+        <ProjectReference Include="..\MetricsApp.DataSources.Sqlite\MetricsApp.DataSources.Sqlite.csproj" />
+        <ProjectReference Include="..\MetricsApp.DataSources.SqlServer\MetricsApp.DataSources.SqlServer.csproj" />
+        <ProjectReference Include="..\MetricsApp.DataSources.WindowsPerformanceCounters\MetricsApp.DataSources.WindowsPerformanceCounters.csproj" />
+        <ProjectReference Include="..\MetricsApp.Parser.OpenTelemetry\MetricsApp.Parser.OpenTelemetry.csproj" />
+        <ProjectReference Include="..\MetricsApp.Parser.WindowsPerfCounters\MetricsApp.Parser.WindowsPerfCounters.csproj" />
+        <ProjectReference Include="..\MetricsApp.Queue.InMemory\MetricsApp.Queue.InMemory.csproj" />
+        <ProjectReference Include="..\MetricsApp.Repository.InMemory\MetricsApp.Repository.InMemory.csproj" />
+        <ProjectReference Include="..\MetricsApp.ServiceDefaults\MetricsApp.ServiceDefaults.csproj" />
+        <ProjectReference Include="..\MetricsApp.Worker\MetricsApp.Worker.csproj" />
     </ItemGroup>
-
-    <!-- Copy plugins to output Plugins folder after build -->
-    <Target Name="CopyPlugins" AfterTargets="Build">
-        <Message Text="Copying plugins to $(OutDir)Plugins..." Importance="high" />
-        
-        <!-- Create plugin directories -->
-        <MakeDir Directories="$(OutDir)Plugins\initial-setup-plugin" />
-        <MakeDir Directories="$(OutDir)Plugins\sqlserver-plugin" />
-        
-        <!-- Copy InitialSetupPlugin -->
-        <ItemGroup>
-            <InitialSetupPluginFiles Include="..\InitialSetupPlugin\bin\$(Configuration)\$(TargetFramework)\InitialSetupPlugin.dll" />
-            <InitialSetupPluginFiles Include="..\InitialSetupPlugin\bin\$(Configuration)\$(TargetFramework)\InitialSetupPlugin.pdb" Condition="Exists('..\InitialSetupPlugin\bin\$(Configuration)\$(TargetFramework)\InitialSetupPlugin.pdb')" />
-            <InitialSetupPluginFiles Include="..\InitialSetupPlugin\bin\$(Configuration)\$(TargetFramework)\manifest.json" />
-            <InitialSetupPluginFiles Include="..\InitialSetupPlugin\bin\$(Configuration)\$(TargetFramework)\schema.sql" Condition="Exists('..\InitialSetupPlugin\bin\$(Configuration)\$(TargetFramework)\schema.sql')" />
-        </ItemGroup>
-        <Copy SourceFiles="@(InitialSetupPluginFiles)" DestinationFolder="$(OutDir)Plugins\initial-setup-plugin" SkipUnchangedFiles="true" />
-        
-        <!-- Copy SqlServerPlugin -->
-        <ItemGroup>
-            <SqlServerPluginFiles Include="..\SqlServerPlugin\bin\$(Configuration)\$(TargetFramework)\SqlServerPlugin.dll" />
-            <SqlServerPluginFiles Include="..\SqlServerPlugin\bin\$(Configuration)\$(TargetFramework)\SqlServerPlugin.pdb" Condition="Exists('..\SqlServerPlugin\bin\$(Configuration)\$(TargetFramework)\SqlServerPlugin.pdb')" />
-            <SqlServerPluginFiles Include="..\SqlServerPlugin\bin\$(Configuration)\$(TargetFramework)\manifest.json" />
-        </ItemGroup>
-        <Copy SourceFiles="@(SqlServerPluginFiles)" DestinationFolder="$(OutDir)Plugins\sqlserver-plugin" SkipUnchangedFiles="true" />
-        
-        <Message Text="Plugins copied successfully!" Importance="high" />
-    </Target>
 
 </Project>

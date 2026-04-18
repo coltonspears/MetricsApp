@@ -73,12 +73,11 @@ export function initializeTelemetry() {
 
     // URLs to ignore for instrumentation (prevents infinite loop from tracing telemetry export requests)
     const ignoreUrls = [
-      /\/api\/v1\/ingest\/otlp/,  // OTLP trace/metrics/logs export endpoints
-      /\/api\/v1\/rum\//,         // RUM events endpoint
-      /\/api\/v1\/telemetry\//,   // Telemetry query endpoints
-      /\/v1\/traces/,             // Alternative OTLP endpoint format
-      /\/v1\/metrics/,            // Alternative OTLP metrics endpoint
-      /\/v1\/logs/                // Alternative OTLP logs endpoint
+      /\/api\/v1\/ingest\/otlp/,
+      /\/api\/v1\/telemetry\//,
+      /\/v1\/traces/,
+      /\/v1\/metrics/,
+      /\/v1\/logs/,
     ]
 
     registerInstrumentations({

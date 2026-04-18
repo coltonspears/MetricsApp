@@ -1,9 +1,5 @@
-const API_BASE_URL = '/api/v1'
+import { API_BASE_URL } from './api'
 
-// Import mock API for fallback
-import { MockDataSourceApi } from './mock-datasource-api'
-
-// Types for DataSource API
 export interface DataSourceConfiguration {
   id: string
   name: string
@@ -154,7 +150,7 @@ export interface MetricQueryResult {
   errorMessage?: string
 }
 
-class ApiError extends Error {
+export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message)
     this.name = 'ApiError'
@@ -162,14 +158,7 @@ class ApiError extends Error {
 }
 
 export class DataSourceApi {
-  private static useMockApi = false
-
   private static async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    // Check if we should use mock API
-    if (this.useMockApi) {
-      throw new ApiError(0, 'Using mock API')
-    }
-
     try {
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         headers: {
@@ -184,252 +173,133 @@ export class DataSourceApi {
         throw new ApiError(response.status, `HTTP ${response.status}: ${errorText || response.statusText}`)
       }
 
-      return await response.json()
+      // 204 No Content
+      if (response.status === 204) {
+        return undefined as unknown as T
+      }
+      return await response.json() as T
     } catch (error) {
       if (error instanceof ApiError) {
         throw error
       }
-      
-      // Handle network errors - fallback to mock API
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        console.warn('API not available, falling back to mock data')
-        this.useMockApi = true
-        throw new ApiError(0, 'Network error: Unable to connect to the API. Using mock data.')
+        throw new ApiError(0, `Network error: Unable to reach the API at ${API_BASE_URL}.`)
       }
-      
       throw new ApiError(500, error instanceof Error ? error.message : 'Unknown error occurred')
     }
   }
 
-  // Helper method to try real API first, fallback to mock
-  private static async tryApiOrMock<T>(
-    realApiCall: () => Promise<T>,
-    mockApiCall: () => Promise<T>
-  ): Promise<T> {
-    try {
-      return await realApiCall()
-    } catch (error) {
-      if (error instanceof ApiError && (error.status === 0 || error.status >= 500)) {
-        console.warn('Real API failed, using mock data:', error.message)
-        return await mockApiCall()
+  static getDataSourceTypes(): Promise<DataSourceTypeInfo[]> {
+    return this.request<DataSourceTypeInfo[]>('/datasources/types')
+  }
+
+  static getDataSourceType(dataSourceType: string): Promise<DataSourceTypeInfo> {
+    return this.request<DataSourceTypeInfo>(`/datasources/types/${encodeURIComponent(dataSourceType)}`)
+  }
+
+  static getDataSourceExtendedInfo(dataSourceType: string): Promise<DataSourceExtendedInfo> {
+    return this.request<DataSourceExtendedInfo>(`/datasources/types/${encodeURIComponent(dataSourceType)}/extended`)
+  }
+
+  static getDataSources(): Promise<DataSourceConfiguration[]> {
+    return this.request<DataSourceConfiguration[]>('/datasources')
+  }
+
+  static getDataSource(id: string): Promise<DataSourceConfiguration> {
+    return this.request<DataSourceConfiguration>(`/datasources/${id}`)
+  }
+
+  static createDataSource(
+    configuration: Omit<DataSourceConfiguration, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<DataSourceConfiguration> {
+    return this.request<DataSourceConfiguration>('/datasources', {
+      method: 'POST',
+      body: JSON.stringify(configuration),
+    })
+  }
+
+  static updateDataSource(configuration: DataSourceConfiguration): Promise<DataSourceConfiguration> {
+    return this.request<DataSourceConfiguration>(`/datasources/${configuration.id}`, {
+      method: 'PUT',
+      body: JSON.stringify(configuration),
+    })
+  }
+
+  static deleteDataSource(id: string): Promise<void> {
+    return this.request<void>(`/datasources/${id}`, { method: 'DELETE' })
+  }
+
+  static testDataSource(
+    configuration: Omit<DataSourceConfiguration, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<DataSourceTestResult> {
+    return this.request<DataSourceTestResult>('/datasources/test', {
+      method: 'POST',
+      body: JSON.stringify(configuration),
+    })
+  }
+
+  static getDataSourceMetadata(id: string): Promise<DataSourceMetadata> {
+    return this.request<DataSourceMetadata>(`/datasources/${id}/metadata`)
+  }
+
+  static queryLogs(id: string, criteria: LogQueryCriteria): Promise<LogQueryResult> {
+    return this.request<LogQueryResult>(`/datasources/${id}/query/logs`, {
+      method: 'POST',
+      body: JSON.stringify(criteria),
+    })
+  }
+
+  static queryMetrics(id: string, criteria: MetricQueryCriteria): Promise<MetricQueryResult> {
+    return this.request<MetricQueryResult>(`/datasources/${id}/query/metrics`, {
+      method: 'POST',
+      body: JSON.stringify(criteria),
+    })
+  }
+
+  static async validateConfiguration(
+    dataSourceType: string,
+    configuration: Record<string, any>
+  ): Promise<{ isValid: boolean; errors: string[] }> {
+    const typeInfo = await this.getDataSourceType(dataSourceType)
+    const errors: string[] = []
+
+    typeInfo.configurationSchema.fields.forEach(field => {
+      if (field.required && !configuration[field.name]) {
+        errors.push(`${field.label} is required`)
       }
-      throw error
-    }
-  }
+    })
 
-  // DataSource Type Management
-  static async getDataSourceTypes(): Promise<DataSourceTypeInfo[]> {
-    return this.tryApiOrMock(
-      async () => {
-        const response = await fetch(`${API_BASE_URL}/datasources/types`)
-        if (!response.ok) {
-          throw new ApiError(response.status, `Failed to fetch datasource types: ${response.statusText}`)
-        }
-        return response.json()
-      },
-      () => MockDataSourceApi.getDataSourceTypes()
-    )
-  }
+    typeInfo.configurationSchema.validationRules.forEach(rule => {
+      const value = configuration[rule.fieldName]
 
-  static async getDataSourceType(dataSourceType: string): Promise<DataSourceTypeInfo> {
-    return this.tryApiOrMock(
-      async () => {
-        const response = await fetch(`${API_BASE_URL}/datasources/types/${encodeURIComponent(dataSourceType)}`)
-        if (!response.ok) {
-          throw new ApiError(response.status, `Failed to fetch datasource type: ${response.statusText}`)
-        }
-        return response.json()
-      },
-      () => MockDataSourceApi.getDataSourceType(dataSourceType)
-    )
-  }
-
-  static async getDataSourceExtendedInfo(dataSourceType: string): Promise<DataSourceExtendedInfo> {
-    return this.tryApiOrMock(
-      () => this.request<DataSourceExtendedInfo>(`/datasources/types/${encodeURIComponent(dataSourceType)}/extended`),
-      async () => {
-        // Mock extended info
-        return {
-          category: 'Database',
-          license: 'MIT',
-          maintainer: 'MetricsApp Team',
-          capabilities: ['metrics', 'logs'],
-          tags: ['database', 'monitoring'],
-          screenshots: [],
-          changelog: [{
-            version: '1.0.0',
-            releaseDate: '2024-01-01',
-            changes: ['Initial release'],
-            releaseType: 'major'
-          }]
-        }
+      switch (rule.type) {
+        case 'Required':
+          if (!value) errors.push(rule.errorMessage)
+          break
+        case 'Url':
+          if (value && !isValidUrl(value)) errors.push(rule.errorMessage)
+          break
+        case 'MinLength':
+          if (value && value.length < rule.value) errors.push(rule.errorMessage)
+          break
+        case 'MaxLength':
+          if (value && value.length > rule.value) errors.push(rule.errorMessage)
+          break
+        case 'Pattern':
+          if (value && !new RegExp(rule.value).test(value)) errors.push(rule.errorMessage)
+          break
       }
-    )
-  }
+    })
 
-  // DataSource Configuration Management
-  static async getDataSources(): Promise<DataSourceConfiguration[]> {
-    return this.tryApiOrMock(
-      () => this.request<DataSourceConfiguration[]>('/datasources'),
-      () => MockDataSourceApi.getDataSources()
-    )
-  }
-
-  static async getDataSource(id: string): Promise<DataSourceConfiguration> {
-    return this.tryApiOrMock(
-      () => this.request<DataSourceConfiguration>(`/datasources/${id}`),
-      () => MockDataSourceApi.getDataSource(id)
-    )
-  }
-
-  static async createDataSource(configuration: Omit<DataSourceConfiguration, 'id' | 'createdAt' | 'updatedAt'>): Promise<DataSourceConfiguration> {
-    return this.tryApiOrMock(
-      () => this.request<DataSourceConfiguration>('/datasources', {
-        method: 'POST',
-        body: JSON.stringify(configuration)
-      }),
-      () => MockDataSourceApi.createDataSource(configuration)
-    )
-  }
-
-  static async updateDataSource(configuration: DataSourceConfiguration): Promise<DataSourceConfiguration> {
-    return this.tryApiOrMock(
-      () => this.request<DataSourceConfiguration>(`/datasources/${configuration.id}`, {
-        method: 'PUT',
-        body: JSON.stringify(configuration)
-      }),
-      () => MockDataSourceApi.updateDataSource(configuration)
-    )
-  }
-
-  static async deleteDataSource(id: string): Promise<void> {
-    return this.tryApiOrMock(
-      () => this.request<void>(`/datasources/${id}`, {
-        method: 'DELETE'
-      }),
-      () => MockDataSourceApi.deleteDataSource(id)
-    )
-  }
-
-  // DataSource Testing
-  static async testDataSource(configuration: Omit<DataSourceConfiguration, 'id' | 'createdAt' | 'updatedAt'>): Promise<DataSourceTestResult> {
-    return this.tryApiOrMock(
-      () => this.request<DataSourceTestResult>('/datasources/test', {
-        method: 'POST',
-        body: JSON.stringify(configuration)
-      }),
-      () => MockDataSourceApi.testDataSource(configuration)
-    )
-  }
-
-  // DataSource Metadata
-  static async getDataSourceMetadata(id: string): Promise<DataSourceMetadata> {
-    return this.tryApiOrMock(
-      () => this.request<DataSourceMetadata>(`/datasources/${id}/metadata`),
-      () => MockDataSourceApi.getDataSourceMetadata(id)
-    )
-  }
-
-  // DataSource Querying
-  static async queryLogs(id: string, criteria: LogQueryCriteria): Promise<LogQueryResult> {
-    return this.tryApiOrMock(
-      () => this.request<LogQueryResult>(`/datasources/${id}/query/logs`, {
-        method: 'POST',
-        body: JSON.stringify(criteria)
-      }),
-      async () => {
-        // Mock log query result
-        return {
-          logs: [],
-          totalHits: 0,
-          errorMessage: 'Mock API: Log querying not implemented'
-        }
-      }
-    )
-  }
-
-  static async queryMetrics(id: string, criteria: MetricQueryCriteria): Promise<MetricQueryResult> {
-    return this.tryApiOrMock(
-      () => this.request<MetricQueryResult>(`/datasources/${id}/query/metrics`, {
-        method: 'POST',
-        body: JSON.stringify(criteria)
-      }),
-      async () => {
-        // Mock metric query result
-        return {
-          resultType: 'matrix',
-          result: [],
-          errorMessage: 'Mock API: Metric querying not implemented'
-        }
-      }
-    )
-  }
-
-  // Utility methods
-  static async validateConfiguration(dataSourceType: string, configuration: Record<string, any>): Promise<{ isValid: boolean; errors: string[] }> {
-    return this.tryApiOrMock(
-      async () => {
-        const typeInfo = await this.getDataSourceType(dataSourceType)
-        const errors: string[] = []
-
-        // Validate required fields
-        typeInfo.configurationSchema.fields.forEach(field => {
-          if (field.required && !configuration[field.name]) {
-            errors.push(`${field.label} is required`)
-          }
-        })
-
-        // Validate against validation rules
-        typeInfo.configurationSchema.validationRules.forEach(rule => {
-          const value = configuration[rule.fieldName]
-          
-          switch (rule.type) {
-            case 'Required':
-              if (!value) {
-                errors.push(rule.errorMessage)
-              }
-              break
-            case 'Url':
-              if (value && !isValidUrl(value)) {
-                errors.push(rule.errorMessage)
-              }
-              break
-            case 'MinLength':
-              if (value && value.length < rule.value) {
-                errors.push(rule.errorMessage)
-              }
-              break
-            case 'MaxLength':
-              if (value && value.length > rule.value) {
-                errors.push(rule.errorMessage)
-              }
-              break
-            case 'Pattern':
-              if (value && !new RegExp(rule.value).test(value)) {
-                errors.push(rule.errorMessage)
-              }
-              break
-          }
-        })
-
-        return {
-          isValid: errors.length === 0,
-          errors
-        }
-      },
-      () => MockDataSourceApi.validateConfiguration(dataSourceType, configuration)
-    )
+    return { isValid: errors.length === 0, errors }
   }
 }
 
-// Utility functions
 function isValidUrl(string: string): boolean {
   try {
     new URL(string)
     return true
-  } catch (_) {
+  } catch {
     return false
   }
 }
-
-export { ApiError } 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Database, Search, Bell, Settings, Sun, Moon, Activity, Layers, ChevronDown, Plus, BarChart3, User, LogOut, History, Star, Home, HelpCircle, Sliders, Bookmark, Menu, Shield, Users, Building, GitBranch, BookCopy, Target, FileText, GitCommit, Network, LayoutDashboard } from 'lucide-react'
+import { Database, Search, Bell, Settings, Sun, Moon, Layers, ChevronDown, Plus, BarChart3, User, LogOut, History, Star, Home, HelpCircle, Sliders, Bookmark, Menu, BookCopy, Target, FileText, GitCommit, LayoutDashboard } from 'lucide-react'
 import { useTheme } from '../lib/theme'
 import ThemeSelector from './ThemeSelector'
 import BreadcrumbDropdown, { BreadcrumbDropdownItem } from './BreadcrumbDropdown'
@@ -16,8 +16,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     return saved ? JSON.parse(saved) : true
   })
   const [connectionsOpen, setConnectionsOpen] = useState(false)
-  const [authenticationOpen, setAuthenticationOpen] = useState(false)
-  const [administrationOpen, setAdministrationOpen] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [pinnedNavOpen, setPinnedNavOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -32,8 +30,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { name: 'Telemetry Explorer', href: '/telemetry', icon: Target, current: location.pathname === '/telemetry' || location.pathname === '/telemetry/testing' },
     { name: 'Log Viewer', href: '/logs', icon: FileText, current: location.pathname === '/logs' },
     { name: 'Tracing', href: '/tracing', icon: GitCommit, current: location.pathname === '/tracing' },
-    { name: 'Service Map', href: '/service-map', icon: Network, current: location.pathname === '/service-map' },
-    { name: 'RUM', href: '/rum', icon: Activity, current: location.pathname === '/rum' },
     { name: 'Alerts', href: '/alerts', icon: Bell, current: location.pathname === '/alerts' },
     { name: 'Settings', href: '/settings', icon: Settings, current: location.pathname === '/settings' },
     { name: 'Plugins', href: '/plugins', icon: BookCopy, current: location.pathname === '/plugins' },
@@ -42,22 +38,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const connectionsItems = [
     { name: 'Add new connection', href: '/connections/add', icon: Plus },
     { name: 'Data Sources', href: '/connections/datasources', icon: Database },
-  ]
-
-  const authenticationItems = [
-    { name: 'Google OAuth', href: '/admin/authentication/google', icon: Shield, wip: true },
-    { name: 'GitHub OAuth', href: '/admin/authentication/github', icon: GitBranch, wip: true },
-    { name: 'Azure PAT', href: '/admin/authentication/azure', icon: Shield, wip: true },
-    { name: 'Standalone Auth', href: '/admin/authentication/default', icon: Shield, wip: true },
-  ]
-
-  const administrationItems = [
-    { name: 'Organizations', href: '/admin/orgs', icon: Building, wip: true },
-    { name: 'Create Organization', href: '/admin/orgs/create', icon: Plus, wip: true },
-    { name: 'Admin Users', href: '/admin/users', icon: Users, wip: true },
-    { name: 'Invite Users', href: '/org/users/invite', icon: Plus, wip: true },
-    { name: 'Teams', href: '/org/teams', icon: Users, wip: true },
-    { name: 'Create Team', href: '/orgs/teams/create', icon: Plus, wip: true },
   ]
 
   const pinnedNavItems = [
@@ -69,8 +49,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   ]
 
   const isConnectionsActive = location.pathname.startsWith('/connections') || location.pathname.startsWith('/datasources')
-  const isAuthenticationActive = location.pathname.startsWith('/admin/authentication')
-  const isAdministrationActive = location.pathname.startsWith('/admin/orgs') || location.pathname.startsWith('/admin/users') || location.pathname.startsWith('/org/users') || location.pathname.startsWith('/org/teams') || location.pathname.startsWith('/orgs/teams')
 
   // Persist sidebar collapsed state
   useEffect(() => {
@@ -142,13 +120,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const sidebarWidth = sidebarCollapsed ? 'w-16' : 'w-75'
   const mainContentOffset = sidebarCollapsed ? 'md:pl-16' : 'md:pl-75'
   const topNavOffset = sidebarCollapsed ? 'left-16' : 'left-75'
-
-  // WIP Badge Component
-  const WipBadge = () => (
-    <span className="ml-auto px-1.5 py-0.5 text-xs font-medium bg-yellow-600 text-yellow-100 rounded">
-      WIP
-    </span>
-  )
 
   return (
     <div 
@@ -356,175 +327,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 </div>
               )}
 
-              {/* Authentication Dropdown */}
-              {!sidebarCollapsed && (
-                <div className="relative">
-                  <button
-                    onClick={() => setAuthenticationOpen(!authenticationOpen)}
-                    className="group flex items-center w-full px-2 py-2 text-sm font-medium transition-colors duration-200"
-                    style={{
-                      backgroundColor: isAuthenticationActive ? 'var(--interactive-primary)' : 'transparent',
-                      color: isAuthenticationActive ? 'var(--text-inverse)' : 'var(--text-secondary)',
-                      borderRadius: 'var(--radius-md)',
-                      borderRight: isAuthenticationActive ? '2px solid var(--interactive-primary)' : 'none'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isAuthenticationActive) {
-                        e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
-                        e.currentTarget.style.color = 'var(--text-primary)'
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isAuthenticationActive) {
-                        e.currentTarget.style.backgroundColor = 'transparent'
-                        e.currentTarget.style.color = 'var(--text-secondary)'
-                      }
-                    }}
-                  >
-                    <Shield
-                      className="mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200"
-                      style={{
-                        color: isAuthenticationActive ? 'var(--text-inverse)' : 'var(--text-secondary)'
-                      }}
-                    />
-                    Authentication
-                    <ChevronDown
-                      className={`${
-                        authenticationOpen ? 'rotate-180' : ''
-                      } ml-auto h-4 w-4 transition-transform duration-200`}
-                    />
-                  </button>
-                  
-                  {authenticationOpen && (
-                    <div className="mt-1 space-y-1">
-                      {authenticationItems.map((item) => {
-                        const Icon = item.icon
-                        const isActive = location.pathname === item.href
-                        
-                        return (
-                          <Link
-                            key={item.name}
-                            to={item.href}
-                            className="group flex items-center pl-8 pr-2 py-2 text-sm font-medium transition-colors duration-200"
-                            style={{
-                              backgroundColor: isActive ? 'var(--interactive-secondary)' : 'transparent',
-                              color: isActive ? 'var(--text-accent)' : 'var(--text-secondary)',
-                              borderRadius: 'var(--radius-md)',
-                              borderLeft: isActive ? '2px solid var(--text-accent)' : 'none'
-                            }}
-                            onMouseEnter={(e) => {
-                              if (!isActive) {
-                                e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
-                                e.currentTarget.style.color = 'var(--text-primary)'
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              if (!isActive) {
-                                e.currentTarget.style.backgroundColor = 'transparent'
-                                e.currentTarget.style.color = 'var(--text-secondary)'
-                              }
-                            }}
-                          >
-                            <Icon
-                              className="mr-3 flex-shrink-0 h-4 w-4 transition-colors duration-200"
-                              style={{
-                                color: isActive ? 'var(--text-accent)' : 'var(--text-secondary)'
-                              }}
-                            />
-                            {item.name}
-                            {item.wip && <WipBadge />}
-                          </Link>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Administration Dropdown */}
-              {!sidebarCollapsed && (
-                <div className="relative">
-                  <button
-                    onClick={() => setAdministrationOpen(!administrationOpen)}
-                    className="group flex items-center w-full px-2 py-2 text-sm font-medium transition-colors duration-200"
-                    style={{
-                      backgroundColor: isAdministrationActive ? 'var(--interactive-primary)' : 'transparent',
-                      color: isAdministrationActive ? 'var(--text-inverse)' : 'var(--text-secondary)',
-                      borderRadius: 'var(--radius-md)',
-                      borderRight: isAdministrationActive ? '2px solid var(--interactive-primary)' : 'none'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isAdministrationActive) {
-                        e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
-                        e.currentTarget.style.color = 'var(--text-primary)'
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isAdministrationActive) {
-                        e.currentTarget.style.backgroundColor = 'transparent'
-                        e.currentTarget.style.color = 'var(--text-secondary)'
-                      }
-                    }}
-                  >
-                    <Users
-                      className="mr-3 flex-shrink-0 h-5 w-5 transition-colors duration-200"
-                      style={{
-                        color: isAdministrationActive ? 'var(--text-inverse)' : 'var(--text-secondary)'
-                      }}
-                    />
-                    Administration
-                    <ChevronDown
-                      className={`${
-                        administrationOpen ? 'rotate-180' : ''
-                      } ml-auto h-4 w-4 transition-transform duration-200`}
-                    />
-                  </button>
-                  
-                  {administrationOpen && (
-                    <div className="mt-1 space-y-1">
-                      {administrationItems.map((item) => {
-                        const Icon = item.icon
-                        const isActive = location.pathname === item.href
-                        
-                        return (
-                          <Link
-                            key={item.name}
-                            to={item.href}
-                            className="group flex items-center pl-8 pr-2 py-2 text-sm font-medium transition-colors duration-200"
-                            style={{
-                              backgroundColor: isActive ? 'var(--interactive-secondary)' : 'transparent',
-                              color: isActive ? 'var(--text-accent)' : 'var(--text-secondary)',
-                              borderRadius: 'var(--radius-md)',
-                              borderLeft: isActive ? '2px solid var(--text-accent)' : 'none'
-                            }}
-                            onMouseEnter={(e) => {
-                              if (!isActive) {
-                                e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
-                                e.currentTarget.style.color = 'var(--text-primary)'
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              if (!isActive) {
-                                e.currentTarget.style.backgroundColor = 'transparent'
-                                e.currentTarget.style.color = 'var(--text-secondary)'
-                              }
-                            }}
-                          >
-                            <Icon
-                              className="mr-3 flex-shrink-0 h-4 w-4 transition-colors duration-200"
-                              style={{
-                                color: isActive ? 'var(--text-accent)' : 'var(--text-secondary)'
-                              }}
-                            />
-                            {item.name}
-                            {item.wip && <WipBadge />}
-                          </Link>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
             </nav>
           </div>
           <div 
@@ -1413,91 +1215,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 })}
               </div>
 
-              {/* Mobile Authentication */}
-              <div className="space-y-1">
-                <div 
-                  className="px-2 py-2 text-xs font-semibold uppercase tracking-wider"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-                  Authentication
-                </div>
-                {authenticationItems.map((item) => {
-                  const Icon = item.icon
-                  const isActive = location.pathname === item.href
-                  
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      className="group flex items-center px-2 py-2 text-base font-medium transition-colors"
-                      style={{
-                        backgroundColor: isActive ? 'var(--interactive-primary)' : 'transparent',
-                        color: isActive ? 'var(--text-inverse)' : 'var(--text-secondary)',
-                        borderRadius: 'var(--radius-md)'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
-                          e.currentTarget.style.color = 'var(--text-primary)'
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.backgroundColor = 'transparent'
-                          e.currentTarget.style.color = 'var(--text-secondary)'
-                        }
-                      }}
-                      onClick={() => setSidebarOpen(false)}
-                    >
-                      <Icon className="mr-4 flex-shrink-0 h-6 w-6" />
-                      {item.name}
-                    </Link>
-                  )
-                })}
-              </div>
-
-              {/* Mobile Administration */}
-              <div className="space-y-1">
-                <div 
-                  className="px-2 py-2 text-xs font-semibold uppercase tracking-wider"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-                  Administration
-                </div>
-                {administrationItems.map((item) => {
-                  const Icon = item.icon
-                  const isActive = location.pathname === item.href
-                  
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      className="group flex items-center px-2 py-2 text-base font-medium transition-colors"
-                      style={{
-                        backgroundColor: isActive ? 'var(--interactive-primary)' : 'transparent',
-                        color: isActive ? 'var(--text-inverse)' : 'var(--text-secondary)',
-                        borderRadius: 'var(--radius-md)'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.backgroundColor = 'var(--interactive-secondary-hover)'
-                          e.currentTarget.style.color = 'var(--text-primary)'
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.backgroundColor = 'transparent'
-                          e.currentTarget.style.color = 'var(--text-secondary)'
-                        }
-                      }}
-                      onClick={() => setSidebarOpen(false)}
-                    >
-                      <Icon className="mr-4 flex-shrink-0 h-6 w-6" />
-                      {item.name}
-                    </Link>
-                  )
-                })}
-              </div>
             </nav>
           </div>
         </div>

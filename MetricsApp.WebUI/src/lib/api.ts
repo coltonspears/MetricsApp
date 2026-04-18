@@ -1,4 +1,29 @@
-const API_BASE_URL = '/api/v1'
+// Resolve the API base URL once. Order of precedence:
+//  1. VITE_API_BASE_URL env var (injected at build time or via Aspire)
+//  2. services__metricsapp-api__https__0 / __http__0 (Aspire-injected)
+//  3. Same-origin /api/v1 (production reverse-proxy / Docker Compose)
+function resolveApiBaseUrl(): string {
+  const env = import.meta.env as Record<string, string | undefined>
+  const explicit = env.VITE_API_BASE_URL
+  if (explicit) {
+    return explicit.replace(/\/$/, '')
+  }
+
+  const aspireHttps = env['services__metricsapp-api__https__0']
+  const aspireHttp = env['services__metricsapp-api__http__0']
+  const aspire = aspireHttps ?? aspireHttp
+  if (aspire) {
+    return `${aspire.replace(/\/$/, '')}/api/v1`
+  }
+
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}/api/v1`
+  }
+
+  return '/api/v1'
+}
+
+export const API_BASE_URL = resolveApiBaseUrl()
 
 export interface MetricQueryParams {
   query?: string
@@ -52,7 +77,7 @@ export class MetricsApi {
       
       // Handle network errors
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new ApiError(0, 'Network error: Unable to connect to the metrics API. Please ensure the service is running on localhost:7201.')
+        throw new ApiError(0, `Network error: Unable to reach the metrics API at ${API_BASE_URL}. Please ensure the service is running.`)
       }
       
       throw new ApiError(500, error instanceof Error ? error.message : 'Unknown error occurred')

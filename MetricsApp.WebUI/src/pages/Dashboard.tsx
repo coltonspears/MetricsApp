@@ -377,7 +377,7 @@ const Dashboard = () => {
           </div>
           <p className="text-sm text-themed-text-secondary">{error}</p>
           <div className="panel-footer">
-            Ensure your MetricsApp API is running on localhost:7201.
+            Ensure the MetricsApp API is reachable.
           </div>
         </div>
       )}
